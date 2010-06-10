@@ -113,7 +113,7 @@ module BrighterPlanet
           end
     
           quorum 'default' do
-            fallback.load_factor
+            ::Flight.fallback.load_factor
           end
         end
         
@@ -147,13 +147,13 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            fallback.distance_estimate.kilometres.to :nautical_miles
+            ::Flight.fallback.distance_estimate.kilometres.to :nautical_miles
           end
         end
         
         committee :emplanements_per_trip do # per trip
           quorum 'default' do
-            fallback.emplanements_per_trip_before_type_cast
+            ::Flight.fallback.emplanements_per_trip_before_type_cast
           end
         end
         
@@ -188,7 +188,7 @@ module BrighterPlanet
         
         committee :trips do
           quorum 'default' do
-            fallback.trips_before_type_cast
+            ::Flight.fallback.trips_before_type_cast
           end
         end
         
