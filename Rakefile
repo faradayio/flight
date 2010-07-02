@@ -1,47 +1,41 @@
 require 'rubygems'
-require 'rake'
+require 'bundler'
+Bundler.setup
 
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gem|
-    gem.name = "flight"
-    gem.summary = %Q{A carbon model}
-    gem.description = %Q{A software model in Ruby for the greenhouse gas emissions of a flight}
-    gem.email = "andy@rossmeissl.net"
-    gem.homepage = "http://github.com/brighterplanet/flight"
-    gem.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling"]
-    gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
-    gem.add_development_dependency 'leap'
-    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
-  end
-  Jeweler::GemcutterTasks.new
-rescue LoadError
-  puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
+require 'jeweler'                                                                 
+Jeweler::Tasks.new do |gem|                                                       
+  gem.name = %q{flight}
+  gem.summary = %q{A carbon model}
+  gem.description = %q{A software model in Ruby for the greenhouse gas emissions of a flight}
+  gem.email = %q{andy@rossmeissl.net}
+  gem.homepage = %q{http://github.com/brighterplanet/flight}
+  gem.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling", 'Derek Kastner']
+  gem.files = Dir.glob(File.join(File.dirname(__FILE__), 'lib', '**/*.rb')) +
+  gem.test_files = Dir.glob(File.join(File.dirname(__FILE__), 'features', '**/*.rb'))
+  gem.add_development_dependency 'rake'
+  gem.add_development_dependency 'bundler', '=1.0.0.beta.2'
+  gem.add_development_dependency 'jeweler', '=1.4.0'
+  gem.add_development_dependency 'cucumber', '=0.8.3'
+  gem.add_development_dependency 'sniff', '=0.0.1'
+end                                                                               
+Jeweler::GemcutterTasks.new
+
+require 'cucumber'
+require 'cucumber/rake/task'
+
+desc 'Run all cucumber tests'
+Cucumber::Rake::Task.new(:features) do |t|
+  t.cucumber_opts = "features --format pretty"
 end
 
-require 'rake/testtask'
-Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
+desc "Run all tests with RCov"
+Cucumber::Rake::Task.new(:features_with_coverage) do |t|
+  t.cucumber_opts = "features --format pretty"
+  t.rcov = true
+  t.rcov_opts = ['--exclude', 'features']
 end
 
-begin
-  require 'rcov/rcovtask'
-  Rcov::RcovTask.new do |test|
-    test.libs << 'test'
-    test.pattern = 'test/**/test_*.rb'
-    test.verbose = true
-  end
-rescue LoadError
-  task :rcov do
-    abort "RCov is not available. In order to run rcov, you must: sudo gem install spicycode-rcov"
-  end
-end
-
-task :test => :check_dependencies
-
-task :default => :test
+task :default => :features
 
 require 'rake/rdoctask'
 Rake::RDocTask.new do |rdoc|
