@@ -1,3 +1,5 @@
+require 'weighted_average'
+
 module BrighterPlanet
   module Flight
     def self.included(base)
@@ -113,7 +115,9 @@ module BrighterPlanet
           end
     
           quorum 'default' do
-            ::Flight.fallback.load_factor
+            if Object.const_defined?(:Flight)
+              ::Flight.fallback.load_factor
+            end
           end
         end
         
@@ -147,13 +151,17 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            ::Flight.fallback.distance_estimate.kilometres.to :nautical_miles
+            if Object.const_defined?(:Flight)
+              ::Flight.fallback.distance_estimate.kilometres.to :nautical_miles
+            end
           end
         end
         
         committee :emplanements_per_trip do # per trip
           quorum 'default' do
-            ::Flight.fallback.emplanements_per_trip_before_type_cast
+            if Object.const_defined?(:Flight)
+              ::Flight.fallback.emplanements_per_trip_before_type_cast
+            end
           end
         end
         
@@ -188,7 +196,9 @@ module BrighterPlanet
         
         committee :trips do
           quorum 'default' do
-            ::Flight.fallback.trips_before_type_cast
+            if Object.const_defined?(:Flight)
+              ::Flight.fallback.trips_before_type_cast
+            end
           end
         end
         
@@ -226,7 +236,7 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            FlightSeatClass.fallback.multiplier
+            FlightSeatClass.fallback.andand.multiplier
           end
         end
         
@@ -236,7 +246,7 @@ module BrighterPlanet
           end
           
           quorum 'from timeframe' do |characteristics, timeframe|
-            timeframe.from
+            timeframe.andand.from
           end
         end
         
