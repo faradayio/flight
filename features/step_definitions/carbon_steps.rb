@@ -11,7 +11,6 @@ Given /^(a flight|it) has (.+) of (.*)$/ do |ignore, field, value|
       context[method] = value if method == methods.last.to_sym
       context = context[method]
     end
-    puts "activity hash: #{@activity_hash.inspect}"
   end
 end
 
