@@ -10,7 +10,6 @@ FileUtils.mkdir_p(DB_DIR)
 Sniff::Database.init DB_DIR
 
 # ORDER MATTERS! Do this after connecting to DB
-require 'loose_tight_dictionary/active_record_ext'
 $:.unshift File.join(File.dirname(__FILE__), '..', '..', 'lib')
 $:.unshift File.join(File.dirname(__FILE__), '..', 'fixtures')
 require 'flight_record'

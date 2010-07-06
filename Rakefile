@@ -17,6 +17,7 @@ Jeweler::Tasks.new do |gem|
   gem.add_development_dependency 'jeweler', '=1.4.0'
   gem.add_development_dependency 'cucumber', '=0.8.3'
   gem.add_development_dependency 'sniff', '=0.0.1' unless ENV['LOCAL_SNIFF']
+  gem.add_dependency 'weighted_average', '=0.0.4'
 end                                                                               
 Jeweler::GemcutterTasks.new
 
