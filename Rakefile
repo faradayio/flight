@@ -16,7 +16,7 @@ Jeweler::Tasks.new do |gem|
   gem.add_development_dependency 'bundler', '=1.0.0.beta.2'
   gem.add_development_dependency 'jeweler', '=1.4.0'
   gem.add_development_dependency 'cucumber', '=0.8.3'
-  gem.add_development_dependency 'sniff', '=0.0.1'
+  gem.add_development_dependency 'sniff', '=0.0.1' unless ENV['LOCAL_SNIFF']
 end                                                                               
 Jeweler::GemcutterTasks.new
 
