@@ -4,7 +4,7 @@ Feature: Flight Emissions Calculations
   Scenario Outline: Standard Calculations
     Given a flight has origin_airport.iata_code of <source>
     And it has destination_airport.iata_code of <dest>
-    And it has airline of <airline>
+    And it has airline.iata_code of <airline>
     When emissions are calculated
     Then the emission value should be within 10 kgs of <emission>
     And the fuel_per_segment committee should be close to <fuel_per_segment>, +/-10
