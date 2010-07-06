@@ -1,8 +1,18 @@
 require 'time'
 
 Given /^(a flight|it) has (.+) of (.*)$/ do |ignore, field, value|
-  @activity ||= FlightRecord.new
-  @activity.send("#{field}=", value) if value.present?
+  @activity_hash ||= {}
+  if value.present?
+    methods = field.split('.')
+    context = @activity_hash
+    methods.each do |method|
+      method = method.to_sym
+      context[method] ||= {}
+      context[method] = value if method == methods.last.to_sym
+      context = context[method]
+    end
+    puts "activity hash: #{@activity_hash.inspect}"
+  end
 end
 
 Given /^the current date is (.+)$/ do |current_date|
@@ -10,6 +20,7 @@ Given /^the current date is (.+)$/ do |current_date|
 end
 
 When /^emissions are calculated$/ do
+  @activity = FlightRecord.from_params_hash @activity_hash
   if @current_date
     Timecop.travel(@current_date) do
       @activity.emission

@@ -2,8 +2,8 @@ Feature: Flight Emissions Calculations
   The flight model should generate correct emission calculations
 
   Scenario Outline: Standard Calculations
-    Given a flight has origin_airport of <source>
-    And it has destination_airport of <dest>
+    Given a flight has origin_airport.iata_code of <source>
+    And it has destination_airport.iata_code of <dest>
     And it has airline of <airline>
     When emissions are calculated
     Then the emission value should be within 10 kgs of <emission>
