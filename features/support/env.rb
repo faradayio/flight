@@ -5,11 +5,12 @@ require 'cucumber'
 require 'cucumber/formatter/unicode' # Remove this line if you don't want Cucumber Unicode support
 require 'sniff'
 
-DB_DIR = File.join(File.dirname(__FILE__), '..', 'db')
+DB_DIR = File.join(File.dirname(__FILE__), '..')
 FileUtils.mkdir_p(DB_DIR)
 Sniff::Database.init DB_DIR
 
 # ORDER MATTERS! Do this after connecting to DB
+require 'loose_tight_dictionary/active_record_ext'
 $:.unshift File.join(File.dirname(__FILE__), '..', '..', 'lib')
 $:.unshift File.join(File.dirname(__FILE__), '..', 'fixtures')
 require 'flight_record'
