@@ -2,6 +2,9 @@ require 'rubygems'
 require 'bundler'
 Bundler.setup
 
+require 'sniff'
+require 'sniff/tasks'
+
 require 'jeweler'                                                                 
 Jeweler::Tasks.new do |gem|                                                       
   gem.name = %q{flight}
