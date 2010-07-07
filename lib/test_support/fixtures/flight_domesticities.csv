@@ -1,5 +1,0 @@
-"name","bts_data_source_code","distance","distance_units","freight_share","load_factor","seats","payload","payload_units","created_at","updated_at"
-"Domestic Data, Foreign Carriers","DF","5440.25","kilometres","0.0718975","0.7181","343.512","48658","kilograms","NULL","NULL"
-"Domestic Data, US Carriers Only","DU","1370.52","kilometres","0.00904615","0.781316","127.984","15306.5","kilograms","NULL","NULL"
-"International Data, Foreign Carriers","IF","6157.73","kilometres","0.106814","0.773913","259.571","38310","kilograms","NULL","NULL"
-"International Data, US Carriers Only","IU","4299.66","kilometres","0.0589951","0.786845","189.774","27253.4","kilograms","NULL","NULL"
