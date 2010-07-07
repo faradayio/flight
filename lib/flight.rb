@@ -51,7 +51,7 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            Aircraft.fallback.endpoint_fuel
+            Aircraft.fallback.andand.endpoint_fuel
           end
         end
         
@@ -65,7 +65,10 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            Aircraft.fallback.attributes.symbolize_keys.slice(:m1, :m2, :m3)
+            fallback = Aircraft.fallback
+            if fallback
+              fallback.attributes.symbolize_keys.slice(:m1, :m2, :m3)
+            end
           end
         end
         
@@ -105,7 +108,7 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            FlightSegment.fallback.seats
+            FlightSegment.fallback.andand.seats
           end
         end
         
@@ -116,7 +119,7 @@ module BrighterPlanet
     
           quorum 'default' do
             if Object.const_defined?(:Flight)
-              ::Flight.fallback.load_factor
+              ::Flight.fallback.andand.load_factor
             end
           end
         end
@@ -151,7 +154,7 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            if Object.const_defined?(:Flight)
+            if Object.const_defined?(:Flight) and ::Flight.fallback
               ::Flight.fallback.distance_estimate.kilometres.to :nautical_miles
             end
           end
@@ -159,7 +162,7 @@ module BrighterPlanet
         
         committee :emplanements_per_trip do # per trip
           quorum 'default' do
-            if Object.const_defined?(:Flight)
+            if Object.const_defined?(:Flight) and Flight.fallback
               ::Flight.fallback.emplanements_per_trip_before_type_cast
             end
           end
@@ -190,14 +193,14 @@ module BrighterPlanet
           end
           
           quorum 'default' do
-            FlightSegment.fallback.freight_share
+            FlightSegment.fallback.andand.freight_share
           end
         end
         
         committee :trips do
           quorum 'default' do
             if Object.const_defined?(:Flight)
-              ::Flight.fallback.trips_before_type_cast
+              ::Flight.fallback.andand.trips_before_type_cast
             end
           end
         end
