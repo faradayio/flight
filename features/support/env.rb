@@ -6,7 +6,7 @@ require 'cucumber/formatter/unicode' # Remove this line if you don't want Cucumb
 
 require 'sniff'
 
-Sniff::Database.init File.join(File.dirname(__FILE__), '..', '..')
+Sniff.init File.join(File.dirname(__FILE__), '..', '..')
 
 ## How to clean your database when transactions are turned off. See
 ## http://github.com/bmabey/database_cleaner for more info.
