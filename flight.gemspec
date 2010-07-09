@@ -9,12 +9,17 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling", "Derek Kastner"]
-  s.date = %q{2010-07-06}
+  s.date = %q{2010-07-08}
   s.description = %q{A software model in Ruby for the greenhouse gas emissions of a flight}
   s.email = %q{andy@rossmeissl.net}
   s.extra_rdoc_files = [
     "LICENSE",
      "README.rdoc"
+  ]
+  s.files = [
+    "LICENSE",
+     "README.rdoc",
+     "lib/flight.rb"
   ]
   s.homepage = %q{http://github.com/brighterplanet/flight}
   s.rdoc_options = ["--charset=UTF-8"]
@@ -22,10 +27,23 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{A carbon model}
   s.test_files = [
-    "/Users/dkastner/flight/features/fixtures/flight_record.rb",
-     "/Users/dkastner/flight/features/step_definitions/carbon_steps.rb",
+    "/Users/dkastner/flight/features/step_definitions/carbon_steps.rb",
      "/Users/dkastner/flight/features/support/env.rb",
-     "/Users/dkastner/flight/features/support/schema.rb"
+     "/Users/dkastner/flight/lib/test_support/data_models/aircraft.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/aircraft_class.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/aircraft_manufacturer.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/airline.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/airport.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_configuration.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_distance_class.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_domesticity.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_fuel_type.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_propulsion.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_seat_class.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_segment.rb",
+     "/Users/dkastner/flight/lib/test_support/data_models/flight_service.rb",
+     "/Users/dkastner/flight/lib/test_support/db/schema.rb",
+     "/Users/dkastner/flight/lib/test_support/flight_record.rb"
   ]
 
   if s.respond_to? :specification_version then
@@ -38,12 +56,14 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, ["= 1.4.0"])
       s.add_development_dependency(%q<cucumber>, ["= 0.8.3"])
       s.add_runtime_dependency(%q<weighted_average>, ["= 0.0.4"])
+      s.add_runtime_dependency(%q<geokit>, ["= 1.5.0"])
     else
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<bundler>, ["= 1.0.0.beta.2"])
       s.add_dependency(%q<jeweler>, ["= 1.4.0"])
       s.add_dependency(%q<cucumber>, ["= 0.8.3"])
       s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
+      s.add_dependency(%q<geokit>, ["= 1.5.0"])
     end
   else
     s.add_dependency(%q<rake>, [">= 0"])
@@ -51,6 +71,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<jeweler>, ["= 1.4.0"])
     s.add_dependency(%q<cucumber>, ["= 0.8.3"])
     s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
+    s.add_dependency(%q<geokit>, ["= 1.5.0"])
   end
 end
 
