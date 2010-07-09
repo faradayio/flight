@@ -3,7 +3,7 @@ require 'flight'
 class FlightRecord < ActiveRecord::Base
   include Sniff::Emitter
   include BrighterPlanet::Flight
-  set_table_name 'flights'
+  set_table_name 'flight_records'
 
   belongs_to :origin_airport, :class_name => 'Airport'
   belongs_to :destination_airport, :class_name => 'Airport'
@@ -16,49 +16,22 @@ class FlightRecord < ActiveRecord::Base
   belongs_to :airline
   belongs_to :domesticity, :class_name => 'FlightDomesticity'
   
-  # has_many :flight_patterns
-  
   falls_back_on :trips => 1.941, # http://www.bts.gov/publications/america_on_the_go/long_distance_transportation_patterns/html/table_07.html
-                :emplanements_per_trip => 1.67, # https://brighterplanet.sifterapp.com/projects/30/issues/348
+                :emplanements_per_trip => 1.67,
                 :distance_estimate => 2077.4455, # SELECT SUM(passengers * distance) / SUM(passengers) FROM flight_segments;
                 :load_factor => lambda { FlightSegment.fallback.load_factor }
 
-  characterize do
-    has :date, :trumps => :year
-    has :year
-    has :time_of_day
-    has :origin_airport do |origin_airport|
-      origin_airport.reveals :destination_airport, :trumps => [:distance_class, :domesticity, :distance_estimate]
-    end
-    has :distance_class
-    has :distance_estimate, :trumps => :distance_class, :measures => :length, :precision => 0
-    has :domesticity
-    has :airline
-    has :trips
-    has :emplanements_per_trip
-    has :seat_class
-    has :load_factor, :measures => :percentage
-    has :seats_estimate, :range => 1..500
-    has :aircraft_class, :trumps => [:propulsion, :fuel_type]
-    has :aircraft, :trumps => [:propulsion, :aircraft_class, :seats_estimate, :fuel_type]
-    has :propulsion, :trumps => :fuel_type
-
-    has :creation_date, :hidden => true
-  end
-  
   class << self
-    
     def research(key)
       case key
       when :route_inefficiency_factor
-        1.07 # https://brighterplanet.sifterapp.com/projects/30/issues/467
+        1.07
       when :dogleg_factor
-        1.25 # https://brighterplanet.sifterapp.com/projects/30/issues/467
+        1.25
       end
     end
-    
   end
-  
+
   def creation_date
     created_at.to_date if created_at
   end
