@@ -1,5 +1,9 @@
 class Airport < ActiveRecord::Base
   set_primary_key :iata_code
+
+  acts_as_mappable :default_units => :nms,
+                   :lat_column_name => :latitude,
+                   :lng_column_name => :longitude
   
   class << self
     def loose_search_columns
