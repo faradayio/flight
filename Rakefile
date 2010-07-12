@@ -1,10 +1,4 @@
 require 'rubygems'
-require 'bundler'
-Bundler.setup
-
-require 'sniff'
-require 'sniff/tasks'
-
 require 'jeweler'                                                                 
 Jeweler::Tasks.new do |gem|                                                       
   gem.name = %q{flight}
@@ -26,22 +20,27 @@ Jeweler::Tasks.new do |gem|
 end                                                                               
 Jeweler::GemcutterTasks.new
 
-require 'cucumber'
-require 'cucumber/rake/task'
-
-desc 'Run all cucumber tests'
-Cucumber::Rake::Task.new(:features) do |t|
-  t.cucumber_opts = "features --format pretty"
+begin
+  require 'cucumber'
+  require 'cucumber/rake/task'
+  
+  desc 'Run all cucumber tests'
+  Cucumber::Rake::Task.new(:features) do |t|
+    testing_libraries
+    t.cucumber_opts = "features --format pretty"
+  end
+  
+  desc "Run all tests with RCov"
+  Cucumber::Rake::Task.new(:features_with_coverage) do |t|
+    testing_libraries
+    t.cucumber_opts = "features --format pretty"
+    t.rcov = true
+    t.rcov_opts = ['--exclude', 'features']
+  end
+  
+  task :default => :features
+rescue LoadError
 end
-
-desc "Run all tests with RCov"
-Cucumber::Rake::Task.new(:features_with_coverage) do |t|
-  t.cucumber_opts = "features --format pretty"
-  t.rcov = true
-  t.rcov_opts = ['--exclude', 'features']
-end
-
-task :default => :features
 
 require 'rake/rdoctask'
 Rake::RDocTask.new do |rdoc|
@@ -51,4 +50,11 @@ Rake::RDocTask.new do |rdoc|
   rdoc.title = "flight #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
+def testing_libraries
+  require 'bundler'
+  Bundler.setup
+  require 'sniff'
+  require 'sniff/tasks'
 end
