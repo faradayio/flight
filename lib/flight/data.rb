@@ -1,6 +1,6 @@
 module BrighterPlanet
   module Flight
-    module DataMiner
+    module Data
       def self.included(base)
         base.data_miner do
           schema do

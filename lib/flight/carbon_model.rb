@@ -2,7 +2,7 @@ require 'weighted_average'
 
 module BrighterPlanet
   module Flight
-    module Decisions
+    module CarbonModel
       def self.included(base)
         base.extend ::Leap::Subject
         base.decide :emission, :with => :characteristics do
