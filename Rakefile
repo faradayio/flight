@@ -34,7 +34,6 @@ Jeweler::Tasks.new do |gem|
   gem.add_development_dependency 'rdoc'
   gem.add_development_dependency 'sniff', '=0.0.3' unless ENV['LOCAL_SNIFF']
   gem.add_dependency 'weighted_average', '=0.0.4'
-  gem.add_dependency 'geokit', '=1.5.0'
 end
 Jeweler::GemcutterTasks.new
 
