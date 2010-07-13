@@ -19,6 +19,6 @@ rdoc
 pkg
 data_miner.log
 *.sqlite3
-db
+db/schema_output
 
 ## PROJECT::SPECIFIC
