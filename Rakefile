@@ -21,7 +21,7 @@ Jeweler::Tasks.new do |gem|
   gem.test_files = Dir.glob(File.join(File.dirname(__FILE__), 'features', '**/*.rb')) +
     Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'test_support', '**/*.rb'))
   gem.add_development_dependency 'rake'
-  gem.add_development_dependency 'bundler', '=1.0.0.beta.5'
+  gem.add_development_dependency 'bundler', '>=1.0.0.beta.2'
   gem.add_development_dependency 'jeweler', '=1.4.0'
   gem.add_development_dependency 'cucumber', '=0.8.3'
   gem.add_development_dependency 'rdoc'
