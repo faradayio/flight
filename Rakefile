@@ -2,12 +2,16 @@ require 'rubygems'
 begin
   require 'bundler'
   Bundler.setup
-
-  require 'sniff'
-  require 'sniff/tasks'
 rescue LoadError
   puts 'You need to `gem install bundler`, then run `bundle install` in order to run rake tasks'
   exit
+end
+
+begin
+  require 'sniff'
+  require 'sniff/tasks'
+rescue LoadError
+  puts 'Sniff gem not found, sniff tasks unavailable'
 end
 
 require 'jeweler'                                                                 
