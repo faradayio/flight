@@ -6,7 +6,8 @@ begin
   require 'sniff'
   require 'sniff/tasks'
 rescue LoadError
-  puts 'You need to install bundler, then run `bundle install` in order to run rake tasks'
+  puts 'You need to `gem install bundler`, then run `bundle install` in order to run rake tasks'
+  exit
 end
 
 require 'jeweler'                                                                 
