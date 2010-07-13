@@ -18,7 +18,7 @@ class FlightRecord < ActiveRecord::Base
   
   falls_back_on :trips => 1.941, # http://www.bts.gov/publications/america_on_the_go/long_distance_transportation_patterns/html/table_07.html
                 :emplanements_per_trip => 1.67,
-                :distance_estimate => 2077.4455, # SELECT SUM(passengers * distance) / SUM(passengers) FROM flight_segments;
+                :distance_estimate => 2077.4455,
                 :load_factor => lambda { FlightSegment.fallback.load_factor }
 
   class << self
@@ -29,22 +29,6 @@ class FlightRecord < ActiveRecord::Base
       when :dogleg_factor
         1.25
       end
-    end
-  end
-
-  def creation_date
-    created_at.to_date if created_at
-  end
-  
-  def emission_date
-    date || committee_reports[:date]
-  end
-  
-  def vehicle
-    if aircraft
-      aircraft.name
-    elsif aircraft_class
-      aircraft_class.name
     end
   end
 end
