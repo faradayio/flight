@@ -22,15 +22,17 @@ Jeweler::Tasks.new do |gem|
   gem.email = %q{andy@rossmeissl.net}
   gem.homepage = %q{http://github.com/brighterplanet/flight}
   gem.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling", 'Derek Kastner']
-  gem.files = ['LICENSE', 'README.rdoc', 'lib/flight.rb']
-  gem.test_files = Dir.glob(File.join(File.dirname(__FILE__), 'features', '**/*.rb')) +
-    Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'test_support', '**/*.rb'))
+  gem.files = ['LICENSE', 'README.rdoc'] + 
+    Dir.glob(File.join('lib', '**','*.rb'))
+  gem.test_files = Dir.glob(File.join('features', '**', '*.rb')) +
+    Dir.glob(File.join('features', '**', '*.feature')) +
+    Dir.glob(File.join('lib', 'test_support', '**/*.rb'))
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'bundler', '>=1.0.0.beta.2'
   gem.add_development_dependency 'jeweler', '=1.4.0'
   gem.add_development_dependency 'cucumber', '=0.8.3'
   gem.add_development_dependency 'rdoc'
-  gem.add_development_dependency 'sniff', '=0.0.1' unless ENV['LOCAL_SNIFF']
+  gem.add_development_dependency 'sniff', '=0.0.3' unless ENV['LOCAL_SNIFF']
   gem.add_dependency 'weighted_average', '=0.0.4'
   gem.add_dependency 'geokit', '=1.5.0'
 end
