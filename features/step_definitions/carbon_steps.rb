@@ -28,6 +28,7 @@ When /^emissions are calculated$/ do
   else
     @emission = @activity.emission Sniff::Timeframe.this_year
   end
+  @characteristics = @activity.deliberations[:emission].characteristics
 end
 
 Then /^the emission value should be within (\d+) kgs of (\d+)$/ do |cusion, emissions|
@@ -37,20 +38,20 @@ end
 Then /^the calculation should have used committees (.*)$/ do |committee_list|
   committees = committee_list.split(/,\s*/)
   committees.each do |committee|
-    @activity.committees.keys.should include(committee)
+    @characteristics.keys.should include(committee)
   end
 end
 
-Then /^the (.+) committee should be close to (\d+), \+\/-(\d+)$/ do |committee, cusion, emission|
-  @activity.committees[committee].to_f.should be_close(emission.to_f, cusion.to_f)
+Then /^the (.+) committee should be close to ([^,]+), \+\/-(.+)$/ do |committee, value, cusion|
+  @characteristics[committee.to_sym].to_f.should be_close(value.to_f, cusion.to_f)
 end
 
 Then /^the (.+) committee should be exactly (.*)$/ do |committee, value|
-  @activity.committees[committee].to_s.should == value
+  @characteristics[committee.to_sym].to_s.should == value
 end
 
 Then /^the active_subtimeframe committee should have timeframe (.*)$/ do |tf_string|
   days, start, finish = tf_string.split(/,\s*/)
-  @activity.committees['active_subtimeframe'].to_s.should =~ /#{days} days starting #{start} ending #{finish}/
+  @characteristics[:active_subtimeframe].to_s.should =~ /#{days} days starting #{start} ending #{finish}/
 end
 
