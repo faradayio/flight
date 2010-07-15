@@ -20,5 +20,6 @@ pkg
 data_miner.log
 *.sqlite3
 db/schema_output
+.bundle
 
 ## PROJECT::SPECIFIC

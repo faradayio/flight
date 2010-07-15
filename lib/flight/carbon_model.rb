@@ -4,7 +4,7 @@ module BrighterPlanet
   module Flight
     module CarbonModel
       def self.included(base)
-        base.send :include, ::Leap::Subject
+        base.extend ::Leap::Subject
         base.decide :emission, :with => :characteristics do
           committee :emission do
             quorum 'from fuel and passengers with coefficients', 
