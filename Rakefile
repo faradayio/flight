@@ -1,18 +1,4 @@
 require 'rubygems'
-begin
-  require 'bundler'
-  Bundler.setup
-rescue LoadError
-  puts 'You need to `gem install bundler`, then run `bundle install` in order to run rake tasks'
-  exit
-end
-
-begin
-  require 'sniff'
-  require 'sniff/tasks'
-rescue LoadError
-  puts 'Sniff gem not found, sniff tasks unavailable'
-end
 
 require 'jeweler'                                                                 
 Jeweler::Tasks.new do |gem|                                                       
@@ -37,22 +23,39 @@ Jeweler::Tasks.new do |gem|
 end
 Jeweler::GemcutterTasks.new
 
-require 'cucumber'
-require 'cucumber/rake/task'
+unless ENV['NOBUNDLE']
+  begin
+    require 'bundler'
+    Bundler.setup
+  rescue LoadError
+    puts 'You need to `gem install bundler`, then run `bundle install` in order to run rake tasks'
+    exit
+  end
+  
+  begin
+    require 'sniff'
+    require 'sniff/tasks'
+  rescue LoadError
+    puts 'Sniff gem not found, sniff tasks unavailable'
+  end
 
-desc 'Run all cucumber tests'
-Cucumber::Rake::Task.new(:features) do |t|
-  t.cucumber_opts = "features --format pretty"
+  require 'cucumber'
+  require 'cucumber/rake/task'
+  
+  desc 'Run all cucumber tests'
+  Cucumber::Rake::Task.new(:features) do |t|
+    t.cucumber_opts = "features --format pretty"
+  end
+  
+  desc "Run all tests with RCov"
+  Cucumber::Rake::Task.new(:features_with_coverage) do |t|
+    t.cucumber_opts = "features --format pretty"
+    t.rcov = true
+    t.rcov_opts = ['--exclude', 'features']
+  end
+  
+  task :default => :features
 end
-
-desc "Run all tests with RCov"
-Cucumber::Rake::Task.new(:features_with_coverage) do |t|
-  t.cucumber_opts = "features --format pretty"
-  t.rcov = true
-  t.rcov_opts = ['--exclude', 'features']
-end
-
-task :default => :features
 
 require 'rake/rdoctask'
 Rake::RDocTask.new do |rdoc|
