@@ -5,6 +5,7 @@ gem 'loose_tight_dictionary', :path => ENV['LOCAL_LOOSE_TIGHT_DICTIONARY'] if EN
 gem 'cohort_scope', :path => ENV['LOCAL_COHORT_SCOPE'] if ENV['LOCAL_COHORT_SCOPE']
 gem 'leap', :path => ENV['LOCAL_LEAP'] if ENV['LOCAL_LEAP']
 gem 'data_miner', :path => ENV['LOCAL_DATA_MINER'] if ENV['LOCAL_DATA_MINER']
+gem 'earth', :path => ENV['LOCAL_EARTH'] if ENV['LOCAL_EARTH']
 
 source :rubygems
 

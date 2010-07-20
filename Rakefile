@@ -18,8 +18,10 @@ Jeweler::Tasks.new do |gem|
   gem.add_development_dependency 'jeweler', '=1.4.0'
   gem.add_development_dependency 'cucumber', '=0.8.3'
   gem.add_development_dependency 'rdoc'
-  gem.add_development_dependency 'sniff', '=0.0.3' unless ENV['LOCAL_SNIFF']
+  gem.add_development_dependency 'rspec', '= 2.0.0.beta.17'
+  gem.add_development_dependency 'sniff', '=0.0.5' unless ENV['LOCAL_SNIFF']
   gem.add_dependency 'weighted_average', '=0.0.4'
+  gem.add_dependency 'earth', '=0.0.7'
 end
 Jeweler::GemcutterTasks.new
 
@@ -54,6 +56,7 @@ unless ENV['NOBUNDLE']
     t.rcov_opts = ['--exclude', 'features']
   end
   
+  task :test => :features
   task :default => :features
 end
 
