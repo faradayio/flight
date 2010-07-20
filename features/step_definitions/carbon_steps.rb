@@ -23,10 +23,10 @@ When /^emissions are calculated$/ do
   @activity = FlightRecord.from_params_hash @activity_hash
   if @current_date
     Timecop.travel(@current_date) do
-      @emission = @activity.emission Sniff::Timeframe.this_year
+      @emission = @activity.emission Timeframe.this_year
     end
   else
-    @emission = @activity.emission Sniff::Timeframe.this_year
+    @emission = @activity.emission Timeframe.this_year
   end
   @characteristics = @activity.deliberations[:emission].characteristics
 end
