@@ -1,16 +1,16 @@
-require 'flight/carbon_model'
-require 'flight/characterization'
-require 'flight/data'
-require 'flight/summarization'
-
 module BrighterPlanet
   module Flight
     extend self
 
     def included(base)
+      require 'flight/carbon_model'
+      require 'flight/characterization'
+      require 'flight/data'
+      require 'flight/summarization'
+
       base.send :include, BrighterPlanet::Flight::CarbonModel
       base.send :include, BrighterPlanet::Flight::Characterization
-#      base.send :include, BrighterPlanet::Flight::Data
+      base.send :include, BrighterPlanet::Flight::Data
       base.send :include, BrighterPlanet::Flight::Summarization
     end
     def flight_model
