@@ -24,19 +24,6 @@ Gem::Specification.new do |s|
      "lib/flight/characterization.rb",
      "lib/flight/data.rb",
      "lib/flight/summarization.rb",
-     "lib/test_support/data_models/aircraft.rb",
-     "lib/test_support/data_models/aircraft_class.rb",
-     "lib/test_support/data_models/aircraft_manufacturer.rb",
-     "lib/test_support/data_models/airline.rb",
-     "lib/test_support/data_models/airport.rb",
-     "lib/test_support/data_models/flight_configuration.rb",
-     "lib/test_support/data_models/flight_distance_class.rb",
-     "lib/test_support/data_models/flight_domesticity.rb",
-     "lib/test_support/data_models/flight_fuel_type.rb",
-     "lib/test_support/data_models/flight_propulsion.rb",
-     "lib/test_support/data_models/flight_seat_class.rb",
-     "lib/test_support/data_models/flight_segment.rb",
-     "lib/test_support/data_models/flight_service.rb",
      "lib/test_support/db/schema.rb",
      "lib/test_support/flight_record.rb"
   ]
@@ -50,19 +37,6 @@ Gem::Specification.new do |s|
      "features/support/env.rb",
      "features/flight_committees.feature",
      "features/flight_emissions.feature",
-     "lib/test_support/data_models/aircraft.rb",
-     "lib/test_support/data_models/aircraft_class.rb",
-     "lib/test_support/data_models/aircraft_manufacturer.rb",
-     "lib/test_support/data_models/airline.rb",
-     "lib/test_support/data_models/airport.rb",
-     "lib/test_support/data_models/flight_configuration.rb",
-     "lib/test_support/data_models/flight_distance_class.rb",
-     "lib/test_support/data_models/flight_domesticity.rb",
-     "lib/test_support/data_models/flight_fuel_type.rb",
-     "lib/test_support/data_models/flight_propulsion.rb",
-     "lib/test_support/data_models/flight_seat_class.rb",
-     "lib/test_support/data_models/flight_segment.rb",
-     "lib/test_support/data_models/flight_service.rb",
      "lib/test_support/db/schema.rb",
      "lib/test_support/flight_record.rb"
   ]
@@ -77,16 +51,20 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, ["= 1.4.0"])
       s.add_development_dependency(%q<cucumber>, ["= 0.8.3"])
       s.add_development_dependency(%q<rdoc>, [">= 0"])
-      s.add_development_dependency(%q<sniff>, ["= 0.0.3"])
+      s.add_development_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
+      s.add_development_dependency(%q<sniff>, ["= 0.0.5"])
       s.add_runtime_dependency(%q<weighted_average>, ["= 0.0.4"])
+      s.add_runtime_dependency(%q<earth>, ["= 0.0.7"])
     else
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<bundler>, [">= 1.0.0.beta.2"])
       s.add_dependency(%q<jeweler>, ["= 1.4.0"])
       s.add_dependency(%q<cucumber>, ["= 0.8.3"])
       s.add_dependency(%q<rdoc>, [">= 0"])
-      s.add_dependency(%q<sniff>, ["= 0.0.3"])
+      s.add_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
+      s.add_dependency(%q<sniff>, ["= 0.0.5"])
       s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
+      s.add_dependency(%q<earth>, ["= 0.0.7"])
     end
   else
     s.add_dependency(%q<rake>, [">= 0"])
@@ -94,8 +72,10 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<jeweler>, ["= 1.4.0"])
     s.add_dependency(%q<cucumber>, ["= 0.8.3"])
     s.add_dependency(%q<rdoc>, [">= 0"])
-    s.add_dependency(%q<sniff>, ["= 0.0.3"])
+    s.add_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
+    s.add_dependency(%q<sniff>, ["= 0.0.5"])
     s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
+    s.add_dependency(%q<earth>, ["= 0.0.7"])
   end
 end
 
