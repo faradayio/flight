@@ -19,10 +19,9 @@ GEM
       activesupport (>= 3.0.0.beta)
     blockenspiel (0.3.2)
     builder (2.1.2)
-    characterizable (0.0.11)
+    characterizable (0.0.12)
       activesupport (>= 2.3.5)
       blockenspiel (>= 0.3.2)
-      to_json_fix (>= 0.0.1)
     cohort_scope (0.0.5)
       activerecord (>= 3.0.0.beta2)
       activesupport (>= 3.0.0.beta2)
@@ -149,7 +148,6 @@ GEM
     timeframe (0.0.1)
       activesupport (= 3.0.0.beta4)
       andand
-    to_json_fix (0.0.2)
     trollop (1.16.2)
     tzinfo (0.3.22)
     verbs (2.0.8)
@@ -164,12 +162,18 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activerecord (= 3.0.0.beta4)
   bundler (>= 1.0.0.beta.2)
+  characterizable (= 0.0.12)
   cucumber (= 0.8.3)
+  data_miner (= 0.5.2)
   earth (= 0.0.7)
+  falls_back_on (= 0.0.2)
   jeweler (= 1.4.0)
+  leap (= 0.3.3)
   rake
   rdoc
   rspec (= 2.0.0.beta.17)
   sniff (= 0.0.5)
+  summary_judgement (= 1.3.8)
   weighted_average (= 0.0.4)

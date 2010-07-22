@@ -22,7 +22,7 @@ begin
     gem.test_files = Dir.glob(File.join('features', '**', '*.rb')) +
       Dir.glob(File.join('features', '**', '*.feature')) +
       Dir.glob(File.join('lib', 'test_support', '**/*.rb'))
-    gem.add_development_dependency 'activerecord', '3.0.0.beta.4'
+    gem.add_development_dependency 'activerecord', '3.0.0.beta4'
     gem.add_development_dependency 'bundler', '>=1.0.0.beta.2'
     gem.add_development_dependency 'cucumber', '=0.8.3'
     gem.add_development_dependency 'jeweler', '=1.4.0'
