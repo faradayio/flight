@@ -1,4 +1,4 @@
-require 'activerecord'
+require 'active_record'
 require 'falls_back_on'
 require 'flight'
 require 'sniff'

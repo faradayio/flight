@@ -33,8 +33,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{A carbon model}
   s.test_files = [
-    "features/step_definitions/carbon_steps.rb",
-     "features/support/env.rb",
+    "features/support/env.rb",
      "features/flight_committees.feature",
      "features/flight_emissions.feature",
      "lib/test_support/db/schema.rb",
@@ -53,7 +52,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
-      s.add_development_dependency(%q<sniff>, ["= 0.0.5"])
+      s.add_development_dependency(%q<sniff>, ["= 0.0.6"])
       s.add_runtime_dependency(%q<characterizable>, ["= 0.0.12"])
       s.add_runtime_dependency(%q<data_miner>, ["= 0.5.2"])
       s.add_runtime_dependency(%q<earth>, ["= 0.0.7"])
@@ -69,7 +68,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<rdoc>, [">= 0"])
       s.add_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
-      s.add_dependency(%q<sniff>, ["= 0.0.5"])
+      s.add_dependency(%q<sniff>, ["= 0.0.6"])
       s.add_dependency(%q<characterizable>, ["= 0.0.12"])
       s.add_dependency(%q<data_miner>, ["= 0.5.2"])
       s.add_dependency(%q<earth>, ["= 0.0.7"])
@@ -86,7 +85,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rake>, [">= 0"])
     s.add_dependency(%q<rdoc>, [">= 0"])
     s.add_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
-    s.add_dependency(%q<sniff>, ["= 0.0.5"])
+    s.add_dependency(%q<sniff>, ["= 0.0.6"])
     s.add_dependency(%q<characterizable>, ["= 0.0.12"])
     s.add_dependency(%q<data_miner>, ["= 0.5.2"])
     s.add_dependency(%q<earth>, ["= 0.0.7"])
