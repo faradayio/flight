@@ -1,3 +1,15 @@
+PATH
+  remote: .
+  specs:
+    flight (0.0.8)
+      characterizable (= 0.0.12)
+      data_miner (= 0.5.2)
+      earth (= 0.0.7)
+      falls_back_on (= 0.0.2)
+      leap (= 0.3.3)
+      summary_judgement (= 1.3.8)
+      weighted_average (= 0.0.4)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -169,6 +181,7 @@ DEPENDENCIES
   data_miner (= 0.5.2)
   earth (= 0.0.7)
   falls_back_on (= 0.0.2)
+  flight!
   jeweler (= 1.4.0)
   leap (= 0.3.3)
   rake
