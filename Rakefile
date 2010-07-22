@@ -34,7 +34,7 @@ begin
     gem.add_dependency 'data_miner', '= 0.5.2' unless ENV['LOCAL_DATA_MINER']
     gem.add_dependency 'earth', '=0.0.7'
     gem.add_dependency 'falls_back_on', '= 0.0.2'
-    gem.add_dependency 'leap', '= 0.3.3' unless ENV['LOCAL_LEAP']
+    gem.add_dependency 'leap', '= 0.4.1' unless ENV['LOCAL_LEAP']
     gem.add_dependency 'summary_judgement', '= 1.3.8'
     gem.add_dependency 'weighted_average', '=0.0.4'
   end

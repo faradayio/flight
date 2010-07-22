@@ -57,7 +57,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<data_miner>, ["= 0.5.2"])
       s.add_runtime_dependency(%q<earth>, ["= 0.0.7"])
       s.add_runtime_dependency(%q<falls_back_on>, ["= 0.0.2"])
-      s.add_runtime_dependency(%q<leap>, ["= 0.3.3"])
+      s.add_runtime_dependency(%q<leap>, ["= 0.4.1"])
       s.add_runtime_dependency(%q<summary_judgement>, ["= 1.3.8"])
       s.add_runtime_dependency(%q<weighted_average>, ["= 0.0.4"])
     else
@@ -73,7 +73,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<data_miner>, ["= 0.5.2"])
       s.add_dependency(%q<earth>, ["= 0.0.7"])
       s.add_dependency(%q<falls_back_on>, ["= 0.0.2"])
-      s.add_dependency(%q<leap>, ["= 0.3.3"])
+      s.add_dependency(%q<leap>, ["= 0.4.1"])
       s.add_dependency(%q<summary_judgement>, ["= 1.3.8"])
       s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
     end
@@ -90,7 +90,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<data_miner>, ["= 0.5.2"])
     s.add_dependency(%q<earth>, ["= 0.0.7"])
     s.add_dependency(%q<falls_back_on>, ["= 0.0.2"])
-    s.add_dependency(%q<leap>, ["= 0.3.3"])
+    s.add_dependency(%q<leap>, ["= 0.4.1"])
     s.add_dependency(%q<summary_judgement>, ["= 1.3.8"])
     s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
   end
