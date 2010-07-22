@@ -3,6 +3,10 @@ module BrighterPlanet
     extend self
 
     def included(base)
+      require 'cohort_scope'
+      require 'falls_back_on'
+      require 'falls_back_on/active_record_ext'
+
       require 'flight/carbon_model'
       require 'flight/characterization'
       require 'flight/data'
