@@ -1,3 +1,5 @@
+require 'characterizable'
+
 module BrighterPlanet
   module Flight
     module Characterization

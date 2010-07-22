@@ -1,3 +1,5 @@
+require 'summary_judgement'
+
 module BrighterPlanet
   module Flight
     module Summarization

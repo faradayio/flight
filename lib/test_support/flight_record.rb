@@ -1,4 +1,7 @@
+require 'activerecord'
+require 'falls_back_on'
 require 'flight'
+require 'sniff'
 
 class FlightRecord < ActiveRecord::Base
   include Sniff::Emitter

@@ -1,3 +1,4 @@
+require 'leap'
 require 'weighted_average'
 
 module BrighterPlanet
