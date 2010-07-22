@@ -15,7 +15,7 @@ module BrighterPlanet
     end
     def flight_model
       if Object.const_defined? 'Flight'
-        Flight
+        ::Flight
       elsif Object.const_defined? 'FlightRecord'
         FlightRecord
       else
