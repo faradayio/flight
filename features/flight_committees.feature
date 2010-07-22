@@ -16,5 +16,5 @@ Feature: Flight Committee Calculations
     And the adjusted_distance committee should be close to <adjusted_distance>, +/-1
     Examples:
       | source | dest | airline | date       | aircraft | fuel  | fuel_per_segment | adjusted_distance_per_segment | load_factor | passengers | adjusted_distance |
-      | DTW    | SFO  | UA      | 2010-06-25 | A320     | 24676 | 7612             | 1341                          | 0.801       | 120        | 2241              |
+      | DTW    | SFO  | UA      | 2010-06-25 | A320     | 24676 | 7612             | 1341                          | 0.788       | 118        | 2241              |
       | IAD    | CDG  | AF      | 2010-06-25 | A320     | 43477 | 13413            | 2492                          | 0.800       | 120        | 4161              |
