@@ -28,6 +28,7 @@ module BrighterPlanet
 
           has :creation_date, :hidden => true
         end
+        base.add_implicit_characteristics
       end
     end
   end
