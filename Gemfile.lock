@@ -161,7 +161,7 @@ DEPENDENCIES
   characterizable (= 0.0.12)
   cucumber (= 0.8.3)
   data_miner (= 0.5.2)
-  earth (= 0.0.7)
+  earth (>= 0.0.7)
   falls_back_on (= 0.0.2)
   fast_timestamp (= 0.0.4)
   jeweler (= 1.4.0)
