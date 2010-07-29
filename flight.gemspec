@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{flight}
-  s.version = "0.0.12"
+  s.version = "0.0.13"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling", "Derek Kastner"]
-  s.date = %q{2010-07-28}
+  s.date = %q{2010-07-29}
   s.description = %q{A software model in Ruby for the greenhouse gas emissions of a flight}
   s.email = %q{andy@rossmeissl.net}
   s.extra_rdoc_files = [
@@ -62,6 +62,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<summary_judgement>, ["= 1.3.8"])
       s.add_runtime_dependency(%q<timeframe>, ["= 0.0.8"])
       s.add_runtime_dependency(%q<weighted_average>, ["= 0.0.4"])
+      s.add_runtime_dependency(%q<cohort_scope>, ["~> 0.0"])
     else
       s.add_dependency(%q<activerecord>, ["= 3.0.0.beta4"])
       s.add_dependency(%q<bundler>, [">= 1.0.0.beta.2"])
@@ -80,6 +81,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<summary_judgement>, ["= 1.3.8"])
       s.add_dependency(%q<timeframe>, ["= 0.0.8"])
       s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
+      s.add_dependency(%q<cohort_scope>, ["~> 0.0"])
     end
   else
     s.add_dependency(%q<activerecord>, ["= 3.0.0.beta4"])
@@ -99,6 +101,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<summary_judgement>, ["= 1.3.8"])
     s.add_dependency(%q<timeframe>, ["= 0.0.8"])
     s.add_dependency(%q<weighted_average>, ["= 0.0.4"])
+    s.add_dependency(%q<cohort_scope>, ["~> 0.0"])
   end
 end
 

@@ -39,6 +39,7 @@ begin
     gem.add_dependency 'summary_judgement', '= 1.3.8'
     gem.add_dependency 'timeframe', '= 0.0.8'
     gem.add_dependency 'weighted_average', '=0.0.4'
+    gem.add_dependency 'cohort_scope', '~> 0.0'
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
