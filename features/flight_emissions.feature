@@ -8,7 +8,7 @@ Feature: Flight Emissions Calculations
     And it has "date" of "<date>"
     And it used "aircraft.icao_code" "<aircraft>"
     When emissions are calculated
-    Then the emission value should be within 10 kgs of <emission>
+    Then the emission value should be within 1 kgs of <emission>
     Examples:
       | source | dest | airline | date       | aircraft | emission |
       | DTW    | SFO  | UA      | 2010-06-25 | A320     | 1153     |
