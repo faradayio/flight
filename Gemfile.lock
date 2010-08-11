@@ -166,7 +166,7 @@ DEPENDENCIES
   falls_back_on (= 0.0.2)
   fast_timestamp (= 0.0.4)
   jeweler (= 1.4.0)
-  leap (= 0.4.1)
+  leap (>= 0.4.1)
   rake
   rdoc
   rspec (= 2.0.0.beta.17)
