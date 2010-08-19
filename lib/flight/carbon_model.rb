@@ -205,33 +205,35 @@ module BrighterPlanet
             end
           end
           
-          committee :domesticity do
-            quorum 'from airports', :needs => [:origin_airport, :destination_airport] do |characteristics|
-              if [characteristics[:origin_airport], characteristics[:destination_airport]].all?(&:united_states?)
-                FlightDomesticity.find_by_name('domestic')
-              elsif [characteristics[:origin_airport], characteristics[:destination_airport]].any?(&:united_states?)
-                FlightDomesticity.find_by_name('international')
-              end
-            end
-            
-            quorum 'from origin', :needs => :origin_airport do |characteristics|
-              if characteristics[:origin_airport].all_flights_from_here_domestic?
-                FlightDomesticity.find_by_name('domestic')
-              end
-            end
-            
-            quorum 'from destination', :needs => :destination_airport do |characteristics|
-              if characteristics[:destination_airport].all_flights_to_here_domestic?
-                FlightDomesticity.find_by_name('domestic')
-              end
-            end
-            
-            quorum 'from airline', :needs => :airline do |characteristics|
-              if characteristics[:airline].all_flights_domestic?
-                FlightDomesticity.find_by_name('domestic')
-              end
-            end
-          end
+          # Disabling this for now because domesticity is pretty useless
+          # FIXME TODO make domesticity non-us-centric and check that data's ok
+          # committee :domesticity do
+          #   quorum 'from airports', :needs => [:origin_airport, :destination_airport] do |characteristics|
+          #     if [characteristics[:origin_airport], characteristics[:destination_airport]].all?(&:united_states?)
+          #       FlightDomesticity.find_by_name('domestic')
+          #     elsif [characteristics[:origin_airport], characteristics[:destination_airport]].any?(&:united_states?)
+          #       FlightDomesticity.find_by_name('international')
+          #     end
+          #   end
+          #   
+          #   quorum 'from origin', :needs => :origin_airport do |characteristics|
+          #     if characteristics[:origin_airport].all_flights_from_here_domestic?
+          #       FlightDomesticity.find_by_name('domestic')
+          #     end
+          #   end
+          #   
+          #   quorum 'from destination', :needs => :destination_airport do |characteristics|
+          #     if characteristics[:destination_airport].all_flights_to_here_domestic?
+          #       FlightDomesticity.find_by_name('domestic')
+          #     end
+          #   end
+          #   
+          #   quorum 'from airline', :needs => :airline do |characteristics|
+          #     if characteristics[:airline].all_flights_domestic?
+          #       FlightDomesticity.find_by_name('domestic')
+          #     end
+          #   end
+          # end
           
           committee :seat_class_multiplier do
             quorum 'from seat class', :needs => :seat_class do |characteristics|
