@@ -1,3 +1,3 @@
 "iata_code","name","city","country_name","country_iso_3166_code","latitude","longitude","distance","distance_units","load_factor","freight_share","payload","payload_units","international_origin","international_destination","seats"
-"DCA","National DC Intl","Washington","UNITED STATES","US","40.000","-80.000","100","kilometres","0.9","0.01","10100","kilograms","0","0","111"
-"JFK","JFK NY Internatl","New York","UNITED STATES","US","40.8985074","-80.000","550","kilometres","0.9","0.055","10600","kilograms","1","0","111"
+"ADA","American Domestic Airport","Anytown","UNITED STATES","US","40.000","-80.000","100","kilometres","0.9","0.01","10100","kilograms","0","0","111"
+"AIA","American International Airprot","Somewhere Else","UNITED STATES","US","40.8985074","-80.000","550","kilometres","0.9","0.055","10600","kilograms","1","0","111"

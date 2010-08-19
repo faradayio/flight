@@ -3,7 +3,7 @@ Feature: Flight Committee Calculations
 
   Scenario: Cohort committee from t100 with usable characteristics
     Given a flight emitter
-    And a characteristic "origin_airport.iata_code" of "JFK"
+    And a characteristic "origin_airport.iata_code" of "AIA"
     When the "cohort" committee is calculated
     Then the conclusion of the committee should have a record with "count" equal to "1"
 
@@ -72,8 +72,8 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<freight share>"
     Examples:
       | origin | freight share |
-      | DCA    | 0.010         |
-      | JFK    | 0.099         |
+      | ADA    | 0.010         |
+      | AIA    | 0.099         |
 
   Scenario Outline: Freight share committee from default
     Given a flight emitter
@@ -119,7 +119,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<distance>"
     Examples:
       | origin | destination | distance |
-      | DCA    | JFK         | 53.99568 |
+      | ADA    | AIA         | 53.99568 |
 
   Scenario Outline: Distance committee from distance class
     Given a flight emitter
@@ -129,7 +129,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<distance>"
     Examples:
       | distance_class | distance |
-      | short          | 53.99568 |
+      | petite         | 53.99568 |
 
   Scenario Outline: Distance committee from distance estimate
     Given a flight emitter
@@ -150,7 +150,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<distance>"
     Examples:
       | origin | destination | distance |
-      | DCA    | JFK         | 53.99568 |
+      | ADA    | AIA         | 53.99568 |
 
   Scenario Outline: Adjusted distance committee
     Given a flight emitter
@@ -173,7 +173,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<load_factor>"
     Examples:
       | origin | load_factor |
-      | DCA    | 0.01        |
+      | ADA    | 0.01        |
 
   Scenario Outline: Load factor committee from default
     Given a flight emitter
@@ -208,11 +208,11 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<seats>"
     Examples:
       | origin | seats |
-      | DCA    | 111   |
+      | AFA    | 111   |
 
   Scenario Outline: Seats commitee from aircraft class
     Given a flight emitter
-    And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "PJ"
+    And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should be "111"
@@ -255,7 +255,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
     Examples:
       | code | m3 | m2 | m1  | b |
-      | PJ   | 0  | 0  | 1.5 | 0 |
+      | EX   | 0  | 0  | 1.5 | 0 |
 
   Scenario Outline: Fuel use coefficients commitee from default
     Given a flight emitter
@@ -279,7 +279,7 @@ Feature: Flight Committee Calculations
   Scenario Outline: Fuel per segment committee
     Given a flight emitter
     And a characteristic "adjusted_distance_per_segment" of "100"
-    And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "PJ"
+    And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
     When the "fuel_per_segment" committee is calculated
     Then the conclusion of the committee should be "150"
 

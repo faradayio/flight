@@ -1,3 +1,3 @@
 "iata_code","name","distance","distance_units","load_factor","freight_share","payload","payload_units","seats"
-"AA","American Airlines","100","kilometres","0.9","0.01","10100","kilograms","111"
-"DL","Delta Airlines","1000","kilometres","0.9","0.10","11100","kilograms","111"
+"DA","Domestic Airlines","100","kilometres","0.9","0.01","10100","kilograms","111"
+"IA","International Airways","1000","kilometres","0.9","0.10","11100","kilograms","111"
