@@ -33,11 +33,11 @@ module BrighterPlanet
           end
           
           committee :fuel_per_segment do # returns kg fuel
-            quorum 'from adjusted distance and fuel use formula and emplanements and trips', :needs => [:adjusted_distance_per_segment, :fuel_use_coefficients, :endpoint_fuel] do |characteristics|
+            quorum 'from adjusted distance per segment and fuel use coefficients', :needs => [:adjusted_distance_per_segment, :fuel_use_coefficients] do |characteristics|
               characteristics[:fuel_use_coefficients][:m3].to_f * characteristics[:adjusted_distance_per_segment].to_f ** 3 +
                 characteristics[:fuel_use_coefficients][:m2].to_f * characteristics[:adjusted_distance_per_segment].to_f ** 2 +
                 characteristics[:fuel_use_coefficients][:m1].to_f * characteristics[:adjusted_distance_per_segment].to_f +
-                characteristics[:endpoint_fuel].to_f
+                characteristics[:fuel_use_coefficients][:endpoint_fuel].to_f
             end
           end
           
@@ -47,33 +47,19 @@ module BrighterPlanet
             end
           end
           
-          committee :endpoint_fuel do
-            quorum 'from aircraft', :needs => :aircraft do |characteristics|
-              characteristics[:aircraft].endpoint_fuel
-            end
-            
-            quorum 'from aircraft class', :needs => :aircraft_class do |characteristics|
-              characteristics[:aircraft_class].endpoint_fuel
-            end
-            
-            quorum 'default' do
-              Aircraft.fallback.andand.endpoint_fuel
-            end
-          end
-          
           committee :fuel_use_coefficients do
             quorum 'from aircraft', :needs => :aircraft do |characteristics|
-              characteristics[:aircraft].attributes.symbolize_keys.slice(:m1, :m2, :m3)
+              characteristics[:aircraft].attributes.symbolize_keys.slice(:m1, :m2, :m3, :endpoint_fuel)
             end
             
             quorum 'from aircraft class', :needs => :aircraft_class do |characteristics|
-              characteristics[:aircraft_class].attributes.symbolize_keys.slice(:m1, :m2, :m3)
+              characteristics[:aircraft_class].attributes.symbolize_keys.slice(:m1, :m2, :m3, :endpoint_fuel)
             end
             
             quorum 'default' do
               fallback = Aircraft.fallback
               if fallback
-                fallback.attributes.symbolize_keys.slice(:m1, :m2, :m3)
+                fallback.attributes.symbolize_keys.slice(:m1, :m2, :m3, :endpoint_fuel)
               end
             end
           end
