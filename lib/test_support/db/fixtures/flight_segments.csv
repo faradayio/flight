@@ -1,3 +1,3 @@
 "row_hash","departures_performed","payload","payload_units","passengers","freight","freight_units","load_factor","freight_share","distance","distance_units","airline_iata_code","unique_carrier_name","origin_airport_iata_code","dest_airport_iata_code","year","quarter","month","bts_aircraft_type_code","total_seats","seats"
-"1","1","10100","kilograms","100","100","kilograms","0.901","0.010","100","kilometres","AA","American Airlines","DCA","JFK","2010","3","8","1","111","111"
-"2","1","11100","kilograms","100","1100","kilograms","0.901","0.099","1000","kilometres","DL","Delta Airlines","JFK","LHR","2010","3","8","2","111","111"
+"1","1","10100","kilograms","100","100","kilograms","0.901","0.010","100","kilometres","DA","Domestic Airlines","ADA","AWA","2010","3","8","1","111","111"
+"2","1","11100","kilograms","100","1100","kilograms","0.901","0.099","1000","kilometres","IA","International Airways","AIA","WEA","2010","3","8","2","111","111"
