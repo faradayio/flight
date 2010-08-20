@@ -237,7 +237,7 @@ module BrighterPlanet
             end
             
             quorum 'from timeframe' do |characteristics, timeframe|
-              timeframe.andand.from
+              timeframe.present? ? timeframe.from : nil
             end
           end
           

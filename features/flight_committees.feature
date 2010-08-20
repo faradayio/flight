@@ -23,14 +23,11 @@ Feature: Flight Committee Calculations
       | timeframe             | date       |
       | 2010-07-15/2010-07-20 | 2010-07-15 |
 
-  Scenario Outline: Date committee from nil timeframe
+  Scenario: Date committee from nil timeframe
     Given a flight emitter
-    And a characteristic "timeframe" of "<timeframe>"
+    And a characteristic "timeframe" of ""
     When the "date" committee is calculated
-    Then the conclusion of the committee should be "<date>"
-    Examples:
-      | timeframe             | date       |
-      |                       |            |
+    Then the conclusion of the committee should be nil
 
   Scenario Outline: Date committee from creation date
     Given a flight emitter
