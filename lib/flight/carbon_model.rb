@@ -242,11 +242,13 @@ module BrighterPlanet
           end
           
           committee :cohort do
-            quorum 'from t100', :appreciates => FlightSegment::INPUT_CHARACTERISTICS do |characteristics|
-              needed_characteristics = characteristics
-              needed_characteristics.
-                reject! { |k,v| !FlightSegment::INPUT_CHARACTERISTICS.include?(k) }
-              cohort = FlightSegment.big_cohort needed_characteristics
+            quorum 'from t100', :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline] do |characteristics|
+              provided_characteristics = [:origin_airport, :destination_airport, :aircraft, :airline].
+                inject(ActiveSupport::OrderedHash.new) do |memo, characteristic_name|
+                  memo[characteristic_name] = characteristics[characteristic_name]
+                  memo
+                end
+              cohort = FlightSegment.strict_cohort provided_characteristics
               if cohort.any?
                 cohort
               else
