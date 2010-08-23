@@ -34,10 +34,10 @@ module BrighterPlanet
           
           committee :fuel_per_segment do # returns kg fuel
             quorum 'from adjusted distance per segment and fuel use coefficients', :needs => [:adjusted_distance_per_segment, :fuel_use_coefficients] do |characteristics|
-              characteristics[:fuel_use_coefficients][:m3].to_f * characteristics[:adjusted_distance_per_segment].to_f ** 3 +
-                characteristics[:fuel_use_coefficients][:m2].to_f * characteristics[:adjusted_distance_per_segment].to_f ** 2 +
-                characteristics[:fuel_use_coefficients][:m1].to_f * characteristics[:adjusted_distance_per_segment].to_f +
-                characteristics[:fuel_use_coefficients][:endpoint_fuel].to_f
+              characteristics[:fuel_use_coefficients].m3.to_f * characteristics[:adjusted_distance_per_segment].to_f ** 3 +
+                characteristics[:fuel_use_coefficients].m2.to_f * characteristics[:adjusted_distance_per_segment].to_f ** 2 +
+                characteristics[:fuel_use_coefficients].m1.to_f * characteristics[:adjusted_distance_per_segment].to_f +
+                characteristics[:fuel_use_coefficients].endpoint_fuel.to_f
             end
           end
           
@@ -49,17 +49,19 @@ module BrighterPlanet
           
           committee :fuel_use_coefficients do
             quorum 'from aircraft', :needs => :aircraft do |characteristics|
-              characteristics[:aircraft].attributes.symbolize_keys.slice(:m1, :m2, :m3, :endpoint_fuel)
+              aircraft = characteristics[:aircraft]
+              FuelUseCoefficient.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
             end
             
             quorum 'from aircraft class', :needs => :aircraft_class do |characteristics|
-              characteristics[:aircraft_class].attributes.symbolize_keys.slice(:m1, :m2, :m3, :endpoint_fuel)
+              aircraft_class = characteristics[:aircraft_class]
+              FuelUseCoefficient.new aircraft_class.m3, aircraft_class.m2, aircraft_class.m1, aircraft_class.endpoint_fuel
             end
             
             quorum 'default' do
               fallback = Aircraft.fallback
               if fallback
-                fallback.attributes.symbolize_keys.slice(:m1, :m2, :m3, :endpoint_fuel)
+                FuelUseCoefficient.new fallback.m3, fallback.m2, fallback.m1, fallback.endpoint_fuel
               end
             end
           end
@@ -258,6 +260,8 @@ module BrighterPlanet
           end
         end
       end
+      
+      class FuelUseCoefficient < Struct.new(:m3, :m2, :m1, :endpoint_fuel); end
     end
   end
 end
