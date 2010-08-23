@@ -29,7 +29,7 @@ begin
     gem.add_development_dependency 'rake'
     gem.add_development_dependency 'rdoc'
     gem.add_development_dependency 'rspec', '= 2.0.0.beta.17'
-    gem.add_development_dependency 'sniff', '=0.1.2' unless ENV['LOCAL_SNIFF']
+    gem.add_development_dependency 'sniff', '=0.1.8' unless ENV['LOCAL_SNIFF']
     gem.add_dependency 'emitter', '>=0.0.4' unless ENV['LOCAL_EMITTER']
   end
   Jeweler::GemcutterTasks.new
