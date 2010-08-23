@@ -72,7 +72,7 @@ Feature: Flight Committee Calculations
       | ADA    | 0.010         |
       | AIA    | 0.099         |
 
-  Scenario Outline: Freight share committee from default
+  Scenario: Freight share committee from default
     Given a flight emitter
     When the "freight_share" committee is calculated
     Then the committee should have used quorum "default"
@@ -83,17 +83,17 @@ Feature: Flight Committee Calculations
     When the "fuel_type" committee is calculated
     Then the conclusion of the committee should have a record with "emission_factor" equal to "2.52714"
 
-  Scenario Outline: Emission factor committee
+  Scenario: Emission factor committee
     Given a flight emitter
     When the "fuel_type" committee is calculated
     And the "emission_factor" committee is calculated
-    Then the conclusion of the committee should have a record with "emission_factor" equal to "3.129"
+    Then the conclusion of the committee should be "3.1293"
 
-  Scenario Outline: Radiative forcing index committee
+  Scenario: Radiative forcing index committee
     Given a flight emitter
-    When the "fuel_type" commitee is calculated
+    When the "fuel_type" committee is calculated
     And the "radiative_forcing_index" committee is calculated
-    Then the conclusion of the commitee should be "2"
+    Then the conclusion of the committee should be "2"
 
   Scenario: Emplanements per trip committee from default
     Given a flight emitter
@@ -108,15 +108,14 @@ Feature: Flight Committee Calculations
 
   Scenario Outline: Distance committee from cohort
     Given a flight emitter
-    And a characteristic "origin_airport.iata_code" of "<origin>"
-    And a characteristic "destination_airport.iata_code" of "<destination>"
+    And a characteristic "airline.iata_code" of "<airline>"
     When the "cohort" committee is calculated
     And the "distance" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<distance>"
     Examples:
-      | origin | destination | distance |
-      | ADA    | AIA         | 53.99568 |
+      | airline | distance |
+      | DA      | 53.99568 |
 
   Scenario Outline: Distance committee from distance class
     Given a flight emitter
@@ -170,33 +169,33 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<load_factor>"
     Examples:
       | origin | load_factor |
-      | ADA    | 0.01        |
+      | ADA    | 0.901       |
 
-  Scenario Outline: Load factor committee from default
+  Scenario: Load factor committee from default
     Given a flight emitter
     When the "load_factor" committee is calculated
-    Then the committee should have used quorum "from default"
-    And the conclustion of the committee should be "0.901"
+    Then the committee should have used quorum "default"
+    And the conclusion of the committee should be "0.901"
 
-  Scenario Outline: Seats commitee from aircraft
+  Scenario Outline: Seats committee from aircraft
     Given a flight emitter
-    And a characteristic "aircraft.bts_aircraft_code" of "<code>"
+    And a characteristic "aircraft.icao_code" of "<code>"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft"
     And the conclusion of the committee should be "<seats>"
     Examples:
       | code | seats |
-      | 1    | 111   |
-      | 2    | 111   |
+      | FM1  | 111   |
+      | BA1  | 111   |
 
-  Scenario Outline: Seats commitee from seats estimate
+  Scenario: Seats committee from seats estimate
     Given a flight emitter
     And a characteristic "seats_estimate" of "100"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from seats estimate"
     And the conclusion of the committee should be "100"
 
-  Scenario Outline: Seats commitee from cohort
+  Scenario Outline: Seats committee from cohort
     Given a flight emitter
     And a characteristic "origin_airport.iata_code" of "<origin>"
     When the "cohort" committee is calculated
@@ -205,31 +204,31 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<seats>"
     Examples:
       | origin | seats |
-      | AFA    | 111   |
+      | ADA    | 111   |
 
-  Scenario Outline: Seats commitee from aircraft class
+  Scenario: Seats committee from aircraft class
     Given a flight emitter
     And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should be "111"
 
-  Scenario Outline: Seats commitee from default
+  Scenario: Seats committee from default
     Given a flight emitter
     When the "seats" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "111"
 
-  Scenario Outline: Passengers committee
+  Scenario: Passengers committee
     Given a flight emitter
     And a characteristic "seats" of "100"
     And a characteristic "load_factor" of "0.9"
     When the "passengers" committee is calculated
     Then the conclusion of the committee should be "90"
 
-  Scenario Outline: Fuel use coefficients commitee from aircraft
+  Scenario Outline: Fuel use coefficients committee from aircraft
     Given a flight emitter
-    And a characteristic "aircraft.bts_aircraft_type_code" of "<code>"
+    And a characteristic "aircraft.icao_code" of "<code>"
     When the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "from aircraft"
     And the conclusion of the committee should have a record with "m3" equal to "<m3>"
@@ -238,10 +237,10 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
     Examples:
       | code | m3 | m2 | m1 | b |
-      | 1    | 0  | 0  | 1  | 0 |
-      | 2    | 0  | 0  | 2  | 0 |
+      | FM1  | 0  | 0  | 1  | 0 |
+      | BA1  | 0  | 0  | 2  | 0 |
 
-  Scenario Outline: Fuel use coefficients commitee from aircraft class
+  Scenario Outline: Fuel use coefficients committee from aircraft class
     Given a flight emitter
     And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "<code>"
     When the "fuel_use_coefficients" committee is calculated
@@ -254,7 +253,7 @@ Feature: Flight Committee Calculations
       | code | m3 | m2 | m1  | b |
       | EX   | 0  | 0  | 1.5 | 0 |
 
-  Scenario Outline: Fuel use coefficients commitee from default
+  Scenario Outline: Fuel use coefficients committee from default
     Given a flight emitter
     When the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "default"
@@ -266,21 +265,22 @@ Feature: Flight Committee Calculations
       | m3 | m2 | m1  | b |
       | 0  | 0  | 1.5 | 0 |
 
-  Scenario Outline: Adjusted distance per segment committee
+  Scenario: Adjusted distance per segment committee
     Given a flight emitter
     And a characteristic "adjusted_distance" of "100"
-    And a characteristic "emplanements" of "2"
+    And a characteristic "emplanements_per_trip" of "2"
     When the "adjusted_distance_per_segment" committee is calculated
     Then the conclusion of the committee should be "50"
 
-  Scenario Outline: Fuel per segment committee
+  Scenario: Fuel per segment committee
     Given a flight emitter
     And a characteristic "adjusted_distance_per_segment" of "100"
     And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
-    When the "fuel_per_segment" committee is calculated
+    When the "fuel_use_coefficients" committee is calculated
+    And the "fuel_per_segment" committee is calculated
     Then the conclusion of the committee should be "150"
 
-  Scenario Outline: Fuel committee
+  Scenario: Fuel committee
     Given a flight emitter
     And a characteristic "fuel_per_segment" of "100"
     And a characteristic "emplanements_per_trip" of "2"
@@ -305,7 +305,7 @@ Feature: Flight Committee Calculations
       | fuel | passengers | seat_mult | ef | rfi | freight | date       | emission |
       | 100  | 100        | 1.5       | 10 | 2   | 0.10    | 2010-07-15 | 27       |
 
-  Scenario Outline: Emission committee from default
+  Scenario: Emission committee from default
     Given a flight emitter
     When the "emission" committee is calculated
     Then the committee should have used quorum "default"
