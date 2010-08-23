@@ -1,3 +1,3 @@
-"bts_aircraft_type_code","brighter_planet_aircraft_class_code","manufacturer_name","name","fuel_use_aircraft_name","m3","m2","m1","endpoint_fuel","distance","load_factor","freight_share","payload","weighting","seats"
-"1","EX","Flying Machines","FM1","Flying Machines FM1","0","0","1","0","100","0.901","0.01","10100","100","111"
-"2","EX","Better Aircraft","BA1","Better Aircraft BA1","0","0","2","0","1000","0.901","0.10","11100","100","111"
+"icao_code","bts_aircraft_type_code","brighter_planet_aircraft_class_code","manufacturer_name","name","fuel_use_aircraft_name","m3","m2","m1","endpoint_fuel","distance","load_factor","freight_share","payload","weighting","seats"
+"FM1","1","EX","Flying Machines","FM1","Flying Machines FM1","0","0","1","0","100","0.901","0.01","10100","100","111"
+"BA1","2","EX","Better Aircraft","BA1","Better Aircraft BA1","0","0","2","0","1000","0.901","0.10","11100","100","111"
