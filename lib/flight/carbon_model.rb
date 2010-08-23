@@ -50,18 +50,18 @@ module BrighterPlanet
           committee :fuel_use_coefficients do
             quorum 'from aircraft', :needs => :aircraft do |characteristics|
               aircraft = characteristics[:aircraft]
-              FuelUseCoefficient.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
+              FuelUseEquation.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
             end
             
             quorum 'from aircraft class', :needs => :aircraft_class do |characteristics|
               aircraft_class = characteristics[:aircraft_class]
-              FuelUseCoefficient.new aircraft_class.m3, aircraft_class.m2, aircraft_class.m1, aircraft_class.endpoint_fuel
+              FuelUseEquation.new aircraft_class.m3, aircraft_class.m2, aircraft_class.m1, aircraft_class.endpoint_fuel
             end
             
             quorum 'default' do
               fallback = Aircraft.fallback
               if fallback
-                FuelUseCoefficient.new fallback.m3, fallback.m2, fallback.m1, fallback.endpoint_fuel
+                FuelUseEquation.new fallback.m3, fallback.m2, fallback.m1, fallback.endpoint_fuel
               end
             end
           end
@@ -261,7 +261,7 @@ module BrighterPlanet
         end
       end
       
-      class FuelUseCoefficient < Struct.new(:m3, :m2, :m1, :endpoint_fuel); end
+      class FuelUseEquation < Struct.new(:m3, :m2, :m1, :endpoint_fuel); end
     end
   end
 end
