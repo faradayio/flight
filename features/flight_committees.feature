@@ -253,6 +253,20 @@ Feature: Flight Committee Calculations
       | code | m3 | m2 | m1  | b |
       | EX   | 0  | 0  | 1.5 | 0 |
 
+  Scenario Outline: Fuel use coefficients committee from cohort
+    Given a flight emitter
+    And a characteristic "origin_airport.iata_code" of "<origin>"
+    When the "cohort" committee is calculated
+    And the "fuel_use_coefficients" committee is calculated
+    Then the committee should have used quorum "from cohort"
+    And the conclusion of the committee should have a record with "m3" equal to "<m3>"
+    And the conclusion of the committee should have a record with "m2" equal to "<m2>"
+    And the conclusion of the committee should have a record with "m1" equal to "<m1>"
+    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
+    Examples:
+      | origin | m3 | m2 | m1  | b |
+      | AIA    | 0  | 0  | 2   | 0 |
+
   Scenario Outline: Fuel use coefficients committee from default
     Given a flight emitter
     When the "fuel_use_coefficients" committee is calculated

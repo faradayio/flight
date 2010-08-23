@@ -58,6 +58,22 @@ module BrighterPlanet
               FuelUseEquation.new aircraft_class.m3, aircraft_class.m2, aircraft_class.m1, aircraft_class.endpoint_fuel
             end
             
+            quorum 'from cohort', :needs => :cohort do |characteristics|
+              for each flight_segment in the cohort
+                look up the aircraft based on bts_aircraft_type_code
+                look up m3, m2, m1, and endpoint fuel from the aircraft
+              end
+              
+              m3 = characteristics[:cohort].weighted_average :m2, :weighted_by => :passengers
+              m2 = characteristics[:cohort].weighted_average :m2, :weighted_by => :passengers
+              m1 = characteristics[:cohort].weighted_average :m1, :weighted_by => :passengers
+              endpoint_fuel = characteristics[:cohort].weighted_average :endpoint_fuel, :weighted_by => :passengers
+              
+              if [m3, m2, m1, endpoint_fuel].all?(&:nonzero?)
+                FuelUseEquation.new m3, m2, m1, endpoint_fuel
+              end
+            end
+            
             quorum 'default' do
               fallback = Aircraft.fallback
               if fallback
