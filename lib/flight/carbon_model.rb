@@ -59,17 +59,38 @@ module BrighterPlanet
             end
             
             quorum 'from cohort', :needs => :cohort do |characteristics|
-              for each flight_segment in the cohort
-                look up the aircraft based on bts_aircraft_type_code
-                look up m3, m2, m1, and endpoint fuel from the aircraft
+              flight_segments = characteristics[:cohort]
+              
+              passengers = flight_segments.inject(0) do |passengers, flight_segment|
+                passengers + flight_segment.passengers
+              end
+
+              m3 = flight_segments.inject(0) do |m3, flight_segment|
+                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
+                m3 + (aircraft.m3 * flight_segment.passengers)
               end
               
-              m3 = characteristics[:cohort].weighted_average :m2, :weighted_by => :passengers
-              m2 = characteristics[:cohort].weighted_average :m2, :weighted_by => :passengers
-              m1 = characteristics[:cohort].weighted_average :m1, :weighted_by => :passengers
-              endpoint_fuel = characteristics[:cohort].weighted_average :endpoint_fuel, :weighted_by => :passengers
-              
-              if [m3, m2, m1, endpoint_fuel].all?(&:nonzero?)
+              m2 = flight_segments.inject(0) do |m2, flight_segment|
+                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
+                m2 + (aircraft.m2 * flight_segment.passengers)
+              end
+
+              m1 = flight_segments.inject(0) do |m1, flight_segment|
+                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
+                m1 + (aircraft.m1 * flight_segment.passengers)
+              end
+
+              endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
+                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
+                endpoint_fuel + (aircraft.endpoint_fuel * flight_segment.passengers)
+              end
+
+              if [m3, m2, m1, endpoint_fuel, passengers].any?(&:nonzero?)
+                m3 = m3 / passengers
+                m2 = m2 / passengers
+                m1 = m1 / passengers
+                endpoint_fuel = endpoint_fuel / passengers
+
                 FuelUseEquation.new m3, m2, m1, endpoint_fuel
               end
             end
