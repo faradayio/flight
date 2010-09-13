@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling", "Derek Kastner"]
-  s.date = %q{2010-09-08}
+  s.date = %q{2010-09-13}
   s.description = %q{A software model in Ruby for the greenhouse gas emissions of a flight}
   s.email = %q{andy@rossmeissl.net}
   s.extra_rdoc_files = [
@@ -53,7 +53,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
-      s.add_development_dependency(%q<sniff>, ["= 0.1.8"])
+      s.add_development_dependency(%q<sniff>, ["= 0.1.13"])
       s.add_runtime_dependency(%q<emitter>, [">= 0.0.4"])
     else
       s.add_dependency(%q<activerecord>, ["= 3.0.0.beta4"])
@@ -63,7 +63,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<rdoc>, [">= 0"])
       s.add_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
-      s.add_dependency(%q<sniff>, ["= 0.1.8"])
+      s.add_dependency(%q<sniff>, ["= 0.1.13"])
       s.add_dependency(%q<emitter>, [">= 0.0.4"])
     end
   else
@@ -74,7 +74,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rake>, [">= 0"])
     s.add_dependency(%q<rdoc>, [">= 0"])
     s.add_dependency(%q<rspec>, ["= 2.0.0.beta.17"])
-    s.add_dependency(%q<sniff>, ["= 0.1.8"])
+    s.add_dependency(%q<sniff>, ["= 0.1.13"])
     s.add_dependency(%q<emitter>, [">= 0.0.4"])
   end
 end
