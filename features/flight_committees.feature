@@ -214,13 +214,13 @@ Feature: Flight Committee Calculations
     And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should be "117"
+    And the conclusion of the committee should be "116"
 
   Scenario: Seats committee from default
     Given a flight emitter
     When the "seats" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "117"
+    And the conclusion of the committee should be "116"
 
   Scenario: Passengers committee
     Given a flight emitter
