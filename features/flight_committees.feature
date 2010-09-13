@@ -141,7 +141,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<distance>"
     Examples:
       | airline | distance |
-      | DA      |  100.0   |
+      | DA      | 99.89200 |
       | IA      | 1000.0   |
 
   Scenario: Distance committee from default
