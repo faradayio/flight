@@ -13,7 +13,10 @@ module BrighterPlanet
             quorum 'from fuel and passengers with coefficients', 
               :needs => [:fuel, :passengers, :seat_class_multiplier, :emission_factor, 
                          :radiative_forcing_index, :freight_share, :date] do |characteristics, timeframe|
-              if timeframe.include? characteristics[:date]
+              date = characteristics[:date].is_a?(Date) ?
+                characteristics[:date] :
+                Date.parse(characteristics[:date].to_s)
+              if timeframe.include? date
                 #( kg fuel ) * ( kg CO2 / kg fuel ) = kg CO2
                 (characteristics[:fuel] / characteristics[:passengers] * characteristics[:seat_class_multiplier]) * characteristics[:emission_factor] * characteristics[:radiative_forcing_index] * (1 - characteristics[:freight_share])
               else
