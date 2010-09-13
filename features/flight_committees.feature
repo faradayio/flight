@@ -321,9 +321,3 @@ Feature: Flight Committee Calculations
     Examples:
       | fuel | passengers | seat_mult | ef | rfi | freight | date       | emission |
       | 100  | 100        | 1.5       | 10 | 2   | 0.10    | 2010-07-15 | 27       |
-
-  Scenario: Emission committee from default
-    Given a flight emitter
-    When the "emission" committee is calculated
-    Then the committee should have used quorum "default"
-    And the conclusion of the committee should be ""
