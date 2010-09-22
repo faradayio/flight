@@ -1,10 +1,7 @@
-require 'summary_judgement'
-
 module BrighterPlanet
   module Flight
     module Summarization
       def self.included(base)
-        base.extend SummaryJudgement
         base.summarize do |has|
           has.adjective 'one-way', :if => lambda { |flight| flight.trips == 1 }
           has.adjective 'round-trip', :if => lambda { |flight| flight.trips == 1 }

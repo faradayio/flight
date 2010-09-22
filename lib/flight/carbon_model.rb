@@ -1,4 +1,3 @@
-require 'leap'
 require 'timeframe'
 require 'weighted_average'
 
@@ -6,7 +5,6 @@ module BrighterPlanet
   module Flight
     module CarbonModel
       def self.included(base)
-        base.extend ::Leap::Subject
         base.extend FastTimestamp
         base.decide :emission, :with => :characteristics do
           committee :emission do
@@ -152,14 +150,14 @@ module BrighterPlanet
             end
       
             quorum 'default' do
-              BrighterPlanet::Flight.flight_model.fallback.andand.load_factor
+              base.fallback.andand.load_factor
             end
           end
           
           committee :adjusted_distance do # returns nautical miles
             quorum 'from distance', :needs => [:distance, :emplanements_per_trip] do |characteristics|
-              route_inefficiency_factor = BrighterPlanet::Flight.flight_model.research(:route_inefficiency_factor)
-              dogleg_factor = BrighterPlanet::Flight.flight_model.research(:dogleg_factor)
+              route_inefficiency_factor = base.research(:route_inefficiency_factor)
+              dogleg_factor = base.research(:dogleg_factor)
               characteristics[:distance] * route_inefficiency_factor * ( dogleg_factor ** (characteristics[:emplanements_per_trip] - 1) )
             end
           end
@@ -188,13 +186,13 @@ module BrighterPlanet
             end
             
             quorum 'default' do
-              BrighterPlanet::Flight.flight_model.fallback.distance_estimate.kilometres.to :nautical_miles
+              base.fallback.distance_estimate.kilometres.to :nautical_miles
             end
           end
           
           committee :emplanements_per_trip do # per trip
             quorum 'default' do
-              BrighterPlanet::Flight.flight_model.fallback.emplanements_per_trip_before_type_cast
+              base.fallback.emplanements_per_trip_before_type_cast
             end
           end
           
@@ -229,7 +227,7 @@ module BrighterPlanet
           
           committee :trips do
             quorum 'default' do
-              BrighterPlanet::Flight.flight_model.fallback.andand.trips_before_type_cast
+              base.fallback.andand.trips_before_type_cast
             end
           end
           
