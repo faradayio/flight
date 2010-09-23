@@ -2,3 +2,4 @@
 "1","ADA","AIA","DA","Domestic Airlines","1","185.2","kilometres","1","100","125","125","100","kilograms","10100","kilograms","0.80000","0.00990","2010","3","8"
 "2","AIA","WEA","IA","International Airways","2","1852","kilometres","1","100","125","125","1000","kilograms","11000","kilograms","0.80000","0.09091","2010","3","8"
 "3","WEA","AIA","IA","International Airways","3","1852","kilometres","1","100","100","100","1000","kilograms","11000","kilograms","1.00000","0.09091","2010","3","8"
+"4","AIA","WEA","IA","International Airways","99999","1852","kilometres","1","100","125","125","1000","kilograms","11000","kilograms","0.80000","0.09091","2010","3","8"

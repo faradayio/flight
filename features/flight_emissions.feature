@@ -11,4 +11,4 @@ Feature: Flight Emissions Calculations
     Then the emission value should be within "0.1" kgs of "<emission>"
     Examples:
       | source | dest | airline | date       | aircraft | emission |
-      | DCA    | JFK  | AA      | 2010-06-25 | 1        | 146.7    |
+      | DCA    | JFK  | AA      | 2010-06-25 | 1        | 148.4    |

@@ -69,7 +69,8 @@ module BrighterPlanet
               flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
                 bts_code = flight_segment.bts_aircraft_type_code
                 key = flight_segment.row_hash
-                hsh[key] = Aircraft.find_by_bts_aircraft_type_code bts_code
+                aircraft = Aircraft.find_by_bts_aircraft_type_code bts_code
+                hsh[key] = aircraft if aircraft
                 hsh
               end
               
@@ -103,9 +104,14 @@ module BrighterPlanet
                 m1 = Aircraft.fallback.m1
               end
 
-              endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
-                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
-                endpoint_fuel + (aircraft.endpoint_fuel * flight_segment.passengers)
+              if flight_segment_aircraft.values.map(&:endpoint_fuel).any?
+                endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
+                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                  aircraft_epfuel = aircraft.andand.endpoint_fuel || 0
+                  endpoint_fuel + (aircraft_epfuel * flight_segment.passengers)
+                end
+              else
+                endpoint_fuel = Aircraft.fallback.endpoint_fuel
               end
 
               if [m3, m2, m1, endpoint_fuel, passengers].any?(&:nonzero?)

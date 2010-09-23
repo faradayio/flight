@@ -5,7 +5,7 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     And a characteristic "origin_airport.iata_code" of "AIA"
     When the "cohort" committee is calculated
-    Then the conclusion of the committee should have a record with "count" equal to "1"
+    Then the conclusion of the committee should have a record with "count" equal to "2"
 
   Scenario: Cohort committee from t100 with no usable characteristics
     Given a flight emitter
@@ -76,7 +76,7 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "freight_share" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "0.06391"
+    And the conclusion of the committee should be "0.07065"
 
   Scenario: Fuel type committee from default
     Given a flight emitter
@@ -177,7 +177,7 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "load_factor" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "0.86667"
+    And the conclusion of the committee should be "0.85"
 
   Scenario Outline: Seats committee from aircraft
     Given a flight emitter
@@ -220,7 +220,7 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "seats" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "116"
+    And the conclusion of the committee should be "118"
 
   Scenario: Passengers committee
     Given a flight emitter
@@ -268,7 +268,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
     Examples:
       | origin | m3 | m2 | m1  | b |
-      | AIA    | 0  | 0  | 2   | 0 |
+      | AIA    | 0  | 0  | 1   | 0 |
 
   Scenario Outline: Fuel use coefficients committee from default
     Given a flight emitter
