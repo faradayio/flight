@@ -66,19 +66,41 @@ module BrighterPlanet
                 passengers + flight_segment.passengers
               end
 
-              m3 = flight_segments.inject(0) do |m3, flight_segment|
-                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
-                m3 + (aircraft.m3 * flight_segment.passengers)
+              flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
+                bts_code = flight_segment.bts_aircraft_type_code
+                key = flight_segment.row_hash
+                hsh[key] = Aircraft.find_by_bts_aircraft_type_code bts_code
+                hsh
               end
               
-              m2 = flight_segments.inject(0) do |m2, flight_segment|
-                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
-                m2 + (aircraft.m2 * flight_segment.passengers)
+              if flight_segment_aircraft.values.map(&:m3).any?
+                m3 = flight_segments.inject(0) do |m3, flight_segment|
+                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                  aircraft_m3 = aircraft.m3 || 0
+                  m3 + (aircraft_m3 * flight_segment.passengers)
+                end
+              else
+                m3 = Aircraft.fallback.m3
+              end
+              
+              if flight_segment_aircraft.values.map(&:m2).any?
+                m2 = flight_segments.inject(0) do |m2, flight_segment|
+                  aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
+                  aircraft_m2 = aircraft.m2 || 0
+                  m2 + (aircraft_m2 * flight_segment.passengers)
+                end
+              else
+                m2 = Aircraft.fallback.m2
               end
 
-              m1 = flight_segments.inject(0) do |m1, flight_segment|
-                aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
-                m1 + (aircraft.m1 * flight_segment.passengers)
+              if flight_segment_aircraft.values.map(&:m1).any?
+                m1 = flight_segments.inject(0) do |m1, flight_segment|
+                  aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
+                  aircraft_m1 = aircraft.m1 || 0
+                  m1 + (aircraft_m1 * flight_segment.passengers)
+                end
+              else
+                m1 = Aircraft.fallback.m1
               end
 
               endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
