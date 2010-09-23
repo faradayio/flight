@@ -76,7 +76,7 @@ module BrighterPlanet
               if flight_segment_aircraft.values.map(&:m3).any?
                 m3 = flight_segments.inject(0) do |m3, flight_segment|
                   aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                  aircraft_m3 = aircraft.m3 || 0
+                  aircraft_m3 = aircraft.andand.m3 || 0
                   m3 + (aircraft_m3 * flight_segment.passengers)
                 end
               else
@@ -85,8 +85,8 @@ module BrighterPlanet
               
               if flight_segment_aircraft.values.map(&:m2).any?
                 m2 = flight_segments.inject(0) do |m2, flight_segment|
-                  aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
-                  aircraft_m2 = aircraft.m2 || 0
+                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                  aircraft_m2 = aircraft.andand.m2 || 0
                   m2 + (aircraft_m2 * flight_segment.passengers)
                 end
               else
@@ -95,8 +95,8 @@ module BrighterPlanet
 
               if flight_segment_aircraft.values.map(&:m1).any?
                 m1 = flight_segments.inject(0) do |m1, flight_segment|
-                  aircraft = Aircraft.find_by_bts_aircraft_type_code flight_segment.bts_aircraft_type_code
-                  aircraft_m1 = aircraft.m1 || 0
+                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                  aircraft_m1 = aircraft.andand.m1 || 0
                   m1 + (aircraft_m1 * flight_segment.passengers)
                 end
               else
