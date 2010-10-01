@@ -1,3 +1,4 @@
+require 'timeframe'
 require 'weighted_average'
 
 module BrighterPlanet
@@ -9,9 +10,16 @@ module BrighterPlanet
           committee :emission do
             quorum 'from fuel and passengers with coefficients', 
               :needs => [:fuel, :passengers, :seat_class_multiplier, :emission_factor, 
-                         :radiative_forcing_index, :freight_share] do |characteristics|
-              #( kg fuel ) * ( kg CO2 / kg fuel ) = kg CO2
-              (characteristics[:fuel] / characteristics[:passengers] * characteristics[:seat_class_multiplier]) * characteristics[:emission_factor] * characteristics[:radiative_forcing_index] * (1 - characteristics[:freight_share])
+                         :radiative_forcing_index, :freight_share, :date] do |characteristics, timeframe|
+              date = characteristics[:date].is_a?(Date) ?
+                characteristics[:date] :
+                Date.parse(characteristics[:date].to_s)
+              if timeframe.include? date
+                #( kg fuel ) * ( kg CO2 / kg fuel ) = kg CO2
+                (characteristics[:fuel] / characteristics[:passengers] * characteristics[:seat_class_multiplier]) * characteristics[:emission_factor] * characteristics[:radiative_forcing_index] * (1 - characteristics[:freight_share])
+              else
+                0
+              end
             end
             
             quorum 'default' do
@@ -288,6 +296,16 @@ module BrighterPlanet
             
             quorum 'default' do
               FlightSeatClass.fallback.andand.multiplier
+            end
+          end
+          
+          committee :date do
+            quorum 'from creation date', :needs => :creation_date do |characteristics|
+              characteristics[:creation_date]
+            end
+            
+            quorum 'from timeframe' do |characteristics, timeframe|
+              timeframe.present? ? timeframe.from : nil
             end
           end
           
