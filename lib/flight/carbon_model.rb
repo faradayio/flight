@@ -13,16 +13,9 @@ module BrighterPlanet
           committee :emission do
             quorum 'from fuel and passengers with coefficients', 
               :needs => [:fuel, :passengers, :seat_class_multiplier, :emission_factor, 
-                         :radiative_forcing_index, :freight_share, :date] do |characteristics, timeframe|
-              date = characteristics[:date].is_a?(Date) ?
-                characteristics[:date] :
-                Date.parse(characteristics[:date].to_s)
-              if timeframe.include? date
-                #( kg fuel ) * ( kg CO2 / kg fuel ) = kg CO2
-                (characteristics[:fuel] / characteristics[:passengers] * characteristics[:seat_class_multiplier]) * characteristics[:emission_factor] * characteristics[:radiative_forcing_index] * (1 - characteristics[:freight_share])
-              else
-                0
-              end
+                         :radiative_forcing_index, :freight_share] do |characteristics|
+              #( kg fuel ) * ( kg CO2 / kg fuel ) = kg CO2
+              (characteristics[:fuel] / characteristics[:passengers] * characteristics[:seat_class_multiplier]) * characteristics[:emission_factor] * characteristics[:radiative_forcing_index] * (1 - characteristics[:freight_share])
             end
             
             quorum 'default' do
@@ -30,6 +23,18 @@ module BrighterPlanet
             end
           end
           
+          committee :emission_factor do # returns kg CO2 / kg fuel
+            quorum 'from fuel type', :needs => :fuel_type do |characteristics|
+              #(            kg CO2 / litres fuel        ) * (                 litres fuel / kg fuel                      )
+              characteristics[:fuel_type].emission_factor * ( 1 / characteristics[:fuel_type].density).gallons.to(:litres)
+            end
+          end
+          
+          committee :radiative_forcing_index do
+            quorum 'from fuel type', :needs => :fuel_type do |characteristics|
+              characteristics[:fuel_type].radiative_forcing_index
+            end
+          end
           committee :fuel do # returns kg fuel
             quorum 'from fuel per segment and emplanements and trips', :needs => [:fuel_per_segment, :emplanements_per_trip, :trips] do |characteristics|
               characteristics[:fuel_per_segment] * characteristics[:emplanements_per_trip].to_f * characteristics[:trips].to_f
@@ -48,6 +53,42 @@ module BrighterPlanet
           committee :adjusted_distance_per_segment do
             quorum 'from adjusted distance and emplanements', :needs => [:adjusted_distance, :emplanements_per_trip] do |characteristics|
               characteristics[:adjusted_distance] / characteristics[:emplanements_per_trip]
+            end
+          end
+          
+          committee :adjusted_distance do # returns nautical miles
+            quorum 'from distance', :needs => [:distance, :emplanements_per_trip] do |characteristics|
+              route_inefficiency_factor = base.research(:route_inefficiency_factor)
+              dogleg_factor = base.research(:dogleg_factor)
+              characteristics[:distance] * route_inefficiency_factor * ( dogleg_factor ** (characteristics[:emplanements_per_trip] - 1) )
+            end
+          end
+          
+          committee :distance do # returns nautical miles
+            quorum 'from airports', :needs => [:origin_airport, :destination_airport] do |characteristics|
+              if  characteristics[:origin_airport].latitude and
+                  characteristics[:origin_airport].longitude and
+                  characteristics[:destination_airport].latitude and
+                  characteristics[:destination_airport].longitude
+                characteristics[:origin_airport].distance_to(characteristics[:destination_airport], :units => :kms).kilometres.to :nautical_miles
+              end
+            end
+            
+            quorum 'from distance estimate', :needs => :distance_estimate do |characteristics|
+              characteristics[:distance_estimate].kilometres.to :nautical_miles
+            end
+            
+            quorum 'from distance class', :needs => :distance_class do |characteristics|
+              characteristics[:distance_class].distance.kilometres.to :nautical_miles
+            end
+            
+            quorum 'from cohort', :needs => :cohort do |characteristics|
+              distance = characteristics[:cohort].weighted_average(:distance, :weighted_by => :passengers).to_f.kilometres.to(:nautical_miles)
+              distance > 0 ? distance : nil
+            end
+            
+            quorum 'default' do
+              base.fallback.distance_estimate.kilometres.to :nautical_miles
             end
           end
           
@@ -135,6 +176,12 @@ module BrighterPlanet
             end
           end
           
+          committee :fuel_type do
+            quorum 'default' do
+              FlightFuelType.fallback
+            end
+          end
+          
           committee :passengers do
             quorum 'from seats and load factor', :needs => [:seats, :load_factor] do |characteristics|
               (characteristics[:seats] * characteristics[:load_factor]).round
@@ -182,67 +229,6 @@ module BrighterPlanet
       
             quorum 'default' do
               base.fallback.andand.load_factor
-            end
-          end
-          
-          committee :adjusted_distance do # returns nautical miles
-            quorum 'from distance', :needs => [:distance, :emplanements_per_trip] do |characteristics|
-              route_inefficiency_factor = base.research(:route_inefficiency_factor)
-              dogleg_factor = base.research(:dogleg_factor)
-              characteristics[:distance] * route_inefficiency_factor * ( dogleg_factor ** (characteristics[:emplanements_per_trip] - 1) )
-            end
-          end
-          
-          committee :distance do # returns nautical miles
-            quorum 'from airports', :needs => [:origin_airport, :destination_airport] do |characteristics|
-              if  characteristics[:origin_airport].latitude and
-                  characteristics[:origin_airport].longitude and
-                  characteristics[:destination_airport].latitude and
-                  characteristics[:destination_airport].longitude
-                characteristics[:origin_airport].distance_to(characteristics[:destination_airport], :units => :kms).kilometres.to :nautical_miles
-              end
-            end
-            
-            quorum 'from distance estimate', :needs => :distance_estimate do |characteristics|
-              characteristics[:distance_estimate].kilometres.to :nautical_miles
-            end
-            
-            quorum 'from distance class', :needs => :distance_class do |characteristics|
-              characteristics[:distance_class].distance.kilometres.to :nautical_miles
-            end
-            
-            quorum 'from cohort', :needs => :cohort do |characteristics|
-              distance = characteristics[:cohort].weighted_average(:distance, :weighted_by => :passengers).to_f.kilometres.to(:nautical_miles)
-              distance > 0 ? distance : nil
-            end
-            
-            quorum 'default' do
-              base.fallback.distance_estimate.kilometres.to :nautical_miles
-            end
-          end
-          
-          committee :emplanements_per_trip do # per trip
-            quorum 'default' do
-              base.fallback.emplanements_per_trip_before_type_cast
-            end
-          end
-          
-          committee :radiative_forcing_index do
-            quorum 'from fuel type', :needs => :fuel_type do |characteristics|
-              characteristics[:fuel_type].radiative_forcing_index
-            end
-          end
-          
-          committee :emission_factor do # returns kg CO2 / kg fuel
-            quorum 'from fuel type', :needs => :fuel_type do |characteristics|
-              #(            kg CO2 / litres fuel        ) * (                 litres fuel / kg fuel                      )
-              characteristics[:fuel_type].emission_factor * ( 1 / characteristics[:fuel_type].density).gallons.to(:litres)
-            end
-          end
-          
-          committee :fuel_type do
-            quorum 'default' do
-              FlightFuelType.fallback
             end
           end
           
@@ -302,16 +288,6 @@ module BrighterPlanet
             end
           end
           
-          committee :date do
-            quorum 'from creation date', :needs => :creation_date do |characteristics|
-              characteristics[:creation_date]
-            end
-            
-            quorum 'from timeframe' do |characteristics, timeframe|
-              timeframe.present? ? timeframe.from : nil
-            end
-          end
-          
           committee :cohort do
             quorum 'from t100', :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline] do |characteristics|
               provided_characteristics = [:origin_airport, :destination_airport, :aircraft, :airline].
@@ -325,6 +301,12 @@ module BrighterPlanet
               else
                 nil
               end
+            end
+          end
+          
+          committee :emplanements_per_trip do # per trip
+            quorum 'default' do
+              base.fallback.emplanements_per_trip_before_type_cast
             end
           end
         end
