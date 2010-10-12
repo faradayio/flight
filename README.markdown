@@ -76,3 +76,7 @@ Brighter Planet vigorously encourages collaborative improvement of its emitter l
 1.  Review changes for scientific accuracy.
 1.  Merge changes to master repository and publish.
 1.  Direct production environment to use new emitter version.
+
+## Copyright
+
+Copyright © 2010 Brighter Planet. See LICENSE for details. Contact Brighter Planet for dual-license arrangements.
