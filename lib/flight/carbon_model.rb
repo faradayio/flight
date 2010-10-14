@@ -1,3 +1,6 @@
+require 'leap'
+require 'timeframe'
+require 'date'
 require 'weighted_average'
 
 module BrighterPlanet
