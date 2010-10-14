@@ -91,7 +91,7 @@ module BrighterPlanet
             end
             
             quorum 'default' do
-              base.fallback.distance_estimate.kilometres.to :nautical_miles
+              FlightSegment.fallback.distance.kilometres.to :nautical_miles
             end
           end
           
@@ -197,7 +197,7 @@ module BrighterPlanet
           
           committee :fuel_type do
             quorum 'default' do
-              FlightFuelType.fallback
+              FuelType.find_by_name 'Jet Fuel'
             end
           end
           
@@ -238,9 +238,9 @@ module BrighterPlanet
             quorum 'from cohort', :needs => :cohort, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
               characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
             end
-              base.fallback.andand.load_factor
             
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
+              FlightSegment.fallback.load_factor
             end
           end
           
