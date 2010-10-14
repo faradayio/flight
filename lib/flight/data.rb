@@ -1,3 +1,5 @@
+require 'data_miner'
+
 module BrighterPlanet
   module Flight
     module Data
