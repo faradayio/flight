@@ -208,7 +208,7 @@ module BrighterPlanet
             end
             
             quorum 'from aircraft class', :needs => :aircraft_class do |characteristics|
-              characteristics[:aircraft_class].seats
+              characteristics[:aircraft_class].seats_before_type_cast
             end
             
             quorum 'default' do
@@ -232,7 +232,7 @@ module BrighterPlanet
             end
             
             quorum 'default' do
-              FlightSegment.fallback.andand.freight_share
+              FlightSegment.fallback.freight_share
             end
           end
           
@@ -278,7 +278,7 @@ module BrighterPlanet
             end
             
             quorum 'default' do
-              FlightSeatClass.fallback.andand.multiplier
+              FlightSeatClass.fallback.multiplier
             end
           end
           
