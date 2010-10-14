@@ -1,5 +1,7 @@
-"row_hash","origin_airport_iata_code","dest_airport_iata_code","airline_iata_code","unique_carrier_name","bts_aircraft_type_code","distance","distance_units","departures_performed","passengers","total_seats","seats","freight","freight_units","payload","payload_units","load_factor","freight_share","year","quarter","month"
-"1","ADA","AIA","DA","Domestic Airlines","1","185.2","kilometres","1","100","125","125","100","kilograms","10100","kilograms","0.80000","0.00990","2010","3","8"
-"2","AIA","WEA","IA","International Airways","2","1852","kilometres","1","100","125","125","1000","kilograms","11000","kilograms","0.80000","0.09091","2010","3","8"
-"3","WEA","AIA","IA","International Airways","3","1852","kilometres","1","100","100","100","1000","kilograms","11000","kilograms","1.00000","0.09091","2010","3","8"
-"4","AIA","WEA","IA","International Airways","99999","1852","kilometres","1","100","125","125","1000","kilograms","11000","kilograms","0.80000","0.09091","2010","3","8"
+origin_airport_iata_code,dest_airport_iata_code,airline_iata_code,bts_aircraft_type_code,distance,distance_units,departures_performed,passengers,total_seats,seats,freight,freight_units,payload,payload_units,load_factor,freight_share
+ADA,AIA,DA,1,185.2,kilometres,1,100,125,125,100,kilograms,10100,kilograms,0.8,0.00990
+AIA,WEA,IA,2,1852,kilometres,1,100,120,120,1000,kilograms,11000,kilograms,0.833333333,0.09091
+AIA,WEA,IA,2,1852,kilometres,1,0,120,120,0,kilograms,0,kilograms,0
+AIA,WEA,EA,2,1852,kilometres,0,0,120,,0,kilograms,0,kilograms
+AIA,WEA,EA,2,1852,kilometres,1,0,0,0,1000,kilograms,1000,kilograms,,1
+WEA,WEA,EA,2,0,kilometres,1,100,120,120,1000,kilograms,11000,kilograms,0.833333333,0.09091
