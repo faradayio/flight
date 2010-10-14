@@ -1,11 +1,14 @@
+require 'summary_judgement'
+
 module BrighterPlanet
   module Flight
     module Summarization
       def self.included(base)
+        base.extend SummaryJudgement
         base.summarize do |has|
           has.adjective 'one-way', :if => lambda { |flight| flight.trips == 1 }
-          has.adjective 'round-trip', :if => lambda { |flight| flight.trips == 1 }
-          has.adjective 'nonstop', :if => lambda { |flight| flight.emplanements_per_trip == 1 }
+          has.adjective 'round-trip', :if => lambda { |flight| flight.trips == 2 }
+          has.adjective 'nonstop', :if => lambda { |flight| flight.segments_per_trip == 1 }
           has.identity 'flight'
           has.modifier lambda { |flight| "from #{flight.origin_airport.name}" }, :if => :origin_airport
           has.modifier lambda { |flight| "to #{flight.destination_airport.name}" }, :if => :destination_airport

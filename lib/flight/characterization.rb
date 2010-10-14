@@ -1,7 +1,10 @@
+require 'characterizable'
+
 module BrighterPlanet
   module Flight
     module Characterization
       def self.included(base)
+        base.send :include, Characterizable
         base.characterize do
           has :date, :trumps => :year
           has :year
@@ -24,6 +27,7 @@ module BrighterPlanet
 
           has :creation_date, :hidden => true
         end
+        base.add_implicit_characteristics
       end
     end
   end
