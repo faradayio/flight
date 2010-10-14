@@ -12,7 +12,6 @@ module BrighterPlanet
           end
           has :distance_class
           has :distance_estimate, :trumps => :distance_class, :measures => :length, :precision => 0
-          has :domesticity
           has :airline
           has :trips
           has :emplanements_per_trip
