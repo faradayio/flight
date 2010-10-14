@@ -18,7 +18,6 @@ module BrighterPlanet
             string   'seat_class_id'
             integer  'seats_estimate'
             float    'load_factor'
-            string   'domesticity_id'
             date     'date'
             integer  'year'
             time     'time_of_day'
