@@ -189,12 +189,6 @@ module BrighterPlanet
           end
           
           committee :seats do
-      # leaving this here to explain how someday we might lookup seat count based on both airline AND aircraft
-      #SE      quorum 'from_airline_and_aircraft', :needs => [:airline, :aircraft] do |characteristics, timeframe|
-      #SE        if aircraft = AirlineAircraft.memoized_find_by_airline_id_and_aircraft_id(characteristics[:airline].id, characteristics[:aircraft].id)
-      #SE          aircraft.seats
-      #SE        end
-      #SE      end
             
             quorum 'from aircraft', :needs => :aircraft do |characteristics|
               characteristics[:aircraft].seats
