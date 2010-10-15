@@ -160,7 +160,7 @@ module BrighterPlanet
             ##### From country
             # This first-tier method looks up the `route inefficiency factor` for the [country](http://data.brighterplanet.com/countries) in which the flight occurs.
             quorum 'from country', :needs => :country, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:country].flight_route_inefficiency_factor
+              characteristics[:country].andand.flight_route_inefficiency_factor
             end
             
             ##### Default
