@@ -193,7 +193,12 @@ module BrighterPlanet
             # This first-tier method looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
             quorum 'from aircraft', :needs => :aircraft, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
               aircraft = characteristics[:aircraft]
-              FuelUseEquation.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
+              fuel_use = FuelUseEquation.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
+              if fuel_use.empty?
+                nil
+              else
+                fuel_use
+              end
             end
             
             ##### From aircraft class
@@ -506,7 +511,11 @@ module BrighterPlanet
         end
       end
       
-      class FuelUseEquation < Struct.new(:m3, :m2, :m1, :endpoint_fuel); end
+      class FuelUseEquation < Struct.new(:m3, :m2, :m1, :endpoint_fuel)
+        def empty?
+          m3.nil? and m2.nil? and m1.nil? and endpoint_fuel.nil?
+        end
+      end
     end
   end
 end
