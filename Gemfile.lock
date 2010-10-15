@@ -3,7 +3,7 @@ PATH
   specs:
     flight (0.0.22)
       earth (~> 0.2.5)
-      emitter (~> 0.1.4)
+      emitter (~> 0.1.6)
 
 GEM
   remote: http://rubygems.org/
@@ -32,7 +32,7 @@ GEM
       blockenspiel (>= 0.3.2)
     chronic (0.2.3)
       hoe (>= 1.2.1)
-    cohort_scope (0.0.7)
+    cohort_scope (0.1.0)
       activerecord (>= 3.0.0.beta4)
       activesupport (>= 3.0.0.beta4)
     common_name (0.1.5)
@@ -66,10 +66,10 @@ GEM
       geokit (>= 1.5.0)
       loose_tight_dictionary (>= 0.0.8)
       weighted_average (>= 0.0.4)
-    emitter (0.1.5)
+    emitter (0.1.6)
       activesupport (>= 3.0.0)
       characterizable (>= 0.0.16)
-      cohort_scope (>= 0.0.7)
+      cohort_scope (~> 0.1.0)
       data_miner (>= 0.5.3)
       earth (~> 0.2.0)
       falls_back_on (= 0.0.3)
@@ -88,7 +88,7 @@ GEM
     fastercsv (1.5.3)
     gemcutter (0.6.1)
     geokit (1.5.0)
-    gherkin (2.2.8)
+    gherkin (2.2.9)
       json (~> 1.4.6)
       term-ansicolor (~> 1.0.5)
     git (1.2.5)
@@ -190,7 +190,7 @@ DEPENDENCIES
   bundler (~> 1.0.0)
   cucumber
   earth (~> 0.2.5)
-  emitter (~> 0.1.4)
+  emitter (~> 0.1.6)
   fastercsv
   flight!
   jeweler (~> 1.4.0)
