@@ -35,10 +35,9 @@ Feature: Flight Emissions Calculations
 
   Scenario: Calculations from cohort based on destination
     Given a flight has "segments_per_trip" of "1"
-    And it has "origin_airport.iata_code" of "ADA"
     And it has "destination_airport.iata_code" of "AIA"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "4.2"
+    Then the emission value should be within "0.1" kgs of "24.4"
 
   Scenario: Calculations from cohort based on aircraft
     Given a flight has "segments_per_trip" of "1"
