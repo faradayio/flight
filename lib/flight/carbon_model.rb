@@ -218,9 +218,9 @@ module BrighterPlanet
               end
               
               flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
-                bts_code = flight_segment.bts_aircraft_type_code
+                code = flight_segment.aircraft_type_code
                 key = flight_segment.row_hash
-                aircraft = Aircraft.find_by_bts_aircraft_type_code bts_code
+                aircraft = Aircraft.find_by_aircraft_type_code code
                 hsh[key] = aircraft if aircraft
                 hsh
               end

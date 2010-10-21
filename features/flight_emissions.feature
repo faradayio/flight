@@ -77,7 +77,7 @@ Feature: Flight Emissions Calculations
     Then the emission value should be within "0.1" kgs of "34.6"
 
   Scenario: Calculations from aircraft class
-    Given a flight has "aircraft_class.brighter_planet_aircraft_class_code" of "BX"
+    Given a flight has "aircraft_class.aircraft_class_code" of "BX"
     When emissions are calculated
     Then the emission value should be within "0.1" kgs of "41.5"
 

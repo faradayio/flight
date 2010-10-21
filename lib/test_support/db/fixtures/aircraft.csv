@@ -1,4 +1,4 @@
-icao_code,bts_aircraft_type_code,brighter_planet_aircraft_class_code,m3,m2,m1,endpoint_fuel,seats,weighting
+icao_code,aircraft_type_code,aircraft_class_code,m3,m2,m1,endpoint_fuel,seats,weighting
 FM1,1,EX,0,0,1,0,125,100
 BA1,2,EX,0,0,2,0,120,200
 XX1

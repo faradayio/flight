@@ -222,7 +222,7 @@ Feature: Flight Committee Calculations
 
   Scenario: Seats committee from aircraft class
     Given a flight emitter
-    And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
+    And a characteristic "aircraft_class.aircraft_class_code" of "EX"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should be "121"
@@ -277,7 +277,7 @@ Feature: Flight Committee Calculations
 
   Scenario: Fuel use coefficients committee from aircraft class
     Given a flight emitter
-    And a characteristic "aircraft_class.brighter_planet_aircraft_class_code" of "EX"
+    And a characteristic "aircraft_class.aircraft_class_code" of "EX"
     When the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should have a record with "m3" equal to "0"

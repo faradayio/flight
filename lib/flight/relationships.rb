@@ -9,7 +9,7 @@ module BrighterPlanet
         target.belongs_to :origin_airport,      :class_name => 'Airport'
         target.belongs_to :destination_airport, :class_name => 'Airport'
         target.belongs_to :aircraft,                                                  :foreign_key => 'icao_code'
-        target.belongs_to :aircraft_class,                                            :foreign_key => 'brighter_planet_aircraft_class_code'
+        target.belongs_to :aircraft_class,                                            :foreign_key => 'aircraft_class_code'
         target.belongs_to :airline,                                                   :foreign_key => 'iata_code'
       end
     end

@@ -19,7 +19,7 @@ module BrighterPlanet
             string  'origin_airport_id'
             string  'destination_airport_id'
             string  'aircraft_icao_code'
-            string  'aircraft_class_brighter_planet_aircraft_class_code'
+            string  'aircraft_class_code'
             string  'airline_iata_code'
             integer 'segments_per_trip'
             float   'dogleg_factor'
