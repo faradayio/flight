@@ -21,7 +21,7 @@ module BrighterPlanet
           # The `emission` estimate is the passenger's share of the total flight emissions that occured during the `timeframe`.
           committee :emission do
             ##### From fuel, emission factor, freight share, passengers, and multipliers
-            # This method:
+            # This first-tier method:
             #
             # 1. Checks that the flight occured during the `timeframe`
             # 2. Multiplies `fuel use` (*kg fuel*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*
@@ -40,6 +40,8 @@ module BrighterPlanet
               end
             end
             
+            ##### Default
+            # This default method displays an error message if the previous method fails.
             quorum 'default' do
               raise "The emission committee's default quorum should never be called"
             end
@@ -59,7 +61,7 @@ module BrighterPlanet
           # This calculation returns the `aviation multiplier`, which approximates the extra climate impact of emissions high in the atmosphere.
           committee :aviation_multiplier do
             ##### Default
-            # This method uses an `aviation multiplier` of **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
+            # This default method uses an `aviation multiplier` of **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
               base.fallback.aviation_multiplier
             end
@@ -292,7 +294,7 @@ module BrighterPlanet
             # This implied first-tier method uses the client-input [fuel type](http://data.brighterplanet.com/fuel_types).
             
             ##### Default
-            # This method assumes the flight uses **Jet Fuel**.
+            # This default method assumes the flight uses **Jet Fuel**.
             quorum 'default' do
               FuelType.find_by_name 'Jet Fuel'
             end
@@ -423,17 +425,17 @@ module BrighterPlanet
           ### Country
           # This calculation returns the [country](http://data.brighterplanet.com/countries) in which a flight occurs.
           committee :country do
+            ##### From client input
+            # This implied first-tier method uses the client-input [country](http://data.brighterplanet.com/countries).
+            
             ##### From origin airport and destination airport
-            # This method checks that the flight's `origin airport` and `destination airport` are within the same country.
+            # This second-tier method checks that the flight's `origin airport` and `destination airport` are within the same country.
             # If so, that country is the `country`.
             quorum 'from origin airport and destination airport', :needs => [:origin_airport, :destination_airport], :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
               if characteristics[:origin_airport].country == characteristics[:destination_airport].country
                 characteristics[:origin_airport].country
               end
             end
-            
-            ##### From client input
-            # This implied method uses the client-input [country](http://data.brighterplanet.com/countries).
           end
           
           ### Cohort
