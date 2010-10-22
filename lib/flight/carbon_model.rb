@@ -177,8 +177,8 @@ module BrighterPlanet
             #### Default
             # **Complies:**
             #
-            # Calculates the average `distance` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers, and converts from *km* to *nautical miles*.
-            quorum 'default' do
+            # Looks up the default `distance`.
+            quorum 'default' do #Calculates the average `distance` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers, and converts from *km* to *nautical miles*.
               FlightSegment.fallback.distance.kilometres.to :nautical_miles
             end
           end
@@ -399,11 +399,11 @@ module BrighterPlanet
             end
             
             #### Default
-            # **Complies:**
+            # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
-            quorum 'default' do
-              FlightSegment.fallback.seats_before_type_cast # need before_type_cast b/c seats is an integer but the fallback value is a float
+            # Looks up the default number of `seats`.
+            quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
+              FlightSegment.fallback.seats_before_type_cast # need before_type_cast b/c seats is an integer but the fallback value is a float; Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
             end
           end
           
@@ -430,9 +430,9 @@ module BrighterPlanet
             #### Default
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Calculates the average `load factor` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
+            # Looks up the default `load factor`.
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              FlightSegment.fallback.load_factor
+              FlightSegment.fallback.load_factor #Calculates the average `load factor` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
             end
           end
           
@@ -451,9 +451,9 @@ module BrighterPlanet
             #### Default
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Calculates the average `freight share` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
+            # Looks up the default `freight share`.
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              FlightSegment.fallback.freight_share
+              FlightSegment.fallback.freight_share # Calculates the average `freight share` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
             end
           end
           
