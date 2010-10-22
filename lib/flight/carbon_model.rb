@@ -71,9 +71,9 @@ module BrighterPlanet
             #### Default
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the default `aviation multiplier`.
-            quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do # **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
-              base.fallback.aviation_multiplier
+            # Uses an `aviation multiplier` of **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
+            quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
+              2.0
             end
           end
           
@@ -210,9 +210,9 @@ module BrighterPlanet
             #### From segments per trip
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the default `dogleg factor` and multiplies it by itself once for every layover.
-            quorum 'from segments per trip', :needs => :segments_per_trip, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics| # Assumes that each layover increases the total flight distance by **25%**.
-              base.fallback.dogleg_factor ** (characteristics[:segments_per_trip] - 1)
+            # Assumes that each layover increases the total flight distance by **25%**.
+            quorum 'from segments per trip', :needs => :segments_per_trip, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
+              1.25 ** (characteristics[:segments_per_trip] - 1)
             end
           end
           
@@ -469,9 +469,9 @@ module BrighterPlanet
             #### Default
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the default number of trips.
+            # Uses an average number of `trips` of **1.941**, taken from the [U.S. National Household Travel Survey](http://www.bts.gov/publications/america_on_the_go/long_distance_transportation_patterns/html/table_07.html).
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              base.fallback.trips_before_type_cast # need before_type_cast b/c trips is an integer but fallback value is a float; average number of `trips` from the [U.S. National Household Travel Survey](http://www.bts.gov/publications/america_on_the_go/long_distance_transportation_patterns/html/table_07.html).
+              1.941
             end
           end
           
@@ -589,9 +589,9 @@ module BrighterPlanet
             #### Default
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the default `segments per trip`.
+            # Uses an average `segments per trip` of **1.67**, calculated from the [U.S. National Household Travel Survey](http://nhts.ornl.gov/).
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              base.fallback.segments_per_trip_before_type_cast #  need before_type_cast b/c segments_per_trip is an integer but fallback value is a float; [U.S. National Household Travel Survey](http://nhts.ornl.gov/).
+              1.67
             end
           end
           
