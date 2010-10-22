@@ -438,6 +438,18 @@ module BrighterPlanet
             end
           end
           
+          ### Aircraft Class
+          committee :aircraft_class do
+            ##### From client input
+            # This implied first-tier method uses the client-input [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
+            
+            ##### From aircraft
+            # This second-tier method looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
+            quorum 'from aircraft', :needs => :aircraft, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
+              characteristics[:aircraft].aircraft_class
+            end
+          end
+          
           ### Cohort
           # This calculation returns the `cohort`, which is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
           committee :cohort do
@@ -477,9 +489,6 @@ module BrighterPlanet
           
           ### Aircraft
           # This implied calculation returns the client-input type of [aircraft](http://data.brighterplanet.com/aircraft).
-          
-          ### Aircraft class
-          # This implied calculation returns the client-input [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
           
           ### Airline
           # This implied calculation returns the client-input [airline](http://data.brighterplanet.com/airlines) operating the flight.
