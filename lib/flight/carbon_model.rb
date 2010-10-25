@@ -10,14 +10,20 @@ require 'weighted_average'
 ## Flight carbon model
 # This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
 #
+##### Timeframe
 # The model estimates the emissions that occur during a particular `timeframe`. For example, if the `timeframe` is January 2010, a flight that occured on January 5, 2010 will have emissions but a flight that occured on February 1, 2010 will not. If no `timeframe` is specified, the default is the current year.
 #
-# The final estimate is the result of the **calculations** detailed below.
-# These calculations are performed in reverse order, starting with the last calculation listed and finishing with the `emission` calculation. Each calculation is named according to the value it returns.
+##### Calculations
+# The final estimate is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the `emission` calculation. Each calculation is named according to the value it returns.
 #
-# To accomodate varying client input, each calculation may have one or more **methods**. These are listed under each calculation in order from most to least preferred. Each method is named according to the values it requires. "Default" methods do not require any values.
+##### Methods
+# To accomodate varying client input, each calculation may have one or more **methods**. These are listed under each calculation in order from most to least preferred. Each method is named according to the values it requires. If any of these values is not available the method will be ignored. If all the methods for a calculation are ignored, the calculation will not return a value. "Default" methods do not require any values, and so a calculation with a default method will always return a value.
 #
-# Each method lists any established calculation standards with which it potentially **complies**. The value produced by a method only complies with a standard if all the values the method required were calculated using methods that comply with the standard (client-input values comply with all standards). Since compliance is evaluated in this way for every method, the result is that a final `emission` estimate only complies with a standard if every calculation that produced it used a method that complies with the standard.
+##### Standard compliance
+# Each method lists any established calculation standards with which it **complies**. When compliance with a standard is requested, all methods that do not comply with that standard are ignored. This means that any values a particular method requires will have been calculated using a compliant method, because those are the only methods available. If any value did not have a compliant method in its calculation then it would be undefined, and the current method would have been ignored.
+#
+##### Collaboration
+# Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes shold include test coverage for new functionality. Please see [sniff](http://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
 module BrighterPlanet
   module Flight
     module CarbonModel
@@ -72,6 +78,11 @@ module BrighterPlanet
           ### Aviation multiplier calculation
           # Returns the `aviation multiplier`. This approximates the extra climate impact of emissions high in the atmosphere.
           committee :aviation_multiplier do
+            #### From client input
+            # **Complies:** All
+            #
+            # Uses the client-input `aviation multiplier`.
+            
             #### Default
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
@@ -220,10 +231,10 @@ module BrighterPlanet
             end
           end
           
-          ### Distance estimate calculation (implied)
+          ### Distance estimate calculation
           # Returns the client-input `distance estimate` in *km*.
           
-          ### Distance class calculation (implied)
+          ### Distance class calculation
           # Returns the client-input [distance class](http://data.brighterplanet.com/distance_classes).
           
           ### Fuel use coefficients calculation
@@ -264,9 +275,9 @@ module BrighterPlanet
               end
               
               flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
-                code = flight_segment.aircraft_type_code
+                code = flight_segment.bts_aircraft_code
                 key = flight_segment.row_hash
-                aircraft = Aircraft.find_by_aircraft_type_code code
+                aircraft = Aircraft.find_by_bts_aircraft_code code
                 hsh[key] = aircraft if aircraft
                 hsh
               end
@@ -336,7 +347,7 @@ module BrighterPlanet
           ### Fuel type calculation
           # Returns the `fuel type`.
           committee :fuel_type do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input [fuel type](http://data.brighterplanet.com/fuel_types).
@@ -411,14 +422,14 @@ module BrighterPlanet
             end
           end
           
-          ### Seats estimate calculation (implied)
+          ### Seats estimate calculation
           # Returns the client-input `seats estimate`.
           
           ### Load factor calculation
           # Returns the `load factor`.
           # This is the portion of available seats that are occupied.
           committee :load_factor do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input `load factor`.
@@ -465,7 +476,7 @@ module BrighterPlanet
           # Returns the number of `trips`.
           # A one-way flight has one trip; a round-trip flight has two trips.
           committee :trips do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input number of `trips`.
@@ -499,13 +510,13 @@ module BrighterPlanet
             end
           end
           
-          ### Seat class calculation (implied)
+          ### Seat class calculation
           # Returns the client-input [seat class](http://data.brighterplanet.com/seat_classes).
           
           ### Country calculation
           # Returns the [country](http://data.brighterplanet.com/countries) in which a flight occurs.
           committee :country do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input [country](http://data.brighterplanet.com/countries).
@@ -525,7 +536,7 @@ module BrighterPlanet
           ### Aircraft Class calculation
           # This calculation returns the [aircraft class](http://data.brighterplanet.com/aircraft_classes).
           committee :aircraft_class do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
@@ -569,23 +580,23 @@ module BrighterPlanet
             end
           end
           
-          ### Origin airport calculation (implied)
+          ### Origin airport calculation
           # Returns the client-input [origin airport](http://data.brighterplanet.com/airports).
           
-          ### Destination airport calculation (implied)
+          ### Destination airport calculation
           # Returns the client-input [destination airport](http://data.brighterplanet.com/airports).
           
-          ### Aircraft calculation (implied)
+          ### Aircraft calculation
           # Returns the client-input type of [aircraft](http://data.brighterplanet.com/aircraft).
           
-          ### Airline calculation (implied)
+          ### Airline calculation
           # Returns the client-input [airline](http://data.brighterplanet.com/airlines) operating the flight.
           
           ### Segments per trip calculation
           # Returns the `segments per trip`.
           # Direct flights have a single segment per trip. Indirect flights with one or more layovers have two or more segments per trip.
           committee :segments_per_trip do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input `segments per trip`.
@@ -602,7 +613,7 @@ module BrighterPlanet
           ### Date calculation
           # Returns the `date` on which the flight occured.
           committee :date do
-            #### From client input (implied)
+            #### From client input
             # **Complies:** All
             #
             # Uses the client-input value for `date`.
