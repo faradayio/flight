@@ -16,13 +16,12 @@ module BrighterPlanet
             string  'seat_class_name'
             string  'country_iso_3166_code'
             date    'date'
-            string  'origin_airport_id'
-            string  'destination_airport_id'
-            string  'aircraft_icao_code'
+            string  'origin_airport_iata_code'
+            string  'destination_airport_iata_code'
+            string  'aircraft_bp_code'
             string  'aircraft_class_code'
             string  'airline_iata_code'
             integer 'segments_per_trip'
-            float   'dogleg_factor'
           end
           
           process :run_data_miner_on_belongs_to_associations
