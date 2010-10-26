@@ -277,59 +277,61 @@ module BrighterPlanet
               flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
                 code = flight_segment.aircraft_bts_code
                 key = flight_segment.row_hash
-                aircraft = Aircraft.find_by_bts_code code
-                hsh[key] = aircraft if aircraft
+                aircraft = Aircraft.find_by_aircraft_bts_code code
+                hsh[key] = aircraft
                 hsh
               end
               
-              if flight_segment_aircraft.values.map(&:m3).any?
-                m3 = flight_segments.inject(0) do |m3, flight_segment|
-                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                  aircraft_m3 = aircraft.andand.m3 || 0
-                  m3 + (aircraft_m3 * flight_segment.passengers)
+              m3 = flight_segments.inject(0) do |m3, flight_segment|
+                aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                if aircraft.m3.nil?
+                  aircraft_class = aircraft.aircraft_class
+                  aircraft_m3 = aircraft_class.m3
+                else
+                  aircraft_m3 = aircraft.m3
                 end
-              else
-                m3 = Aircraft.fallback.m3
+                m3 + (aircraft_m3 * flight_segment.passengers)
               end
               
-              if flight_segment_aircraft.values.map(&:m2).any?
-                m2 = flight_segments.inject(0) do |m2, flight_segment|
-                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                  aircraft_m2 = aircraft.andand.m2 || 0
-                  m2 + (aircraft_m2 * flight_segment.passengers)
+              m2 = flight_segments.inject(0) do |m2, flight_segment|
+                aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                if aircraft.m2.nil?
+                  aircraft_class = aircraft.aircraft_class
+                  aircraft_m2 = aircraft_class.m2
+                else
+                  aircraft_m2 = aircraft.m2
                 end
-              else
-                m2 = Aircraft.fallback.m2
+                m2 + (aircraft_m2 * flight_segment.passengers)
               end
               
-              if flight_segment_aircraft.values.map(&:m1).any?
-                m1 = flight_segments.inject(0) do |m1, flight_segment|
-                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                  aircraft_m1 = aircraft.andand.m1 || 0
-                  m1 + (aircraft_m1 * flight_segment.passengers)
+              m1 = flight_segments.inject(0) do |m1, flight_segment|
+                aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                if aircraft.m1.nil?
+                  aircraft_class = aircraft.aircraft_class
+                  aircraft_m1 = aircraft_class.m1
+                else
+                  aircraft_m1 = aircraft.m1
                 end
-              else
-                m1 = Aircraft.fallback.m1
+                m1 + (aircraft_m1 * flight_segment.passengers)
               end
               
-              if flight_segment_aircraft.values.map(&:endpoint_fuel).any?
-                endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
-                  aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                  aircraft_epfuel = aircraft.andand.endpoint_fuel || 0
-                  endpoint_fuel + (aircraft_epfuel * flight_segment.passengers)
+              endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
+                aircraft = flight_segment_aircraft[flight_segment.row_hash]
+                if aircraft.endpoint_fuel.nil?
+                  aircraft_class = aircraft.aircraft_class
+                  aircraft_epfuel = aircraft_class.endpoint_fuel
+                else
+                  aircraft_epfuel = aircraft.endpoint_fuel
                 end
-              else
-                endpoint_fuel = Aircraft.fallback.endpoint_fuel
+                endpoint_fuel + (aircraft_epfuel * flight_segment.passengers)
               end
               
-              if [m3, m2, m1, endpoint_fuel, passengers].any?(&:nonzero?)
-                m3 = m3 / passengers
-                m2 = m2 / passengers
-                m1 = m1 / passengers
-                endpoint_fuel = endpoint_fuel / passengers
-                
-                FuelUseEquation.new m3, m2, m1, endpoint_fuel
-              end
+              m3 = m3 / passengers
+              m2 = m2 / passengers
+              m1 = m1 / passengers
+              endpoint_fuel = endpoint_fuel / passengers
+              
+              FuelUseEquation.new m3, m2, m1, endpoint_fuel
             end
             
             #### Default fuel use coefficients
