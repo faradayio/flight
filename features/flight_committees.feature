@@ -17,14 +17,14 @@ Feature: Flight Committee Calculations
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "AIA"
     When the "cohort" committee is calculated
-    Then the conclusion of the committee should have a record with "count" equal to "4"
+    Then the conclusion of the committee should have a record with "count" equal to "3"
 
   Scenario: Cohort committee for a direct flight from destination
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "destination_airport.iata_code" of "WEA"
     When the "cohort" committee is calculated
-    Then the conclusion of the committee should have a record with "count" equal to "5"
+    Then the conclusion of the committee should have a record with "count" equal to "3"
 
   Scenario: Cohort committee for a direct flight from aircraft
     Given a flight emitter
@@ -36,7 +36,7 @@ Feature: Flight Committee Calculations
   Scenario: Cohort committee for a direct flight from airline
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "airline.iata_code" of "IA"
+    And a characteristic "airline.iata_code" of "DA"
     When the "cohort" committee is calculated
     Then the conclusion of the committee should have a record with "count" equal to "2"
 
@@ -64,7 +64,7 @@ Feature: Flight Committee Calculations
   Scenario: Cohort committee for a direct flight with aircraft that exists but is not in t100
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "aircraft.bp_code" of "BP-XX3"
+    And a characteristic "aircraft.bp_code" of "BP-XX2"
     When the "cohort" committee is calculated
     Then the conclusion of the committee should be nil
 
@@ -81,7 +81,7 @@ Feature: Flight Committee Calculations
     And a characteristic "origin_airport.iata_code" of "ADA"
     And a characteristic "destination_airport.iata_code" of "WEA"
     When the "cohort" committee is calculated
-    Then the conclusion of the committee should have a record with "count" equal to "1"
+    Then the conclusion of the committee should have a record with "count" equal to "2"
 
   Scenario: Cohort committee for a direct flight with origin that exists but is not in t100 and destination in t100
     Given a flight emitter
@@ -98,11 +98,11 @@ Feature: Flight Committee Calculations
     And a characteristic "destination_airport.iata_code" of "XXX"
     And a characteristic "airline.iata_code" of "IA"
     When the "cohort" committee is calculated
-    Then the conclusion of the committee should have a record with "count" equal to "4"
+    Then the conclusion of the committee should have a record with "count" equal to "3"
 
   Scenario: Aircraft class committee from aircraft
     Given a flight emitter
-    And a characteristic "aircraft.bp_code" of "BP-BM1"
+    And a characteristic "aircraft.bp_code" of "BP-FM1"
     When the "aircraft_class" committee is calculated
     Then the conclusion of the committee should have "code" of "EX"
 
@@ -121,7 +121,7 @@ Feature: Flight Committee Calculations
 
   Scenario: Country committee for international flight
     Given a flight emitter
-    And a characteristic "origin_airport.iata_code" of "ADA"
+    And a characteristic "origin_airport.iata_code" of "AIA"
     And a characteristic "destination_airport.iata_code" of "WEA"
     When the "country" committee is calculated
     Then the conclusion of the committee should be nil
@@ -144,43 +144,35 @@ Feature: Flight Committee Calculations
     When the "trips" committee is calculated
     Then the conclusion of the committee should be "1.941"
 
-  Scenario Outline: Freight share committee from cohort
+  Scenario: Freight share committee from cohort
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "<origin>"
+    And a characteristic "origin_airport.iata_code" of "AIA"
     When the "cohort" committee is calculated
     And the "freight_share" committee is calculated
     Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "<freight share>"
-    Examples:
-      | origin | freight share |
-      | ADA    | 0.0099        |
-      | AIA    | 0.09091       |
+    And the conclusion of the committee should be "0.06205"
 
   Scenario: Freight share committee from default
     Given a flight emitter
     When the "freight_share" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "0.07066"
+    And the conclusion of the committee should be "0.04313"
 
-  Scenario Outline: Load factor committee from cohort
+  Scenario: Load factor committee from cohort
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "<origin>"
+    And a characteristic "origin_airport.iata_code" of "AIA"
     When the "cohort" committee is calculated
     And the "load_factor" committee is calculated
     Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "<load_factor>"
-    Examples:
-      | origin | load_factor |
-      | ADA    | 0.8         |
-      | AIA    | 0.83333     |
+    And the conclusion of the committee should be "0.81197"
 
   Scenario: Load factor committee from default
     Given a flight emitter
     When the "load_factor" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "0.82500"
+    And the conclusion of the committee should be "0.81385"
 
   Scenario Outline: Seats committee from aircraft with seats
     Given a flight emitter
@@ -189,19 +181,19 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "from aircraft"
     And the conclusion of the committee should be "<seats>"
     Examples:
-      | code    | seats |
-      | BP-FM1  | 125   |
-      | BP-BA1  | 120   |
+      | code    | seats  |
+      | BP-FM1  | 125.0  |
+      | BP-BA1  | 120.0  |
+      | BP-XX1  | 130.0  |
 
   Scenario Outline: Seats committee from aircraft missing seats
     Given a flight emitter
     And a characteristic "aircraft.bp_code" of "<code>"
     When the "seats" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "121.25"
+    And the conclusion of the committee should be "123.0"
     Examples:
       | code   |
-      | BP-XX1 |
       | BP-XX2 |
       | BP-XX3 |
       | BP-XX4 |
@@ -213,31 +205,27 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "from seats estimate"
     And the conclusion of the committee should be "100"
 
-  Scenario Outline: Seats committee from cohort
+  Scenario: Seats committee from cohort
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "<origin>"
+    And a characteristic "origin_airport.iata_code" of "ADA"
     When the "cohort" committee is calculated
     And the "seats" committee is calculated
     Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "<seats>"
-    Examples:
-      | origin | seats |
-      | ADA    | 125   |
-      | AIA    | 120   |
+    And the conclusion of the committee should be "122.5"
 
   Scenario: Seats committee from aircraft class
     Given a flight emitter
     And a characteristic "aircraft_class.code" of "EX"
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should be "121"
+    And the conclusion of the committee should be "121.25"
 
   Scenario: Seats committee from default
     Given a flight emitter
     When the "seats" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "121.25"
+    And the conclusion of the committee should be "123.0"
 
   Scenario: Passengers committee from seats and load factor
     Given a flight emitter
@@ -264,22 +252,23 @@ Feature: Flight Committee Calculations
       | code   | m3 | m2 | m1 | b |
       | BP-FM1 | 0  | 0  | 1  | 0 |
       | BP-BA1 | 0  | 0  | 2  | 0 |
-      | BP-XX2 | 0  | 0  | 3  | 0 |
-      | BP-XX4 | 0  | 0  | 4  | 0 |
+      | BP-XX2 | 0  | 0  | 4  | 0 |
 
   Scenario Outline: Fuel use coefficients committee from aircraft missing fuel use coefficients
     Given a flight emitter
     And a characteristic "aircraft.bp_code" of "<code>"
-    When the "fuel_use_coefficients" committee is calculated
-    Then the committee should have used quorum "default"
+    When the "aircraft_class" committee is calculated
+    And the "fuel_use_coefficients" committee is calculated
+    Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should have a record with "m3" equal to "0"
     And the conclusion of the committee should have a record with "m2" equal to "0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.66667"
+    And the conclusion of the committee should have a record with "m1" equal to "4"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
     Examples:
       | code   |
       | BP-XX1 |
       | BP-XX3 |
+      | BP-XX4 |
 
   Scenario: Fuel use coefficients committee from aircraft class
     Given a flight emitter
@@ -288,35 +277,31 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should have a record with "m3" equal to "0"
     And the conclusion of the committee should have a record with "m2" equal to "0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.66667"
+    And the conclusion of the committee should have a record with "m1" equal to "1.75"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
 
-  Scenario Outline: Fuel use coefficients committee from cohort where all aircraft have fuel use equation
+  Scenario: Fuel use coefficients committee from cohort where all aircraft have fuel use equation
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "<origin>"
-    When the "cohort" committee is calculated
-    And the "fuel_use_coefficients" committee is calculated
-    Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should have a record with "m3" equal to "<m3>"
-    And the conclusion of the committee should have a record with "m2" equal to "<m2>"
-    And the conclusion of the committee should have a record with "m1" equal to "<m1>"
-    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
-    Examples:
-      | origin | m3 | m2 | m1  | b |
-      | ADA    | 0  | 0  | 1   | 0 |
-      | AIA    | 0  | 0  | 2   | 0 |
-
-  Scenario: Fuel use coefficients committee from cohort where some aircraft are missing fuel use equation
-    Given a flight emitter
-    And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "WEA"
+    And a characteristic "origin_airport.iata_code" of "ADA"
     When the "cohort" committee is calculated
     And the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should have a record with "m3" equal to "0"
     And the conclusion of the committee should have a record with "m2" equal to "0"
-    And the conclusion of the committee should have a record with "m1" equal to "2"
+    And the conclusion of the committee should have a record with "m1" equal to "1.5"
+    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
+
+  Scenario: Fuel use coefficients committee from cohort where some aircraft are missing fuel use equation
+    Given a flight emitter
+    And a characteristic "segments_per_trip" of "1"
+    And a characteristic "origin_airport.iata_code" of "AIA"
+    When the "cohort" committee is calculated
+    And the "fuel_use_coefficients" committee is calculated
+    Then the committee should have used quorum "from cohort"
+    And the conclusion of the committee should have a record with "m3" equal to "0"
+    And the conclusion of the committee should have a record with "m2" equal to "0"
+    And the conclusion of the committee should have a record with "m1" equal to "2.66667"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
 
   Scenario: Fuel use coefficients committee from default
@@ -325,7 +310,7 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "default"
     And the conclusion of the committee should have a record with "m3" equal to "0"
     And the conclusion of the committee should have a record with "m2" equal to "0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.66667"
+    And the conclusion of the committee should have a record with "m1" equal to "2.2"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
 
   Scenario: Dogleg factor committee from segments per trip
@@ -380,47 +365,20 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "from distance class"
     And the conclusion of the committee should be "100.0"
 
-  Scenario Outline: Distance committee from cohort where all distances > 0
+  Scenario: Distance committee from cohort
     Given a flight emitter
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "<origin>"
+    And a characteristic "origin_airport.iata_code" of "ADA"
     When the "cohort" committee is calculated
     And the "distance" committee is calculated
     Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "<distance>"
-    Examples:
-      | origin | distance |
-      | ADA    | 100.0    |
-      | AIA    | 1000.0   |
-
-  Scenario Outline: Distance committee from cohort where some distances > 0
-    Given a flight emitter
-    And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "<origin>"
-    When the "cohort" committee is calculated
-    And the "distance" committee is calculated
-    Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "<distance>"
-    Examples:
-      | origin | distance |
-      | ADA    | 100.0    |
-      | AIA    | 1000.0   |
-
-  Scenario: Distance committee from cohort where all distances = 0
-    Given a flight emitter
-    And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "WEA"
-    And a characteristic "destination_airport.iata_code" of "WEA"
-    When the "cohort" committee is calculated
-    And the "distance" committee is calculated
-    Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "525.0"
+    And the conclusion of the committee should be "100.0"
 
   Scenario: Distance committee from default
     Given a flight emitter
     When the "distance" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "525.0"
+    And the conclusion of the committee should be "640.0"
 
   Scenario: Adjusted distance committee from distance, route inefficiency factor, and dogleg factor
     Given a flight emitter

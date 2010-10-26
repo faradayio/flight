@@ -376,6 +376,14 @@ module BrighterPlanet
           ### Seats calculation
           # Returns the number of `seats`.
           committee :seats do
+            #### Seats from seats estimate
+            # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
+            #
+            # Uses the client-input estimate of the number of `seats`.
+            quorum 'from seats estimate', :needs => :seats_estimate, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
+              characteristics[:seats_estimate]
+            end
+            
             #### Seats from aircraft
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
@@ -384,12 +392,12 @@ module BrighterPlanet
               characteristics[:aircraft].seats
             end
             
-            #### Seats from seats estimate
+            #### Seats from aircraft class
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Uses the client-input estimate of the number of `seats`.
-            quorum 'from seats estimate', :needs => :seats_estimate, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:seats_estimate]
+            # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)' average number of `seats`.
+            quorum 'from aircraft class', :needs => :aircraft_class, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
+              characteristics[:aircraft_class].seats
             end
             
             #### Seats from cohort
@@ -405,20 +413,12 @@ module BrighterPlanet
               end
             end
             
-            #### Seats from aircraft class
-            # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)' average number of `seats`.
-            quorum 'from aircraft class', :needs => :aircraft_class, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:aircraft_class].seats_before_type_cast
-            end
-            
             #### Default seats
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
             # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              FlightSegment.fallback.seats_before_type_cast # need before_type_cast b/c seats is an integer but the fallback value is a float
+              FlightSegment.fallback.seats
             end
           end
           
