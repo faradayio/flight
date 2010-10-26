@@ -337,10 +337,7 @@ module BrighterPlanet
             #
             # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              fallback = Aircraft.fallback
-              if fallback
-                FuelUseEquation.new fallback.m3, fallback.m2, fallback.m1, fallback.endpoint_fuel
-              end
+              FuelUseEquation.new Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.endpoint_fuel
             end
           end
           
