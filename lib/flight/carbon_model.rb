@@ -277,7 +277,7 @@ module BrighterPlanet
               flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
                 code = flight_segment.aircraft_bts_code
                 key = flight_segment.row_hash
-                aircraft = Aircraft.find_by_aircraft_bts_code code
+                aircraft = Aircraft.find_by_bts_code code
                 hsh[key] = aircraft
                 hsh
               end

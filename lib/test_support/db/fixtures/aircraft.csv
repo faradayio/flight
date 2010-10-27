@@ -1,4 +1,4 @@
-bp_code,icao_code,aircraft_bts_code,class_code,m3,m2,m1,endpoint_fuel,seats,weighting
+bp_code,icao_code,bts_code,class_code,m3,m2,m1,endpoint_fuel,seats,weighting
 BP-FM1,FM1,1,EX,0,0,1,0,125,100
 BP-BA1,BA1,2,EX,0,0,2,0,120,300
 BP-XX1,,3,BX,,,,,130,100
