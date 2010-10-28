@@ -274,10 +274,15 @@ module BrighterPlanet
                 passengers + flight_segment.passengers
               end
               
+              bts_codes = flight_segments.map(&:aircraft_bts_code).uniq
+              relevant_aircraft = Aircraft.find_all_by_bts_code(bts_codes).inject({}) do |hsh, aircraft|
+                hsh[aircraft.aircraft_bts_code] = aircraft
+                hsh
+              end
               flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
-                code = flight_segment.aircraft_bts_code
+                bts_code = flight_segment.aircraft_bts_code
                 key = flight_segment.row_hash
-                aircraft = Aircraft.find_by_bts_code code
+                aircraft = relevant_aircraft[bts_code.to_s]
                 hsh[key] = aircraft
                 hsh
               end
