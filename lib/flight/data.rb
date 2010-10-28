@@ -24,6 +24,10 @@ module BrighterPlanet
             integer 'segments_per_trip'
           end
           
+          process "pull orphans" do
+            FlightSegment.run_data_miner!
+          end
+          
           process :run_data_miner_on_belongs_to_associations
         end
       end
