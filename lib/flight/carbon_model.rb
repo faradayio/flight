@@ -343,13 +343,13 @@ module BrighterPlanet
             ##### From aircraft class
             # This fourth-tier method looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)'s average number of `seats`.
             quorum 'from aircraft class', :needs => :aircraft_class, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:aircraft_class].seats_before_type_cast
+              characteristics[:aircraft_class].seats
             end
             
             ##### Default
             # This default method calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
             quorum 'default' do
-              FlightSegment.fallback.seats_before_type_cast # need before_type_cast b/c seats is an integer but the fallback value is a float
+              FlightSegment.fallback.seats.to_f # need before_type_cast b/c seats is an integer but the fallback value is a float
             end
           end
           

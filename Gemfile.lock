@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    flight (0.1.0)
+    flight (0.1.1)
       emitter (~> 0.1.8)
 
 GEM
