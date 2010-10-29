@@ -36,15 +36,16 @@ require_or_fail('jeweler', 'Jeweler (or a dependency) not available. Install it 
     gem.test_files = Dir.glob(File.join('features', '**', '*.rb')) +
       Dir.glob(File.join('features', '**', '*.feature')) +
       Dir.glob(File.join('lib', 'test_support', '**/*.rb'))
-    gem.add_development_dependency 'activerecord', '~>3.0.0'
+    gem.add_development_dependency 'activerecord', '~>3.0.1'
     gem.add_development_dependency 'bundler', '~>1.0.0'
     gem.add_development_dependency 'cucumber'
     gem.add_development_dependency 'jeweler', '~>1.4.0'
     gem.add_development_dependency 'rake'
     gem.add_development_dependency 'rdoc'
-    gem.add_development_dependency 'rspec', '= 2.0.0.beta.17'
+    gem.add_development_dependency 'rspec', '= 2.0.1'
     gem.add_development_dependency 'sniff', '~>0.2.0' unless ENV['LOCAL_SNIFF']
     gem.add_dependency 'emitter', '~>0.1.8' unless ENV['LOCAL_EMITTER']
+    gem.add_dependency 'builder'
   end
   Jeweler::GemcutterTasks.new
 end
@@ -77,6 +78,19 @@ require_or_fail('cucumber', 'Cucumber gem not found, cucumber tasks unavailable'
 
   task :test => :features
   task :default => :test
+end
+
+require_or_fail 'rspec', 'RSpec gem not found, RSpec tasks unavailable' do
+  require 'rspec/core/rake_task'
+  Rspec::Core::RakeTask.new do |t|
+    if ENV['CUCUMBER_FORMAT']
+      t.rspec_opts = "--format #{ENV['CUCUMBER_FORMAT']}"
+    else
+      t.rspec_opts = '--format p'
+    end
+  end
+
+  task :test => :spec
 end
 
 require 'rake/rdoctask'
