@@ -290,7 +290,7 @@ module BrighterPlanet
               m3 = flight_segments.inject(0) do |m3, flight_segment|
                 aircraft = flight_segment_aircraft[flight_segment.row_hash]
                 if aircraft.m3.nil?
-                  aircraft_class = aircraft.aircraft_class
+                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
                   aircraft_m3 = aircraft_class.m3
                 else
                   aircraft_m3 = aircraft.m3
@@ -301,7 +301,7 @@ module BrighterPlanet
               m2 = flight_segments.inject(0) do |m2, flight_segment|
                 aircraft = flight_segment_aircraft[flight_segment.row_hash]
                 if aircraft.m2.nil?
-                  aircraft_class = aircraft.aircraft_class
+                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
                   aircraft_m2 = aircraft_class.m2
                 else
                   aircraft_m2 = aircraft.m2
@@ -312,7 +312,7 @@ module BrighterPlanet
               m1 = flight_segments.inject(0) do |m1, flight_segment|
                 aircraft = flight_segment_aircraft[flight_segment.row_hash]
                 if aircraft.m1.nil?
-                  aircraft_class = aircraft.aircraft_class
+                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
                   aircraft_m1 = aircraft_class.m1
                 else
                   aircraft_m1 = aircraft.m1
@@ -323,7 +323,7 @@ module BrighterPlanet
               endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
                 aircraft = flight_segment_aircraft[flight_segment.row_hash]
                 if aircraft.endpoint_fuel.nil?
-                  aircraft_class = aircraft.aircraft_class
+                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
                   aircraft_epfuel = aircraft_class.endpoint_fuel
                 else
                   aircraft_epfuel = aircraft.endpoint_fuel
