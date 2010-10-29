@@ -1,8 +1,21 @@
 PATH
   remote: .
   specs:
-    flight (0.1.1)
+    flight (0.1.2)
       emitter (~> 0.1.8)
+
+PATH
+  remote: ~/earth
+  specs:
+    earth (0.2.6)
+      activerecord (>= 3.0.0.beta4)
+      cohort_scope (>= 0.0.7)
+      conversions (>= 1.4.5)
+      data_miner (~> 0.5.5)
+      falls_back_on (>= 0.0.3)
+      geokit (>= 1.5.0)
+      loose_tight_dictionary (>= 0.0.8)
+      weighted_average (>= 0.0.4)
 
 GEM
   remote: http://rubygems.org/
@@ -30,7 +43,7 @@ GEM
     characterizable (0.0.17)
       activesupport (>= 2.3.5)
       blockenspiel (>= 0.3.2)
-    cohort_scope (0.1.0)
+    cohort_scope (0.1.1)
       activerecord (>= 3.0.0.beta4)
       activesupport (>= 3.0.0.beta4)
     common_name (0.1.5)
@@ -55,15 +68,6 @@ GEM
       remote_table (~> 0.2.32)
       taps (>= 0.3.11)
     diff-lcs (1.1.2)
-    earth (0.2.6)
-      activerecord (>= 3.0.0.beta4)
-      cohort_scope (>= 0.0.7)
-      conversions (>= 1.4.5)
-      data_miner (~> 0.5.5)
-      falls_back_on (>= 0.0.3)
-      geokit (>= 1.5.0)
-      loose_tight_dictionary (>= 0.0.8)
-      weighted_average (>= 0.0.4)
     emitter (0.1.8)
       activesupport (>= 3.0.0)
       characterizable (>= 0.0.16)
@@ -105,7 +109,7 @@ GEM
       blockenspiel (>= 0.3.2)
       builder (~> 2.1.2)
     libxml-ruby (1.1.4)
-    log4r (1.1.8)
+    log4r (1.1.9)
     loose_tight_dictionary (0.0.9)
       activesupport (>= 2.3.4)
       amatch (>= 0.2.5)
@@ -129,12 +133,12 @@ GEM
       libxml-ruby (>= 1.1.3)
       rubyzip (>= 0.9.1)
       spreadsheet (>= 0.6.4)
-    rspec (2.0.0)
-      rspec-core (= 2.0.0)
-      rspec-expectations (= 2.0.0)
-      rspec-mocks (= 2.0.0)
-    rspec-core (2.0.0)
-    rspec-expectations (2.0.0)
+    rspec (2.0.0.beta.17)
+      rspec-core (= 2.0.0.beta.17)
+      rspec-expectations (= 2.0.0.beta.17)
+      rspec-mocks (= 2.0.0.beta.17)
+    rspec-core (2.0.0.beta.17)
+    rspec-expectations (2.0.0.beta.17)
       diff-lcs (>= 1.1.2)
     rspec-mocks (2.0.0.beta.17)
     ruby-ole (1.2.11.1)
@@ -185,10 +189,11 @@ DEPENDENCIES
   activerecord (~> 3.0.0)
   bundler (~> 1.0.0)
   cucumber
+  earth!
   emitter (~> 0.1.8)
   flight!
   jeweler (~> 1.4.0)
   rake
   rdoc
-  rspec (~> 2.0.0.beta.17)
-  sniff (~> 0.2.1)
+  rspec (= 2.0.0.beta.17)
+  sniff (~> 0.2.0)
