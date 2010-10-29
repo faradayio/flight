@@ -10,8 +10,8 @@ require 'weighted_average'
 ## Flight carbon model
 # This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
 #
-##### Timeframe
-# The model estimates the emissions that occur during a particular `timeframe`. For example, if the `timeframe` is January 2010, a flight that occured on January 5, 2010 will have emissions but a flight that occured on February 1, 2010 will not. If no `timeframe` is specified, the default is the current year.
+##### Timeframe and date
+# The model estimates the emissions that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occured on January 5, 2010 will have emissions but a flight that occured on February 1, 2010 will not. If no `timeframe` is specified, the default is the current year. If no `date` is specified, the default is the first day of the `timeframe`.
 #
 ##### Calculations
 # The final estimate is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the `emission` calculation. Each calculation is named according to the value it returns.
