@@ -3,6 +3,7 @@
 # Contact Brighter Planet for dual-license arrangements.
 
 require 'weighted_average'
+require 'builder'
 
 ## Flight:carbon model
 # This module is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
@@ -520,6 +521,18 @@ module BrighterPlanet
       class FuelUseEquation < Struct.new(:m3, :m2, :m1, :endpoint_fuel)
         def empty?
           m3.nil? and m2.nil? and m1.nil? and endpoint_fuel.nil?
+        end
+
+        def to_xml(options = {})
+          options[:indent] ||= 2
+          xml = options[:builder] ||= Builder::XmlMarkup.new(:indent => options[:indent])
+          xml.instruct! unless options[:skip_instruct]
+          xml.fuel_use_equation do |estimate_block|
+            estimate_block.endpoint_fuel endpoint_fuel, :type => 'float'
+            estimate_block.m1 m1, :type => 'float'
+            estimate_block.m2 m2, :type => 'float'
+            estimate_block.m3 m3, :type => 'float'
+          end
         end
       end
     end
