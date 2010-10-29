@@ -53,7 +53,7 @@ module BrighterPlanet
             ##### From fuel type
             # This method looks up data on [fuel types](http://data.brighterplanet.com/fuel_types) and divides the `fuel type` `emission factor` (*kg CO<sub>2</sub> / litre fuel*) by the `fuel type` `density` (*kg fuel / litre fuel*) to give *kg CO<sub>2</sub>e / kg fuel*.
             quorum 'from fuel type', :needs => :fuel_type, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:fuel_type].emission_factor / characteristics[:fuel_type].density
+              characteristics[:fuel_type].emission_factor.to_f / characteristics[:fuel_type].density.to_f
             end
           end
           
