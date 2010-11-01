@@ -301,7 +301,7 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should have a record with "m3" equal to "0"
     And the conclusion of the committee should have a record with "m2" equal to "0"
-    And the conclusion of the committee should have a record with "m1" equal to "2.66667"
+    And the conclusion of the committee should have a record with "m1" equal to "1.33333"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
 
   Scenario: Fuel use coefficients committee from cohort where all aircraft are missing fuel use equation
