@@ -199,7 +199,8 @@ module BrighterPlanet
           end
           
           ### Route inefficiency factor calculation
-          # This calculation returns the `route inefficiency factor`. This is a measure of how much farther real world flights travel than the great circle distance between their origin and destination.
+          # This calculation returns the `route inefficiency factor`.
+          # This is a measure of how much farther real world flights travel than the great circle distance between their origin and destination.
           # It accounts for factors like flight path routing around controlled airspace and circling while waiting for clearance to land.
           committee :route_inefficiency_factor do
             #### Route inefficiency factor from country
@@ -220,7 +221,8 @@ module BrighterPlanet
           end
           
           ### Dogleg factor calculation
-          # Returns the `dogleg factor`. This is a measure of how far out of the way the average layover is compared to a direct flight.
+          # Returns the `dogleg factor`.
+          # This is a measure of how far out of the way the average layover is compared to a direct flight.
           committee :dogleg_factor do
             #### Dogleg factor from segments per trip
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
@@ -266,7 +268,8 @@ module BrighterPlanet
             #### Fuel use coefficients from cohort
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Calculates the average `fuel use coefficients` of the aircraft used by the `cohort` segments, weighted by their passengers.
+            # Calculates the average `fuel use coefficients` of the aircraft used by the `cohort` segments, weighted by the segment passengers.
+            # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
             quorum 'from cohort', :needs => :cohort, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
               flight_segments = characteristics[:cohort]
               
@@ -342,7 +345,8 @@ module BrighterPlanet
             #### Default fuel use coefficients
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
+            # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by the segment passengers.
+            # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
             quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
               FuelUseEquation.new Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.endpoint_fuel
             end
@@ -555,7 +559,8 @@ module BrighterPlanet
           end
           
           ### Cohort calculation
-          # Returns the `cohort`, which is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
+          # Returns the `cohort`.
+          # This is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
           committee :cohort do
             #### Cohort from segments per trip and input
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
@@ -630,6 +635,20 @@ module BrighterPlanet
               timeframe.from
             end
           end
+          
+          ### Timeframe calculation
+          # Returns the `timeframe`.
+          # This is the period over which to calculate emissions.
+            
+            #### Timeframe from client input
+            # **Complies:** All
+            #
+            # Uses the client-input value for `timeframe`.
+            
+            #### Default timeframe
+            # **Complies:** All
+            #
+            # Uses the current calendar year.
         end
       end
       
