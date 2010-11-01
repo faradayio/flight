@@ -635,7 +635,11 @@ module BrighterPlanet
       
       class FuelUseEquation < Struct.new(:m3, :m2, :m1, :endpoint_fuel)
         def empty?
-          m3.nil? and m2.nil? and m1.nil? and endpoint_fuel.nil?
+          values.all?(&:nil?) or values.all?(&:zero?)
+        end
+
+        def values
+          [m3, m2, m1, endpoint_fuel]
         end
       end
     end
