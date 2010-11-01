@@ -282,62 +282,23 @@ module BrighterPlanet
                 hsh[aircraft.bts_code] = aircraft
                 hsh
               end
-              flight_segment_aircraft = flight_segments.inject({}) do |hsh, flight_segment|
-                bts_code = flight_segment.aircraft_bts_code
-                key = flight_segment.row_hash
-                aircraft = relevant_aircraft[bts_code.to_s]
-                hsh[key] = aircraft
-                hsh
-              end
-              
-              m3 = flight_segments.inject(0) do |m3, flight_segment|
-                aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                if aircraft.m3.nil?
-                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
-                  aircraft_m3 = aircraft_class.m3
-                else
-                  aircraft_m3 = aircraft.m3
+
+              sum_coefficients = lambda do |name|
+                flight_segments.inject(0) do |coefficient, flight_segment|
+                  bts_code = flight_segment.aircraft_bts_code.to_s
+                  aircraft = relevant_aircraft[bts_code]
+                  aircraft_coefficient = aircraft.send(name)
+                  if aircraft_coefficient.nil? or aircraft_coefficient.zero?
+                    aircraft_coefficient = aircraft.aircraft_class.send(name)
+                  end
+                  coefficient + (aircraft_coefficient * flight_segment.passengers)
                 end
-                m3 + (aircraft_m3 * flight_segment.passengers)
               end
-              
-              m2 = flight_segments.inject(0) do |m2, flight_segment|
-                aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                if aircraft.m2.nil?
-                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
-                  aircraft_m2 = aircraft_class.m2
-                else
-                  aircraft_m2 = aircraft.m2
-                end
-                m2 + (aircraft_m2 * flight_segment.passengers)
-              end
-              
-              m1 = flight_segments.inject(0) do |m1, flight_segment|
-                aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                if aircraft.m1.nil?
-                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
-                  aircraft_m1 = aircraft_class.m1
-                else
-                  aircraft_m1 = aircraft.m1
-                end
-                m1 + (aircraft_m1 * flight_segment.passengers)
-              end
-              
-              endpoint_fuel = flight_segments.inject(0) do |endpoint_fuel, flight_segment|
-                aircraft = flight_segment_aircraft[flight_segment.row_hash]
-                if aircraft.endpoint_fuel.nil?
-                  aircraft_class = AircraftClass.find_by_code(aircraft.class_code)
-                  aircraft_epfuel = aircraft_class.endpoint_fuel
-                else
-                  aircraft_epfuel = aircraft.endpoint_fuel
-                end
-                endpoint_fuel + (aircraft_epfuel * flight_segment.passengers)
-              end
-              
-              m3 = m3 / passengers
-              m2 = m2 / passengers
-              m1 = m1 / passengers
-              endpoint_fuel = endpoint_fuel / passengers
+
+              m3 = sum_coefficients.call(:m3) / passengers
+              m2 = sum_coefficients.call(:m2) / passengers
+              m1 = sum_coefficients.call(:m1) / passengers
+              endpoint_fuel = sum_coefficients.call(:endpoint_fuel) / passengers
               
               FuelUseEquation.new m3, m2, m1, endpoint_fuel
             end
