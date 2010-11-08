@@ -589,20 +589,6 @@ module BrighterPlanet
               timeframe.from
             end
           end
-          
-          ### Timeframe calculation
-          # Returns the `timeframe`.
-          # This is the period over which to calculate emissions.
-            
-            #### Timeframe from client input
-            # **Complies:** All
-            #
-            # Uses the client-input value for `timeframe`.
-            
-            #### Default timeframe
-            # **Complies:** All
-            #
-            # Uses the current calendar year.
         end
       end
       
