@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>carbon_model.rb</title>
+  <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <table cellspacing=0 cellpadding=0>
+  <thead>
+    <tr>
+      <th class=docs><h1>carbon_model.rb</h1></th>
+      <th class=code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr id='section-1'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-1">#</a>
+        </div>
+        <p> Copyright © 2010 Brighter Planet.
+ See LICENSE for details.
+ Contact Brighter Planet for dual-license arrangements.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="nb">require</span> <span class="s1">&#39;leap&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;timeframe&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;date&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;weighted_average&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;builder&#39;</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-2'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-2">#</a>
+        </div>
+        <h1>Flight carbon model</h1>
+
+<p> This model is used by <a href="http://brighterplanet.com">Brighter Planet</a>&rsquo;s carbon emission <a href="http://carbon.brighterplanet.com">web service</a> to estimate the <strong>greenhouse gas emissions of passenger air travel</strong>.</p>
+
+<h4>Timeframe and date</h4>
+
+<p> The model estimates the emissions that occur during a particular <code>timeframe</code>. To do this it needs to know the <code>date</code> on which the flight occurred. For example, if the <code>timeframe</code> is January 2010, a flight that occured on January 5, 2010 will have emissions but a flight that occured on February 1, 2010 will not. If no <code>timeframe</code> is specified, the default is the current year. If no <code>date</code> is specified, the default is the first day of the <code>timeframe</code>.</p>
+
+<h4>Calculations</h4>
+
+<p> The final estimate is the result of the <strong>calculations</strong> detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the <code>emission</code> calculation. Each calculation is named according to the value it returns.</p>
+
+<h4>Methods</h4>
+
+<p> To accomodate varying client input, each calculation may have one or more <strong>methods</strong>. These are listed under each calculation in order from most to least preferred. Each method is named according to the values it requires. If any of these values is not available the method will be ignored. If all the methods for a calculation are ignored, the calculation will not return a value. &ldquo;Default&rdquo; methods do not require any values, and so a calculation with a default method will always return a value.</p>
+
+<h4>Standard compliance</h4>
+
+<p> Each method lists any established calculation standards with which it <strong>complies</strong>. When compliance with a standard is requested, all methods that do not comply with that standard are ignored. This means that any values a particular method requires will have been calculated using a compliant method, because those are the only methods available. If any value did not have a compliant method in its calculation then it would be undefined, and the current method would have been ignored.</p>
+
+<h4>Collaboration</h4>
+
+<p> Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes shold include test coverage for new functionality. Please see <a href="http://github.com/brighterplanet/sniff#readme">sniff</a>, our emitter testing framework, for more information.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="k">module</span> <span class="nn">BrighterPlanet</span>
+  <span class="k">module</span> <span class="nn">Flight</span>
+    <span class="k">module</span> <span class="nn">CarbonModel</span>
+      <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">included</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="n">base</span><span class="o">.</span><span class="n">extend</span> <span class="no">FastTimestamp</span>
+        <span class="n">base</span><span class="o">.</span><span class="n">decide</span> <span class="ss">:emission</span><span class="p">,</span> <span class="ss">:with</span> <span class="o">=&gt;</span> <span class="ss">:characteristics</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-3'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-3">#</a>
+        </div>
+        <h2>Emission calculation</h2>
+
+<p> Returns the <code>emission</code> estimate in <em>kg CO<sub>2</sub>e</em>.
+ This is the passenger&rsquo;s share of the total flight emissions that occured during the <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:emission</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-4'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-4">#</a>
+        </div>
+        <h3>Emission from fuel, emission factor, freight share, passengers, multipliers, and date</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<ul>
+<li>Checks whether the flight occured during the <code>timeframe</code></li>
+<li>Multiplies <code>fuel use</code> (<em>kg fuel</em>) by an <code>emission factor</code> (<em>kg CO<sub>2</sub>e / kg fuel</em>) and an <code>aviation multiplier</code> to give total flight emissions in <em>kg CO<sub>2</sub>e</em></li>
+<li>Multiplies by (1 &ndash; <code>freight share</code>) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage</li>
+<li>Divides by the number of <code>passengers</code> and multiplies by a <code>seat class multiplier</code> to give <code>emission</code> for the passenger</li>
+<li>If the flight did not occur during the <code>timeframe</code>, <code>emission</code> is zero</li>
+</ul>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel, emission factor, freight share, passengers, multipliers, and date&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel</span><span class="p">,</span> <span class="ss">:emission_factor</span><span class="p">,</span> <span class="ss">:freight_share</span><span class="p">,</span> <span class="ss">:passengers</span><span class="p">,</span> <span class="ss">:seat_class_multiplier</span><span class="p">,</span> <span class="ss">:aviation_multiplier</span><span class="p">,</span> <span class="ss">:date</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
+              <span class="n">date</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Date</span><span class="p">)</span> <span class="p">?</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">]</span> <span class="p">:</span>
+                <span class="no">Date</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">to_s</span><span class="p">)</span>
+              <span class="k">if</span> <span class="n">timeframe</span><span class="o">.</span><span class="n">include?</span> <span class="n">date</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:emission_factor</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aviation_multiplier</span><span class="o">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:freight_share</span><span class="o">]</span><span class="p">)</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:passengers</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class_multiplier</span><span class="o">]</span>
+              <span class="k">else</span>
+                <span class="mi">0</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-5'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-5">#</a>
+        </div>
+        <h3>Default emission</h3>
+
+<p> <strong>Complies:</strong></p>
+
+<p> Displays an error message if the previous method fails.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span> <span class="k">do</span>
+              <span class="k">raise</span> <span class="s2">&quot;The emission committee&#39;s default quorum should never be called&quot;</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-6'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-6">#</a>
+        </div>
+        <h2>Emission factor calculation</h2>
+
+<p> Returns the <code>emission factor</code> in <em>kg CO<sub>2</sub>e / kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:emission_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-7'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-7">#</a>
+        </div>
+        <h3>Emission factor from fuel type</h3>
+
+<p> Complies: GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/fuel_types">fuel type</a> and divides its <code>emission factor</code> (<em>kg CO<sub>2</sub> / litre fuel</em>) by its <code>density</code> (<em>kg fuel / litre fuel</em>) to give <em>kg CO<sub>2</sub>e / kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel type&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:fuel_type</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_type</span><span class="o">].</span><span class="n">emission_factor</span><span class="o">.</span><span class="n">to_f</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_type</span><span class="o">].</span><span class="n">density</span><span class="o">.</span><span class="n">to_f</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-8'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-8">#</a>
+        </div>
+        <h2>Aviation multiplier calculation</h2>
+
+<p> Returns the <code>aviation multiplier</code>. This approximates the extra climate impact of emissions high in the atmosphere.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:aviation_multiplier</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-9'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-9">#</a>
+        </div>
+        <h3>Aviation multiplier from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input <code>aviation multiplier</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-10'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-10">#</a>
+        </div>
+        <h3>Default aviation multiplier</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses an <code>aviation multiplier</code> of <strong>2.0</strong> after <a href="http://sei-us.org/publications/id/13">Kolmuss and Crimmins (2009)</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="mi">2</span><span class="o">.</span><span class="mi">0</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-11'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-11">#</a>
+        </div>
+        <h2>Fuel calculation</h2>
+
+<p> Returns the flight&rsquo;s total <code>fuel</code> use in <em>kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-12'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-12">#</a>
+        </div>
+        <h3>Fuel from fuel per segment and segments per trip and trips</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Multiplies the <code>fuel per segment</code> (<em>kg fuel</em>) by the <code>segments per trip</code> and the number of <code>trips</code> to give <em>kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel per segment and segments per trip and trips&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_per_segment</span><span class="p">,</span> <span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:trips</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_per_segment</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">].</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:trips</span><span class="o">].</span><span class="n">to_f</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-13'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-13">#</a>
+        </div>
+        <h2>Fuel per segment calculation</h2>
+
+<p> Returns the <code>fuel per segment</code> in <em>kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_per_segment</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-14'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-14">#</a>
+        </div>
+        <h3>Fuel per segment from adjusted distance per segment and fuel use coefficients</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses a third-order polynomial equation to calculate the fuel used per segment:</p>
+
+<p> (m<sub>3</sub> * d<sup>3</sup> ) + (m<sub>2</sub> * d<sup>2</sup> ) + (m<sub>1</sub> * d) + endpoint fuel</p>
+
+<p> Where d is the <code>adjusted distance per segment</code> and m<sub>3</sub>, m<sub>2</sub>, m<sub>2</sub>, and endpoint fuel are the <code>fuel use coefficients</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance per segment and fuel use coefficients&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="p">,</span> <span class="ss">:fuel_use_coefficients</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m3</span><span class="o">.</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">to_f</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">+</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m2</span><span class="o">.</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">to_f</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m1</span><span class="o">.</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">to_f</span> <span class="o">+</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">endpoint_fuel</span><span class="o">.</span><span class="n">to_f</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-15'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-15">#</a>
+        </div>
+        <h2>Adjusted distance per segment calculation</h2>
+
+<p> Returns the <code>adjusted distance per segment</code> in <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:adjusted_distance_per_segment</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-16'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-16">#</a>
+        </div>
+        <h3>Adjusted distance per segment from adjusted distance and segments per trip</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Divides the <code>adjusted distance</code> (<em>nautical miles</em>) by <code>segments per trip</code> to give <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance and segments per trip&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:adjusted_distance</span><span class="p">,</span> <span class="ss">:segments_per_trip</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance</span><span class="o">]</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-17'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-17">#</a>
+        </div>
+        <h2>Adjusted distance calculation</h2>
+
+<p> Returns the <code>adjusted distance</code> in <em>nautical miles</em>.
+ The <code>adjusted distance</code> accounts for factors that increase the actual distance traveled by real world flights.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:adjusted_distance</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-18'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-18">#</a>
+        </div>
+        <h3>Adjusted distance from distance, route inefficiency factor, and dogleg factor</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Multiplies <code>distance</code> (<em>nautical miles</em>) by a <code>route inefficiency factor</code> and a <code>dogleg factor</code> to give <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance, route inefficiency factor, and dogleg factor&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:distance</span><span class="p">,</span> <span class="ss">:route_inefficiency_factor</span><span class="p">,</span> <span class="ss">:dogleg_factor</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:route_inefficiency_factor</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:dogleg_factor</span><span class="o">]</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-19'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-19">#</a>
+        </div>
+        <h2>Distance calculation</h2>
+
+<p> Returns the flight&rsquo;s base <code>distance</code> in <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-20'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-20">#</a>
+        </div>
+        <h3>Distance from airports</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the great circle distance between the <code>origin airport</code> and <code>destination airport</code> and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from airports&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="k">if</span>  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">latitude</span> <span class="ow">and</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">longitude</span> <span class="ow">and</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">latitude</span> <span class="ow">and</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">longitude</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">distance_to</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span> <span class="ss">:units</span> <span class="o">=&gt;</span> <span class="ss">:kms</span><span class="p">)</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-21'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-21">#</a>
+        </div>
+        <h3>Distance from distance estimate</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Converts the <code>distance_estimate</code> in <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance estimate&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_estimate</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_estimate</span><span class="o">].</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-22'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-22">#</a>
+        </div>
+        <h3>Distance from distance class</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a>&lsquo; <code>distance</code> and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_class</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class</span><span class="o">].</span><span class="n">distance</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-23'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-23">#</a>
+        </div>
+        <h3>Distance from cohort</h3>
+
+<p> <strong>Complies:</strong></p>
+
+<p> Calculates the average <code>distance</code> of the <code>cohort</code> segments, weighted by their passengers, and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span> <span class="c1"># cohort here will be some combo of origin, airline, and aircraft</span>
+              <span class="n">distance</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:distance</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="ss">:nautical_miles</span><span class="p">)</span>
+              <span class="n">distance</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">distance</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-24'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-24">#</a>
+        </div>
+        <h3>Default distance</h3>
+
+<p> <strong>Complies:</strong></p>
+
+<p> Calculates the average <code>distance</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers, and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span> <span class="k">do</span>
+              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-25'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-25">#</a>
+        </div>
+        <h2>Route inefficiency factor calculation</h2>
+
+<p> This calculation returns the <code>route inefficiency factor</code>.
+ This is a measure of how much farther real world flights travel than the great circle distance between their origin and destination.
+ It accounts for factors like flight path routing around controlled airspace and circling while waiting for clearance to land.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:route_inefficiency_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-26'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-26">#</a>
+        </div>
+        <h3>Route inefficiency factor from country</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <code>route inefficiency factor</code> for the <a href="http://data.brighterplanet.com/countries">country</a> in which the flight occurs.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from country&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:country</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:country</span><span class="o">].</span><span class="n">andand</span><span class="o">.</span><span class="n">flight_route_inefficiency_factor</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-27'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-27">#</a>
+        </div>
+        <h3>Default route inefficiency factor</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses a <code>route inefficiency factor</code> of <strong>10%</strong> based on <a href="http://www.atmseminar.org/seminarContent/seminar6/papers/p_055_MPM.pdf">Kettunen et al. (2005)</a></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">Country</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">flight_route_inefficiency_factor</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-28'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-28">#</a>
+        </div>
+        <h2>Dogleg factor calculation</h2>
+
+<p> Returns the <code>dogleg factor</code>.
+ This is a measure of how far out of the way the average layover is compared to a direct flight.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:dogleg_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-29'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-29">#</a>
+        </div>
+        <h3>Dogleg factor from segments per trip</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Assumes that each layover increases the total flight distance by <strong>25%</strong>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from segments per trip&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="mi">1</span><span class="o">.</span><span class="mi">25</span> <span class="o">**</span> <span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-30'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-30">#</a>
+        </div>
+        <h2>Distance estimate calculation</h2>
+
+<p> Returns the client-input <code>distance estimate</code> in <em>km</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-31'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-31">#</a>
+        </div>
+        <h2>Distance class calculation</h2>
+
+<p> Returns the client-input <a href="http://data.brighterplanet.com/distance_classes">distance class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-32'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-32">#</a>
+        </div>
+        <h2>Fuel use coefficients calculation</h2>
+
+<p> Returns the <code>fuel use coefficients</code>. These are the coefficients of the third-order polynomial equation that describes aircraft fuel use.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_use_coefficients</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-33'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-33">#</a>
+        </div>
+        <h3>Fuel use coefficients from aircraft</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft</a>&rsquo;s <code>fuel use coefficients</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">aircraft</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">]</span>
+              <span class="n">fuel_use</span> <span class="o">=</span> <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span> <span class="n">aircraft</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="n">aircraft</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="n">aircraft</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="n">aircraft</span><span class="o">.</span><span class="n">endpoint_fuel</span>
+              <span class="k">if</span> <span class="n">fuel_use</span><span class="o">.</span><span class="n">empty?</span>
+                <span class="kp">nil</span>
+              <span class="k">else</span>
+                <span class="n">fuel_use</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-34'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-34">#</a>
+        </div>
+        <h3>Fuel use coefficients from aircraft class</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/aircraft_classes">aircraft class</a>&lsquo; <code>fuel use coefficients</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft_class</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">aircraft_class</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft_class</span><span class="o">]</span>
+              <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span> <span class="n">aircraft_class</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="n">aircraft_class</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="n">aircraft_class</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="n">aircraft_class</span><span class="o">.</span><span class="n">endpoint_fuel</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-35'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-35">#</a>
+        </div>
+        <h3>Fuel use coefficients from cohort</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average <code>fuel use coefficients</code> of the aircraft used by the <code>cohort</code> segments, weighted by the segment passengers.
+ If an aircraft does not have <code>fuel use coefficients</code>, it takes the <code>fuel use coefficients</code> for the aircraft&rsquo;s <a href="http://data.brighterplanet.com/aircraft_classes">aircraft class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">flight_segments</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">]</span>
+              
+              <span class="n">passengers</span> <span class="o">=</span> <span class="n">flight_segments</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">passengers</span><span class="p">,</span> <span class="n">flight_segment</span><span class="o">|</span>
+                <span class="n">passengers</span> <span class="o">+</span> <span class="n">flight_segment</span><span class="o">.</span><span class="n">passengers</span>
+              <span class="k">end</span>
+              
+              <span class="n">bts_codes</span> <span class="o">=</span> <span class="n">flight_segments</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:aircraft_bts_code</span><span class="p">)</span><span class="o">.</span><span class="n">uniq</span>
+              <span class="n">relevant_aircraft</span> <span class="o">=</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">find_all_by_bts_code</span><span class="p">(</span><span class="n">bts_codes</span><span class="p">)</span><span class="o">.</span><span class="n">inject</span><span class="p">({})</span> <span class="k">do</span> <span class="o">|</span><span class="n">hsh</span><span class="p">,</span> <span class="n">aircraft</span><span class="o">|</span>
+                <span class="n">hsh</span><span class="o">[</span><span class="n">aircraft</span><span class="o">.</span><span class="n">bts_code</span><span class="o">]</span> <span class="o">=</span> <span class="n">aircraft</span>
+                <span class="n">hsh</span>
+              <span class="k">end</span>
+
+              <span class="n">sum_coefficients</span> <span class="o">=</span> <span class="nb">lambda</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="o">|</span>
+                <span class="n">flight_segments</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">coefficient</span><span class="p">,</span> <span class="n">flight_segment</span><span class="o">|</span>
+                  <span class="n">bts_code</span> <span class="o">=</span> <span class="n">flight_segment</span><span class="o">.</span><span class="n">aircraft_bts_code</span><span class="o">.</span><span class="n">to_s</span>
+                  <span class="n">aircraft</span> <span class="o">=</span> <span class="n">relevant_aircraft</span><span class="o">[</span><span class="n">bts_code</span><span class="o">]</span>
+                  <span class="n">aircraft_coefficient</span> <span class="o">=</span> <span class="n">aircraft</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
+                  <span class="k">if</span> <span class="n">aircraft_coefficient</span><span class="o">.</span><span class="n">nil?</span> <span class="ow">or</span> <span class="n">aircraft_coefficient</span><span class="o">.</span><span class="n">zero?</span>
+                    <span class="n">aircraft_coefficient</span> <span class="o">=</span> <span class="n">aircraft</span><span class="o">.</span><span class="n">aircraft_class</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
+                  <span class="k">end</span>
+                  <span class="n">coefficient</span> <span class="o">+</span> <span class="p">(</span><span class="n">aircraft_coefficient</span> <span class="o">*</span> <span class="n">flight_segment</span><span class="o">.</span><span class="n">passengers</span><span class="p">)</span>
+                <span class="k">end</span>
+              <span class="k">end</span>
+
+              <span class="n">m3</span> <span class="o">=</span> <span class="n">sum_coefficients</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="ss">:m3</span><span class="p">)</span> <span class="o">/</span> <span class="n">passengers</span>
+              <span class="n">m2</span> <span class="o">=</span> <span class="n">sum_coefficients</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="ss">:m2</span><span class="p">)</span> <span class="o">/</span> <span class="n">passengers</span>
+              <span class="n">m1</span> <span class="o">=</span> <span class="n">sum_coefficients</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="ss">:m1</span><span class="p">)</span> <span class="o">/</span> <span class="n">passengers</span>
+              <span class="n">endpoint_fuel</span> <span class="o">=</span> <span class="n">sum_coefficients</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="ss">:endpoint_fuel</span><span class="p">)</span> <span class="o">/</span> <span class="n">passengers</span>
+              
+              <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span> <span class="n">m3</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">endpoint_fuel</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-36'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-36">#</a>
+        </div>
+        <h3>Default fuel use coefficients</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average <code>fuel use coefficients</code> of the aircraft used by <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by the segment passengers.
+ If an aircraft does not have <code>fuel use coefficients</code>, it takes the <code>fuel use coefficients</code> for the aircraft&rsquo;s <a href="http://data.brighterplanet.com/aircraft_classes">aircraft class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">endpoint_fuel</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-37'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-37">#</a>
+        </div>
+        <h2>Fuel type calculation</h2>
+
+<p> Returns the <code>fuel type</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_type</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-38'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-38">#</a>
+        </div>
+        <h3>Fuel type from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input <a href="http://data.brighterplanet.com/fuel_types">fuel type</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-39'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-39">#</a>
+        </div>
+        <h3>Default fuel type</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Assumes the flight uses <strong>Jet Fuel</strong>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:ico</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">FuelType</span><span class="o">.</span><span class="n">find_by_name</span> <span class="s1">&#39;Jet Fuel&#39;</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-40'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-40">#</a>
+        </div>
+        <h2>Passengers calculation</h2>
+
+<p> Returns the number of <code>passengers</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:passengers</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-41'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-41">#</a>
+        </div>
+        <h3>Passengers from seats and load factor</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Multiplies the number of <code>seats</code> by the <code>load factor</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seats and load factor&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:seats</span><span class="p">,</span> <span class="ss">:load_factor</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:seats</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:load_factor</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">round</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-42'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-42">#</a>
+        </div>
+        <h2>Seats calculation</h2>
+
+<p> Returns the number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:seats</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-43'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-43">#</a>
+        </div>
+        <h3>Seats from seats estimate</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses the client-input estimate of the number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seats estimate&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:seats_estimate</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seats_estimate</span><span class="o">]</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-44'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-44">#</a>
+        </div>
+        <h3>Seats from aircraft</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft</a>&rsquo;s average number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">seats</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-45'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-45">#</a>
+        </div>
+        <h3>Seats from aircraft class</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/aircraft_classes">aircraft class</a>&lsquo; average number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft_class</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft_class</span><span class="o">].</span><span class="n">seats</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-46'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-46">#</a>
+        </div>
+        <h3>Seats from cohort</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average number of <code>seats</code> of the <code>cohort</code> segments, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">seats</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span> <span class="ss">:seats</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span>
+              <span class="k">if</span> <span class="n">seats</span><span class="o">.</span><span class="n">nil?</span> <span class="ow">or</span> <span class="n">seats</span><span class="o">.</span><span class="n">zero?</span>
+                <span class="kp">nil</span>
+              <span class="k">else</span>
+                <span class="n">seats</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-47'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-47">#</a>
+        </div>
+        <h3>Default seats</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average number of <code>seats</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">seats</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-48'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-48">#</a>
+        </div>
+        <h2>Seats estimate calculation</h2>
+
+<p> Returns the client-input <code>seats estimate</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-49'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-49">#</a>
+        </div>
+        <h2>Load factor calculation</h2>
+
+<p> Returns the <code>load factor</code>.
+ This is the portion of available seats that are occupied.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:load_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-50'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-50">#</a>
+        </div>
+        <h3>Load factor from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input <code>load factor</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-51'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-51">#</a>
+        </div>
+        <h3>Load factor from cohort</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average <code>load factor</code> of the <code>cohort</code> segments, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:load_factor</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-52'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-52">#</a>
+        </div>
+        <h3>Default load factor</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average <code>load factor</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">load_factor</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-53'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-53">#</a>
+        </div>
+        <h2>Freight share calculation</h2>
+
+<p> Returns the <code>freight share</code>.
+ This is the percent of the total aircraft weight that is freight cargo and mail (as opposed to passengers and their baggage).</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:freight_share</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-54'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-54">#</a>
+        </div>
+        <h3>Freight share from cohort</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average <code>freight share</code> of the <code>cohort</code> segments, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:freight_share</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-55'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-55">#</a>
+        </div>
+        <h3>Default freight share</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Calculates the average <code>freight share</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">freight_share</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-56'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-56">#</a>
+        </div>
+        <h2>Trips calculation</h2>
+
+<p> Returns the number of <code>trips</code>.
+ A one-way flight has one trip; a round-trip flight has two trips.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:trips</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-57'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-57">#</a>
+        </div>
+        <h3>Trips from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input number of <code>trips</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-58'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-58">#</a>
+        </div>
+        <h3>Default trips</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses an average number of <code>trips</code> of <strong>1.941</strong>, taken from the <a href="http://www.bts.gov/publications/america_on_the_go/long_distance_transportation_patterns/html/table_07.html">U.S. National Household Travel Survey</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="mi">1</span><span class="o">.</span><span class="mi">941</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-59'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-59">#</a>
+        </div>
+        <h2>Seat class multiplier calculation</h2>
+
+<p> Returns the <code>seat class multiplier</code>. This reflects the amount of cabin space occupied by the passenger&rsquo;s seat.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:seat_class_multiplier</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-60'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-60">#</a>
+        </div>
+        <h3>Seat class multiplier from seat class</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/flight_seat_classes">seat class</a>&lsquo; <code>seat class multiplier</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seat class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:seat_class</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class</span><span class="o">].</span><span class="n">multiplier</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-61'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-61">#</a>
+        </div>
+        <h3>Default seat class multiplier</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses a <code>seat class multiplier</code> of <strong>1</strong>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="no">FlightSeatClass</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">multiplier</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-62'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-62">#</a>
+        </div>
+        <h2>Seat class calculation</h2>
+
+<p> Returns the client-input <a href="http://data.brighterplanet.com/seat_classes">seat class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-63'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-63">#</a>
+        </div>
+        <h2>Country calculation</h2>
+
+<p> Returns the <a href="http://data.brighterplanet.com/countries">country</a> in which a flight occurs.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:country</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-64'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-64">#</a>
+        </div>
+        <h3>Country from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input <a href="http://data.brighterplanet.com/countries">country</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-65'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-65">#</a>
+        </div>
+        <h3>Country from origin airport and destination airport</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Checks whether the flight&rsquo;s <code>origin airport</code> and <code>destination airport</code> are within the same country.
+ If so, that country is the <code>country</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from origin airport and destination airport&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country</span> <span class="o">==</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country</span>
+                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-66'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-66">#</a>
+        </div>
+        <h2>Aircraft Class calculation</h2>
+
+<p> This calculation returns the <a href="http://data.brighterplanet.com/aircraft_classes">aircraft class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:aircraft_class</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-67'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-67">#</a>
+        </div>
+        <h3>Aircraft class from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input <a href="http://data.brighterplanet.com/aircraft_classes">aircraft_class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-68'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-68">#</a>
+        </div>
+        <h3>Aircraft class from aircraft</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft</a>&rsquo;s <a href="http://data.brighterplanet.com/aircraft_classes">aircraft_class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">aircraft_class</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-69'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-69">#</a>
+        </div>
+        <h2>Cohort calculation</h2>
+
+<p> Returns the <code>cohort</code>.
+ This is a set of flight segment records in the <a href="http://data.brighterplanet.com/flight_segments">T-100 database</a> that match certain client-input values.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:cohort</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-70'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-70">#</a>
+        </div>
+        <h3>Cohort from segments per trip and input</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<ul>
+<li>Checks whether the flight is direct</li>
+<li>Takes the input values for <code>origin airport</code>, <code>destination airport</code>, <code>aircraft</code>, and <code>airline</code></li>
+<li>Selects all the records in the T-100 database that match the available input values</li>
+<li>Drops the last input value (initially <code>airline</code>, then <code>aircraft</code>, etc.) if no records match all of the available input values</li>
+<li>Repeats steps 3 and 4 until some records match or no input values remain</li>
+<li>If no records match any of the input values, or if the flight is indirect, then <code>cohort</code> is undefined.</li>
+</ul>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from segments per trip and input&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:appreciates</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="p">,</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:airline</span><span class="o">]</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="n">cohort</span> <span class="o">=</span> <span class="p">{}</span>
+              <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span> <span class="o">==</span> <span class="mi">1</span>
+                <span class="n">provided_characteristics</span> <span class="o">=</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="p">,</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:airline</span><span class="o">].</span>
+                  <span class="n">inject</span><span class="p">(</span><span class="no">ActiveSupport</span><span class="o">::</span><span class="no">OrderedHash</span><span class="o">.</span><span class="n">new</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">memo</span><span class="p">,</span> <span class="n">characteristic_name</span><span class="o">|</span>
+                    <span class="n">memo</span><span class="o">[</span><span class="n">characteristic_name</span><span class="o">]</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="n">characteristic_name</span><span class="o">]</span>
+                    <span class="n">memo</span>
+                  <span class="k">end</span>
+                <span class="n">cohort</span> <span class="o">=</span> <span class="no">FlightSegment</span><span class="o">.</span><span class="n">strict_cohort</span> <span class="n">provided_characteristics</span>
+              <span class="k">end</span>
+              <span class="k">if</span> <span class="n">cohort</span><span class="o">.</span><span class="n">any?</span>
+                <span class="n">cohort</span>
+              <span class="k">else</span>
+                <span class="kp">nil</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-71'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-71">#</a>
+        </div>
+        <h2>Origin airport calculation</h2>
+
+<p> Returns the client-input <a href="http://data.brighterplanet.com/airports">origin airport</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-72'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-72">#</a>
+        </div>
+        <h2>Destination airport calculation</h2>
+
+<p> Returns the client-input <a href="http://data.brighterplanet.com/airports">destination airport</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-73'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-73">#</a>
+        </div>
+        <h2>Aircraft calculation</h2>
+
+<p> Returns the client-input type of <a href="http://data.brighterplanet.com/aircraft">aircraft</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-74'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-74">#</a>
+        </div>
+        <h2>Airline calculation</h2>
+
+<p> Returns the client-input <a href="http://data.brighterplanet.com/airlines">airline</a> operating the flight.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-75'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-75">#</a>
+        </div>
+        <h2>Segments per trip calculation</h2>
+
+<p> Returns the <code>segments per trip</code>.
+ Direct flights have a single segment per trip. Indirect flights with one or more layovers have two or more segments per trip.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:segments_per_trip</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-76'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-76">#</a>
+        </div>
+        <h3>Segments per trip from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input <code>segments per trip</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-77'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-77">#</a>
+        </div>
+        <h3>Default segments per trip</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Uses an average <code>segments per trip</code> of <strong>1.67</strong>, calculated from the <a href="http://nhts.ornl.gov/">U.S. National Household Travel Survey</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
+              <span class="mi">1</span><span class="o">.</span><span class="mi">67</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-78'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-78">#</a>
+        </div>
+        <h2>Date calculation</h2>
+
+<p> Returns the <code>date</code> on which the flight occured.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:date</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-79'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-79">#</a>
+        </div>
+        <h3>Date from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input value for <code>date</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-80'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-80">#</a>
+        </div>
+        <h3>Date from timeframe</h3>
+
+<p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
+
+<p> Assumes the flight occured on the first day of the <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from timeframe&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
+              <span class="n">timeframe</span><span class="o">.</span><span class="n">from</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-81'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-81">#</a>
+        </div>
+        <h2>Timeframe calculation</h2>
+
+<p> Returns the <code>timeframe</code>.
+ This is the period over which to calculate emissions.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-82'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-82">#</a>
+        </div>
+        <h3>Timeframe from client input</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the client-input value for <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-83'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-83">#</a>
+        </div>
+        <h3>Default timeframe</h3>
+
+<p> <strong>Complies:</strong> All</p>
+
+<p> Uses the current calendar year.</p>
+
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>        <span class="k">end</span>
+      <span class="k">end</span>
+      
+      <span class="k">class</span> <span class="nc">FuelUseEquation</span> <span class="o">&lt;</span> <span class="no">Struct</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:m3</span><span class="p">,</span> <span class="ss">:m2</span><span class="p">,</span> <span class="ss">:m1</span><span class="p">,</span> <span class="ss">:endpoint_fuel</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">empty?</span>
+          <span class="n">values</span><span class="o">.</span><span class="n">all?</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:nil?</span><span class="p">)</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">all?</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:zero?</span><span class="p">)</span>
+        <span class="k">end</span>
+
+        <span class="k">def</span> <span class="nf">values</span>
+          <span class="o">[</span><span class="n">m3</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">endpoint_fuel</span><span class="o">]</span>
+        <span class="k">end</span>
+
+        <span class="k">def</span> <span class="nf">to_xml</span><span class="p">(</span><span class="n">options</span> <span class="o">=</span> <span class="p">{})</span>
+          <span class="n">options</span><span class="o">[</span><span class="ss">:indent</span><span class="o">]</span> <span class="o">||=</span> <span class="mi">2</span>
+          <span class="n">xml</span> <span class="o">=</span> <span class="n">options</span><span class="o">[</span><span class="ss">:builder</span><span class="o">]</span> <span class="o">||=</span> <span class="no">Builder</span><span class="o">::</span><span class="no">XmlMarkup</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:indent</span> <span class="o">=&gt;</span> <span class="n">options</span><span class="o">[</span><span class="ss">:indent</span><span class="o">]</span><span class="p">)</span>
+          <span class="n">xml</span><span class="o">.</span><span class="n">instruct!</span> <span class="k">unless</span> <span class="n">options</span><span class="o">[</span><span class="ss">:skip_instruct</span><span class="o">]</span>
+          <span class="n">xml</span><span class="o">.</span><span class="n">fuel_use_equation</span> <span class="k">do</span> <span class="o">|</span><span class="n">estimate_block</span><span class="o">|</span>
+            <span class="n">estimate_block</span><span class="o">.</span><span class="n">endpoint_fuel</span> <span class="n">endpoint_fuel</span><span class="p">,</span> <span class="ss">:type</span> <span class="o">=&gt;</span> <span class="s1">&#39;float&#39;</span>
+            <span class="n">estimate_block</span><span class="o">.</span><span class="n">m1</span> <span class="n">m1</span><span class="p">,</span> <span class="ss">:type</span> <span class="o">=&gt;</span> <span class="s1">&#39;float&#39;</span>
+            <span class="n">estimate_block</span><span class="o">.</span><span class="n">m2</span> <span class="n">m2</span><span class="p">,</span> <span class="ss">:type</span> <span class="o">=&gt;</span> <span class="s1">&#39;float&#39;</span>
+            <span class="n">estimate_block</span><span class="o">.</span><span class="n">m3</span> <span class="n">m3</span><span class="p">,</span> <span class="ss">:type</span> <span class="o">=&gt;</span> <span class="s1">&#39;float&#39;</span>
+          <span class="k">end</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span></pre></div>
+      </td>
+    </tr>
+    </table>
+</div>
+</body>
