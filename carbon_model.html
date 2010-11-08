@@ -1395,58 +1395,14 @@
 <p> <strong>Complies:</strong> GHG Protocol, ISO-14064-1, Climate Registry Protocol</p>
 
 <p> Assumes the flight occured on the first day of the <code>timeframe</code>.</p>
+
       </td>
       <td class=code>
         <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from timeframe&#39;</span><span class="p">,</span> <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
               <span class="n">timeframe</span><span class="o">.</span><span class="n">from</span>
             <span class="k">end</span>
           <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-80'>
-      <td class=docs>
-        <div class="octowrap">
-          <a class="octothorpe" href="#section-80">#</a>
-        </div>
-        <h2>Timeframe calculation</h2>
-
-<p> Returns the <code>timeframe</code>.
- This is the period over which to calculate emissions.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-81'>
-      <td class=docs>
-        <div class="octowrap">
-          <a class="octothorpe" href="#section-81">#</a>
-        </div>
-        <h3>Timeframe from client input</h3>
-
-<p> <strong>Complies:</strong> All</p>
-
-<p> Uses the client-input value for <code>timeframe</code>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-82'>
-      <td class=docs>
-        <div class="octowrap">
-          <a class="octothorpe" href="#section-82">#</a>
-        </div>
-        <h3>Default timeframe</h3>
-
-<p> <strong>Complies:</strong> All</p>
-
-<p> Uses the current calendar year.</p>
-
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>        <span class="k">end</span>
+        <span class="k">end</span>
       <span class="k">end</span>
       
       <span class="k">class</span> <span class="nc">FuelUseEquation</span> <span class="o">&lt;</span> <span class="no">Struct</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:m3</span><span class="p">,</span> <span class="ss">:m2</span><span class="p">,</span> <span class="ss">:m1</span><span class="p">,</span> <span class="ss">:endpoint_fuel</span><span class="p">)</span>
