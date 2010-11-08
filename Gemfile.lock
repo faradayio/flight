@@ -85,6 +85,7 @@ GEM
     falls_back_on (0.0.3)
       activerecord
     fast_timestamp (0.0.4)
+    fastercsv (1.5.3)
     gemcutter (0.6.1)
     geokit (1.5.0)
     gherkin (2.2.9)
@@ -192,6 +193,7 @@ DEPENDENCIES
   cucumber
   earth (~> 0.2.7)
   emitter (~> 0.1.8)
+  fastercsv
   flight!
   jeweler (~> 1.4.0)
   rake

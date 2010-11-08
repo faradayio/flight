@@ -9,6 +9,8 @@ gem 'earth', :path => ENV['LOCAL_EARTH'] if ENV['LOCAL_EARTH']
 gem 'emitter', :path => ENV['LOCAL_EMITTER'] if ENV['LOCAL_EMITTER']
 gem 'cohort_scope', :path => ENV['LOCAL_COHORT_SCOPE'] if ENV['LOCAL_COHORT_SCOPE']
 
+gem 'fastercsv' if RUBY_VERSION < '1.9'
+
 source :rubygems
 
 gemspec :path => '.'
