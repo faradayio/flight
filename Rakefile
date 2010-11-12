@@ -44,7 +44,7 @@ require_or_fail('jeweler', 'Jeweler (or a dependency) not available. Install it 
     gem.add_development_dependency 'rdoc'
     gem.add_development_dependency 'rspec', '= 2.0.1'
     gem.add_development_dependency 'sniff', '~>0.2.0' unless ENV['LOCAL_SNIFF']
-    gem.add_dependency 'emitter', '~>0.1.14' unless ENV['LOCAL_EMITTER']
+    gem.add_dependency 'emitter', '~>0.1.15' unless ENV['LOCAL_EMITTER']
     gem.add_dependency 'builder'
     gem.add_dependency 'earth', '~>0.2.7' unless ENV['LOCAL_EARTH']
   end
@@ -96,8 +96,10 @@ end
 
 require 'rake/rdoctask'
 
-require 'emitter/tasks'
-Emitter::Tasks.define
+require_or_fail('emitter', 'Emitter (or a dependency) not available. Install it with: gem install emitter') do
+  require 'emitter/tasks'
+  Emitter::Tasks.define
+end
 
 Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
