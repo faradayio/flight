@@ -288,7 +288,7 @@ module BrighterPlanet
                   bts_code = flight_segment.aircraft_bts_code.to_s
                   aircraft = relevant_aircraft[bts_code]
                   aircraft_coefficient = aircraft.send(name)
-                  if aircraft_coefficient.nil? or aircraft_coefficient.zero?
+                  if aircraft_coefficient.nil?
                     aircraft_coefficient = aircraft.aircraft_class.send(name)
                   end
                   coefficient + (aircraft_coefficient * flight_segment.passengers)

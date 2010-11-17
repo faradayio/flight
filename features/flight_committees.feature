@@ -184,7 +184,7 @@ Feature: Flight Committee Calculations
       | code    | seats  |
       | BP-FM1  | 125.0  |
       | BP-BA1  | 120.0  |
-      | BP-XX1  | 130.0  |
+      | BP-XX1s | 130.0  |
 
   Scenario Outline: Seats committee from aircraft missing seats
     Given a flight emitter
@@ -265,10 +265,10 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m1" equal to "4"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
     Examples:
-      | code   |
-      | BP-XX1 |
-      | BP-XX3 |
-      | BP-XX4 |
+      | code    |
+      | BP-XX1f |
+      | BP-XX3  |
+      | BP-XX4  |
 
   Scenario: Fuel use coefficients committee from aircraft class
     Given a flight emitter
