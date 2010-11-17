@@ -11,7 +11,7 @@ require 'weighted_average'
 # This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
 #
 ##### Timeframe and date
-# The model estimates the emissions that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occured on January 5, 2010 will have emissions but a flight that occured on February 1, 2010 will not. If no `timeframe` is specified, the default is the current year. If no `date` is specified, the default is the first day of the `timeframe`.
+# The model estimates the emissions that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occurred on January 5, 2010 will have emissions but a flight that occurred on February 1, 2010 will not.
 #
 ##### Calculations
 # The final estimate is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the `emission` calculation. Each calculation is named according to the value it returns.
@@ -23,7 +23,7 @@ require 'weighted_average'
 # Each method lists any established calculation standards with which it **complies**. When compliance with a standard is requested, all methods that do not comply with that standard are ignored. This means that any values a particular method requires will have been calculated using a compliant method, because those are the only methods available. If any value did not have a compliant method in its calculation then it would be undefined, and the current method would have been ignored.
 #
 ##### Collaboration
-# Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes shold include test coverage for new functionality. Please see [sniff](http://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
+# Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](http://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
 module BrighterPlanet
   module Flight
     module CarbonModel
@@ -32,12 +32,12 @@ module BrighterPlanet
         base.decide :emission, :with => :characteristics do
           ### Emission calculation
           # Returns the `emission` estimate in *kg CO<sub>2</sub>e*.
-          # This is the passenger's share of the total flight emissions that occured during the `timeframe`.
+          # This is the passenger's share of the total flight emissions that occurred during the `timeframe`.
           committee :emission do
             #### Emission from fuel, emission factor, freight share, passengers, multipliers, and date
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # - Checks whether the flight occured during the `timeframe`
+            # - Checks whether the flight occurred during the `timeframe`
             # - Multiplies `fuel use` (*kg fuel*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*
             # - Multiplies by (1 - `freight share`) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage
             # - Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `emission` for the passenger
@@ -581,17 +581,17 @@ module BrighterPlanet
           end
           
           ### Date calculation
-          # Returns the `date` on which the flight occured.
+          # Returns the `date` on which the flight occurred.
           committee :date do
             #### Date from client input
             # **Complies:** All
             #
-            # Uses the client-input value for `date`.
+            # Uses the client-input `date`.
             
             #### Date from timeframe
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
-            # Assumes the flight occured on the first day of the `timeframe`.
+            # Assumes the flight occurred on the first day of the `timeframe`.
             quorum 'from timeframe', :complies => [:ghg_protocol, :iso, :tcr] do |characteristics, timeframe|
               timeframe.from
             end
