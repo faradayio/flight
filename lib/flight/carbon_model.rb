@@ -6,6 +6,8 @@ require 'leap'
 require 'timeframe'
 require 'date'
 require 'weighted_average'
+require 'builder'
+require 'flight/carbon_model/fuel_use_equation'
 
 ## Flight carbon model
 # This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
@@ -53,14 +55,6 @@ module BrighterPlanet
                 0
               end
             end
-            
-            #### Default emission
-            # **Complies:**
-            #
-            # Displays an error message if the previous method fails.
-            quorum 'default' do
-              raise "The emission committee's default quorum should never be called"
-            end
           end
           
           ### Emission factor calculation
@@ -71,7 +65,7 @@ module BrighterPlanet
             #
             # Looks up the [fuel type](http://data.brighterplanet.com/fuel_types) and divides its `emission factor` (*kg CO<sub>2</sub> / litre fuel*) by its `density` (*kg fuel / litre fuel*) to give *kg CO<sub>2</sub>e / kg fuel*.
             quorum 'from fuel type', :needs => :fuel_type, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:fuel_type].emission_factor / characteristics[:fuel_type].density
+              characteristics[:fuel_type].emission_factor.to_f / characteristics[:fuel_type].density.to_f
             end
           end
           
@@ -596,30 +590,6 @@ module BrighterPlanet
               timeframe.from
             end
           end
-          
-          ### Timeframe calculation
-          # Returns the `timeframe`.
-          # This is the period over which to calculate emissions.
-            
-            #### Timeframe from client input
-            # **Complies:** All
-            #
-            # Uses the client-input value for `timeframe`.
-            
-            #### Default timeframe
-            # **Complies:** All
-            #
-            # Uses the current calendar year.
-        end
-      end
-      
-      class FuelUseEquation < Struct.new(:m3, :m2, :m1, :endpoint_fuel)
-        def empty?
-          values.all?(&:nil?) or values.all?(&:zero?)
-        end
-
-        def values
-          [m3, m2, m1, endpoint_fuel]
         end
       end
     end
