@@ -101,11 +101,6 @@ end
 
 require 'rake/rdoctask'
 
-require_or_fail('emitter', 'Emitter (or a dependency) not available. Install it with: gem install emitter') do
-  require 'emitter/tasks'
-  Emitter::Tasks.define
-end
-
 Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
