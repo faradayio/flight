@@ -25,7 +25,6 @@ module BrighterPlanet
           has :airline
           has :segments_per_trip
         end
-        base.add_implicit_characteristics
       end
     end
   end
