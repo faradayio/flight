@@ -3,7 +3,7 @@ PATH
   specs:
     flight (0.1.8)
       builder
-      earth (~> 0.3)
+      earth (= 0.3.6)
       emitter (~> 0.3)
 
 GEM
@@ -201,7 +201,7 @@ DEPENDENCIES
   builder
   bundler (~> 1.0.0)
   cucumber
-  earth (~> 0.3)
+  earth (= 0.3.6)
   emitter (~> 0.3)
   flight!
   jeweler (~> 1.4.0)
