@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    flight (0.1.6)
+    flight (0.1.9)
       builder
       earth (~> 0.3)
       emitter (~> 0.3)
