@@ -29,15 +29,15 @@ Feature: Flight Emissions Calculations
 
   Scenario: Calculations from cohort based on origin
     Given a flight has "segments_per_trip" of "1"
-    And it has "origin_airport.iata_code" of "ADA"
+    And it has "origin_airport.iata_code" of "AIA"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "6.3"
+    Then the emission value should be within "0.1" kgs of "106.8"
 
   Scenario: Calculations from cohort based on destination
     Given a flight has "segments_per_trip" of "1"
-    And it has "destination_airport.iata_code" of "AIA"
+    And it has "destination_airport.iata_code" of "WEA"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "6.3"
+    Then the emission value should be within "0.1" kgs of "106.8"
 
   Scenario: Calculations from cohort based on aircraft
     Given a flight has "segments_per_trip" of "1"
@@ -59,7 +59,7 @@ Feature: Flight Emissions Calculations
   Scenario: Calculations from seat class
     Given a flight has "seat_class.name" of "economy"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "38.2"
+    Then the emission value should be within "0.1" kgs of "38.3"
 
   Scenario: Calculations from trips
     Given a flight has "trips" of "2"
@@ -69,22 +69,22 @@ Feature: Flight Emissions Calculations
   Scenario: Calculations from load factor
     Given a flight has "load_factor" of "1"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "34.5"
+    Then the emission value should be within "0.1" kgs of "34.6"
 
   Scenario: Calculations from seats estimate
     Given a flight has "seats_estimate" of "100"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "52.4"
+    Then the emission value should be within "0.1" kgs of "52.5"
 
   Scenario: Calculations from aircraft class
     Given a flight has "aircraft_class.code" of "BX"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "114.5"
+    Then the emission value should be within "0.1" kgs of "114.6"
 
   Scenario: Calculations from country
     Given a flight has "country.iso_3166_code" of "UK"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "46.3"
+    Then the emission value should be within "0.1" kgs of "46.4"
 
   Scenario: Calculations from distance estimate
     Given a flight has "distance_estimate" of "185.2"
@@ -99,7 +99,7 @@ Feature: Flight Emissions Calculations
   Scenario: Calculations from aviation multiplier
     Given a flight has "aviation_multiplier" of "1"
     When emissions are calculated
-    Then the emission value should be within "0.1" kgs of "21.2"
+    Then the emission value should be within "0.1" kgs of "21.3"
 
   Scenario: Calculations from fuel type
     Given a flight has "fuel_type.name" of "Aviation Gasoline"
