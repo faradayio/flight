@@ -8,6 +8,7 @@ Feature: Flight Emissions Calculations
 
   Scenario Outline: Calculations from date
     Given a flight has "date" of "<date>"
+    And it is the year "2010"
     When emissions are calculated
     Then the emission value should be within "0.1" kgs of "<emission>"
     Examples:

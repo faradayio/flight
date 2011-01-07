@@ -240,10 +240,10 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m1" equal to "<m1>"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
     Examples:
-      | code   | m3 | m2 | m1 | b |
-      | BP-FM1 | 0  | 0  | 1  | 0 |
-      | BP-BA1 | 0  | 0  | 2  | 0 |
-      | BP-XX2 | 0  | 0  | 4  | 0 |
+      | code   | m3  | m2  | m1  | b   |
+      | BP-FM1 | 0.0 | 0.0 | 1.0 | 0.0 |
+      | BP-BA1 | 0.0 | 0.0 | 2.0 | 0.0 |
+      | BP-XX2 | 0.0 | 0.0 | 4.0 | 0.0 |
 
   Scenario Outline: Fuel use coefficients committee from aircraft missing fuel use coefficients
     Given a flight emitter
@@ -251,10 +251,10 @@ Feature: Flight Committee Calculations
     When the "aircraft_class" committee is calculated
     And the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should have a record with "m3" equal to "0"
-    And the conclusion of the committee should have a record with "m2" equal to "0"
+    And the conclusion of the committee should have a record with "m3" equal to "0.0"
+    And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "4"
-    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
+    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0.0"
     Examples:
       | code    |
       | BP-XX1f |
@@ -266,10 +266,10 @@ Feature: Flight Committee Calculations
     And a characteristic "aircraft_class.code" of "EX"
     When the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should have a record with "m3" equal to "0"
-    And the conclusion of the committee should have a record with "m2" equal to "0"
+    And the conclusion of the committee should have a record with "m3" equal to "0.0"
+    And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "1.75"
-    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
+    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0.0"
 
   Scenario Outline: Fuel use coefficients from various cohorts
     Given a flight emitter
@@ -285,11 +285,11 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m1" equal to "<m1>"
     And the conclusion of the committee should have a record with "endpoint_fuel" equal to "<b>"
     Examples:
-      | origin_iata | destination_iata | airline_iata | m3 | m2 | m1      | b |
-      | AIA         |                  |              | 0  | 0  | 2.66667 | 0 |
-      |             | WEA              |              | 0  | 0  | 2.66667 | 0 |
-      |             |                  | DA           | 0  | 0  | 1.5     | 0 |
-      | AIA         |                  | EA           | 0  | 0  | 4.0     | 0 |
+      | origin_iata | destination_iata | airline_iata | m3  | m2  | m1      | b   |
+      | AIA         |                  |              | 0.0 | 0.0 | 2.66667 | 0.0 |
+      |             | WEA              |              | 0.0 | 0.0 | 2.66667 | 0.0 |
+      |             |                  | DA           | 0.0 | 0.0 | 1.5     | 0.0 |
+      | AIA         |                  | EA           | 0.0 | 0.0 | 4.0     | 0.0 |
       # some aircraft missing fuel use equation
       # some aircraft missing fuel use equation
       # all aircraft have fuel use equation
@@ -299,10 +299,10 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "fuel_use_coefficients" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should have a record with "m3" equal to "0"
-    And the conclusion of the committee should have a record with "m2" equal to "0"
+    And the conclusion of the committee should have a record with "m3" equal to "0.0"
+    And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "1.4"
-    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0"
+    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0.0"
 
   Scenario: Dogleg factor committee from segments per trip
     Given a flight emitter
