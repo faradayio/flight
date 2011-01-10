@@ -62,6 +62,16 @@ Feature: Flight Committee Calculations
       # airline exists but not in t100
       # origin not in t100, dest in t100
 
+  Scenario: Cohort committee from segments with no passengers should be nil
+    Given a flight emitter
+    And a characteristic "segments_per_trip" of "1"
+    And a characteristic "origin_airport.iata_code" of "AZP"
+    And a characteristic "destination_airport.iata_code" of "BZP"
+    And a characteristic "aircraft.bp_code" of "6"
+    And a characteristic "airline.iata_code" of "ZA"
+    When the "cohort" committee is calculated
+    Then the conclusion of the committee should be nil
+
   Scenario: Aircraft class committee from aircraft
     Given a flight emitter
     And a characteristic "aircraft.bp_code" of "BP-FM1"

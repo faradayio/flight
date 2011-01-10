@@ -535,7 +535,7 @@ module BrighterPlanet
                   end
                 cohort = FlightSegment.strict_cohort provided_characteristics
               end
-              if cohort.any?
+              if cohort.any? && !cohort.all? { |fs| fs.passengers.zero? }
                 cohort
               else
                 nil
