@@ -318,7 +318,7 @@ module BrighterPlanet
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #
             # Assumes the flight uses **Jet Fuel**.
-            quorum 'default', :complies => [:ghg_protocol, :ico, :tcr] do
+            quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
               FuelType.find_by_name 'Jet Fuel'
             end
           end
