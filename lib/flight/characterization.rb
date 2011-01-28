@@ -6,8 +6,6 @@ module BrighterPlanet
       def self.included(base)
         base.send :include, Characterizable
         base.characterize do
-          # sabshere 12/13/10 should this really be a user input?
-          has :aviation_multiplier
           has :distance_estimate
           has :distance_class
           has :fuel_type

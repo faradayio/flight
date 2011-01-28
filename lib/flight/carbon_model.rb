@@ -71,11 +71,6 @@ module BrighterPlanet
           ### Aviation multiplier calculation
           # Returns the `aviation multiplier`. This approximates the extra climate impact of emissions high in the atmosphere.
           committee :aviation_multiplier do
-            #### Aviation multiplier from client input
-            # **Complies:** All
-            #
-            # Uses the client-input `aviation multiplier`.
-            
             #### Default aviation multiplier
             # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
             #

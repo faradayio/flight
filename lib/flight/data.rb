@@ -6,7 +6,6 @@ module BrighterPlanet
       def self.included(base)
         base.data_miner do
           schema do
-            float   'aviation_multiplier'
             float   'distance_estimate'
             string  'distance_class_name'
             string  'fuel_type_name'
