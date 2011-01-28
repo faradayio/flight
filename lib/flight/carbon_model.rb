@@ -144,7 +144,7 @@ module BrighterPlanet
             # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes)' based on `distance`.
             quorum 'from adjusted distance per segment',
               :needs => :adjusted_distance_per_segment,
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 if characteristics[:adjusted_distance_per_segment] < 244.06
                   FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", "unknown")
                 elsif characteristics[:adjusted_distance_per_segment] < 863.93
