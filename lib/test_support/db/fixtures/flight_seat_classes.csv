@@ -1,2 +1,10 @@
-name,multiplier
-economy,0.9
+name,distance_class_name,seat_class_name,multiplier
+Long haul first,Long haul,first,3.4360
+Long haul business,Long haul,business,2.1160
+Long haul economy+,Long haul,economy+,1.1680
+Long haul economy,Long haul,economy,0.7294
+Long haul unknown,Long haul,unknown,1.0000
+Short haul first/business,Short haul,first/business,1.4410
+Short haul economy,Short haul,economy,0.9706
+Short haul unknown,Short haul,unknown,1.0000
+Domestic unknown,Domestic,unknown,1.0000
