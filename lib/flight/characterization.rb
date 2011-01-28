@@ -12,7 +12,7 @@ module BrighterPlanet
           has :seats_estimate
           has :load_factor
           has :trips
-          has :seat_class
+          has :seat_class_name
           has :country
           has :date
           has :origin_airport

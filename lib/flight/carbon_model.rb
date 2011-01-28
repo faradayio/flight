@@ -111,6 +111,45 @@ module BrighterPlanet
             end
           end
           
+          ### Seat class multiplier calculation
+          # Returns the `seat class multiplier`. This reflects the amount of cabin space occupied by the passenger's seat.
+          committee :seat_class_multiplier do
+            #### Seat class multiplier from seat class and distance
+            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+            #
+            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes)' based on `distance` and `seat class`.
+            quorum 'from seat class and adjusted distance per segment',
+              :needs => [:seat_class_name, :adjusted_distance_per_segment],
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                if characteristics[:adjusted_distance_per_segment] < 244.06
+                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", characteristics[:seat_class_name])
+                elsif characteristics[:adjusted_distance_per_segment] < 863.93
+                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Short haul", characteristics[:seat_class_name])
+                else
+                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Long haul", characteristics[:seat_class_name])
+                end
+            end
+            
+            #### Seat class multiplier from distance
+            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+            #
+            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes)' based on `distance`.
+            quorum 'from adjusted distance per segment',
+              :needs => :adjusted_distance_per_segment,
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                if characteristics[:adjusted_distance_per_segment] < 244.06
+                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", "unknown")
+                elsif characteristics[:adjusted_distance_per_segment] < 863.93
+                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Short haul", "unknown")
+                else
+                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Long haul", "unknown")
+                end
+            end
+          end
+          
+          ### Seat class calculation
+          # Returns the client-input [seat class](http://data.brighterplanet.com/seat_classes).
+          
           ### Adjusted distance per segment calculation
           # Returns the `adjusted distance per segment` in *nautical miles*.
           committee :adjusted_distance_per_segment do
@@ -446,29 +485,6 @@ module BrighterPlanet
               1.941
             end
           end
-          
-          ### Seat class multiplier calculation
-          # Returns the `seat class multiplier`. This reflects the amount of cabin space occupied by the passenger's seat.
-          committee :seat_class_multiplier do
-            #### Seat class multiplier from seat class
-            # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [seat class](http://data.brighterplanet.com/flight_seat_classes)' `seat class multiplier`.
-            quorum 'from seat class', :needs => :seat_class, :complies => [:ghg_protocol, :iso, :tcr] do |characteristics|
-              characteristics[:seat_class].multiplier
-            end
-            
-            #### Default seat class multiplier
-            # **Complies:** GHG Protocol, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses a `seat class multiplier` of **1**.
-            quorum 'default', :complies => [:ghg_protocol, :iso, :tcr] do
-              FlightSeatClass.fallback.multiplier
-            end
-          end
-          
-          ### Seat class calculation
-          # Returns the client-input [seat class](http://data.brighterplanet.com/seat_classes).
           
           ### Country calculation
           # Returns the [country](http://data.brighterplanet.com/countries) in which a flight occurs.

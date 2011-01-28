@@ -4,7 +4,6 @@ module BrighterPlanet
       def self.included(target)
         target.belongs_to :distance_class,      :class_name => 'FlightDistanceClass', :foreign_key => 'distance_class_name'
         target.belongs_to :fuel_type,                                                 :foreign_key => 'fuel_type_name'
-        target.belongs_to :seat_class,          :class_name => 'FlightSeatClass',     :foreign_key => 'seat_class_name'
         target.belongs_to :country,                                                   :foreign_key => 'country_iso_3166_code'
         target.belongs_to :origin_airport,      :class_name => 'Airport',             :foreign_key => 'origin_airport_iata_code'
         target.belongs_to :destination_airport, :class_name => 'Airport',             :foreign_key => 'destination_airport_iata_code'

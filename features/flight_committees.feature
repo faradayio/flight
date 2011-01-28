@@ -435,6 +435,41 @@ Feature: Flight Committee Calculations
       | 100       | 2        | 50          |
       | 817.52749 | 1.67     | 489.53742   |
 
+  Scenario Outline: Seat class multiplier committee from adjusted distance per segment
+    Given a flight emitter
+    And a characteristic "adjusted_distance_per_segment" of "<distance>"
+    When the "seat_class_multiplier" committee is calculated
+    Then the committee should have used quorum "from adjusted distance per segment"
+    And the conclusion of the committee should be "<multiplier>"
+    Examples
+      | distance | multiplier |
+      | 1        | 1.0        |
+      | 245      | 1.0        |
+      | 864      | 1.0        |
+      | 9000     | 1.0        |
+
+  Scenario Outline: Seat class multiplier committee from adjusted distance per segment and seat class name
+    Given a flight emitter
+    And a characteristic "adjusted_distance_per_segment" of "<distance>"
+    And a characteristic "seat_class_name" of "<seat_class>"
+    When the "seat_class_multiplier" committee is calculated
+    Then the committee should have used quorum "from adjusted distance per segment and seat class name"
+    And the conclusion of the committee should be "<multiplier>"
+    Examples
+      | distance | seat_class     | multiplier |
+      | 1        | unknown        | 1.0        |
+      | 5        | blah           | 1.0        |
+      | 245      | economy        | 1.4410     |
+      | 863      | first/business | 1.4410     |
+      | 750      | unknown        | 1.0        |
+      | 820      | blah           | 1.0        |
+      | 864      | economy        | 0.7294     |
+      | 1000     | economy+       | 1.1680     |
+      | 5000     | business       | 2.1160     |
+      | 1200     | first          | 3.4360     |
+      | 900      | unknown        | 1.0        |
+      | 3200     | blah           | 1.0        |
+
   Scenario: Fuel per segment committee
     Given a flight emitter
     And a characteristic "adjusted_distance_per_segment" of "100"
