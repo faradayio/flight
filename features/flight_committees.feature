@@ -313,7 +313,7 @@ Feature: Flight Committee Calculations
     When the "segments_per_trip" committee is calculated
     And the "dogleg_factor" committee is calculated
     Then the committee should have used quorum "from segments per trip"
-    And the conclusion of the committee should be "1.16126"
+    And the conclusion of the committee should be "1.16385"
 
   Scenario: Route inefficiency factor committee from country
     Given a flight emitter
