@@ -428,7 +428,7 @@ Feature: Flight Committee Calculations
     When the "seat_class_multiplier" committee is calculated
     Then the committee should have used quorum "from adjusted distance per segment"
     And the conclusion of the committee should be "<multiplier>"
-    Examples
+    Examples:
       | distance | multiplier |
       | 1        | 1.0        |
       | 245      | 1.0        |
@@ -442,7 +442,7 @@ Feature: Flight Committee Calculations
     When the "seat_class_multiplier" committee is calculated
     Then the committee should have used quorum "from adjusted distance per segment and seat class name"
     And the conclusion of the committee should be "<multiplier>"
-    Examples
+    Examples:
       | distance | seat_class     | multiplier |
       | 1        | unknown        | 1.0        |
       | 5        | blah           | 1.0        |

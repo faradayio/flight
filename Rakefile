@@ -43,7 +43,7 @@ require_or_fail('jeweler', 'Jeweler (or a dependency) not available. Install it 
     gem.add_development_dependency 'rake'
     gem.add_development_dependency 'rdoc'
     gem.add_development_dependency 'rspec', '= 2.0.1'
-    gem.add_development_dependency 'sniff', '~>0.4.12' unless ENV['LOCAL_SNIFF']
+    gem.add_development_dependency 'sniff', '~>0.5.1' unless ENV['LOCAL_SNIFF']
     gem.add_dependency 'emitter', '~>0.3' unless ENV['LOCAL_EMITTER']
     gem.add_dependency 'earth', '~>0.3.6' unless ENV['LOCAL_EARTH']
     gem.add_dependency 'builder'

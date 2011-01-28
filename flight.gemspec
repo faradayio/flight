@@ -55,9 +55,9 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["= 2.0.1"])
-      s.add_development_dependency(%q<sniff>, ["~> 0.4.12"])
+      s.add_development_dependency(%q<sniff>, ["~> 0.5.1"])
       s.add_runtime_dependency(%q<emitter>, ["~> 0.3"])
-      s.add_runtime_dependency(%q<earth>, ["~> 0.3.6"])
+      s.add_runtime_dependency(%q<earth>, ["~> 0.3.15"])
       s.add_runtime_dependency(%q<builder>, [">= 0"])
     else
       s.add_dependency(%q<activerecord>, ["~> 3"])
@@ -67,9 +67,9 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<rdoc>, [">= 0"])
       s.add_dependency(%q<rspec>, ["= 2.0.1"])
-      s.add_dependency(%q<sniff>, ["~> 0.4.12"])
+      s.add_dependency(%q<sniff>, ["~> 0.5.1"])
       s.add_dependency(%q<emitter>, ["~> 0.3"])
-      s.add_dependency(%q<earth>, ["~> 0.3.6"])
+      s.add_dependency(%q<earth>, ["~> 0.3.15"])
       s.add_dependency(%q<builder>, [">= 0"])
     end
   else
@@ -80,9 +80,9 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rake>, [">= 0"])
     s.add_dependency(%q<rdoc>, [">= 0"])
     s.add_dependency(%q<rspec>, ["= 2.0.1"])
-    s.add_dependency(%q<sniff>, ["~> 0.4.12"])
+    s.add_dependency(%q<sniff>, ["~> 0.5.1"])
     s.add_dependency(%q<emitter>, ["~> 0.3"])
-    s.add_dependency(%q<earth>, ["~> 0.3.6"])
+    s.add_dependency(%q<earth>, ["~> 0.3.15"])
     s.add_dependency(%q<builder>, [">= 0"])
   end
 end
