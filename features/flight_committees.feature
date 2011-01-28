@@ -10,7 +10,7 @@ Feature: Flight Committee Calculations
   Scenario: Segments per trip committee from default
     Given a flight emitter
     When the "segments_per_trip" committee is calculated
-    Then the conclusion of the committee should be "1.67"
+    Then the conclusion of the committee should be "1.68"
 
   Scenario Outline: Cohort committee from various characteristics
     Given a flight emitter
@@ -98,23 +98,10 @@ Feature: Flight Committee Calculations
     When the "country" committee is calculated
     Then the conclusion of the committee should be nil
 
-  Scenario: Seat class multiplier committee from seat class
-    Given a flight emitter
-    And a characteristic "seat_class.name" of "economy"
-    When the "seat_class_multiplier" committee is calculated
-    Then the committee should have used quorum "from seat class"
-    And the conclusion of the committee should be "0.9"
-
-  Scenario: Seat class multiplier committee from default
-    Given a flight emitter
-    When the "seat_class_multiplier" committee is calculated
-    Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "1.0"
-
   Scenario: Trips committee from default
     Given a flight emitter
     When the "trips" committee is calculated
-    Then the conclusion of the committee should be "1.941"
+    Then the conclusion of the committee should be "1.7"
 
   Scenario Outline: Freight share committee from cohort
     Given a flight emitter
