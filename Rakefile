@@ -57,8 +57,8 @@ require_or_fail 'emitter', 'Emitter gem not found, emitter tasks unavailable' do
 end
 
 require_or_fail('sniff', 'Sniff gem not found, sniff tasks unavailable') do
-  require 'sniff/rake_task'
-  Sniff::RakeTask.new(:console) do |t|
+  require 'sniff/rake_tasks'
+  Sniff::RakeTasks.define_tasks do |t|
     t.earth_domains = [:air, :locality, :fuel]
   end
 end
