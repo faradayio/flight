@@ -125,7 +125,7 @@ module BrighterPlanet
             #### Seat class multiplier from seat class and distance
             # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes)' based on `distance` and `seat class`.
+            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance` and `seat class`.
             quorum 'from seat class name and adjusted distance per segment',
               :needs => [:seat_class_name, :adjusted_distance_per_segment],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
@@ -141,7 +141,7 @@ module BrighterPlanet
             #### Seat class multiplier from distance
             # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes)' based on `distance`.
+            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance`.
             quorum 'from adjusted distance per segment',
               :needs => :adjusted_distance_per_segment,
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
