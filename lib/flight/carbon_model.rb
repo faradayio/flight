@@ -595,12 +595,12 @@ module BrighterPlanet
                     end
                   cohort = FlightSegment.strict_cohort provided_characteristics
                 end
-                if cohort.any? && !cohort.all? { |fs| fs.passengers.zero? }
+                if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
                   cohort
                 else
                   nil
                 end
-              end
+            end
           end
           
           ### Origin airport calculation
