@@ -51,26 +51,20 @@ Feature: Flight Committee Calculations
       | segments | origin_iata | destination_iata | aircraft_code | airline_iata |
       | 2        | AIA         |                  |               |              |
       | 1        | XXX         |                  |               |              |
+      | 1        | ZZZ         |                  |               |              |
       | 1        |             | ADA              |               |              |
       | 1        |             |                  | BP-XX2        |              |
       | 1        |             |                  |               | XX           |
       | 1        | XXX         | AIA              |               | XX           |
+      | 1        | AZP         | BZP              |               |              |
       # indirect flight
       # origin exists but not in t100
+      # origin does not exist
       # dest exists but not in t100
       # aircraft exists but not in t100
       # airline exists but not in t100
       # origin not in t100, dest in t100
-
-  Scenario: Cohort committee from segments with no passengers should be nil
-    Given a flight emitter
-    And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "AZP"
-    And a characteristic "destination_airport.iata_code" of "BZP"
-    And a characteristic "aircraft.bp_code" of "6"
-    And a characteristic "airline.iata_code" of "ZA"
-    When the "cohort" committee is calculated
-    Then the conclusion of the committee should be nil
+      # valid characteristics but only segments with zero passengers
 
   Scenario: Aircraft class committee from aircraft
     Given a flight emitter
@@ -445,14 +439,15 @@ Feature: Flight Committee Calculations
     Examples:
       | distance | seat_class     | multiplier |
       | 1        | unknown        | 1.0        |
-      | 245      | economy        | 0.9706     |
+      | 244      | unknown        | 1.0        |
+      | 245      | unknown        | 1.0        |
+      | 500      | economy        | 0.9706     |
       | 863      | first/business | 1.4410     |
-      | 750      | unknown        | 1.0        |
-      | 864      | economy        | 0.7294     |
-      | 1000     | economy+       | 1.1680     |
-      | 5000     | business       | 2.1160     |
-      | 1200     | first          | 3.4360     |
-      | 900      | unknown        | 1.0        |
+      | 864      | unknown        | 1.0        |
+      | 1000     | economy        | 0.7294     |
+      | 2000     | economy+       | 1.1680     |
+      | 3000     | business       | 2.1160     |
+      | 4000     | first          | 3.4360     |
 
   Scenario: Fuel per segment committee
     Given a flight emitter
