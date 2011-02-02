@@ -63,29 +63,6 @@ require_or_fail('sniff', 'Sniff gem not found, sniff tasks unavailable') do
   end
 end
 
-require_or_fail('cucumber', 'Cucumber gem not found, cucumber tasks unavailable') do
-  require 'cucumber/rake/task'
-
-  desc 'Run all cucumber tests'
-  Cucumber::Rake::Task.new(:features) do |t|
-    if ENV['CUCUMBER_FORMAT']
-      t.cucumber_opts = "features --format #{ENV['CUCUMBER_FORMAT']}"
-    else
-      t.cucumber_opts = 'features --format pretty'
-    end
-  end
-
-  desc "Run all tests with RCov"
-  Cucumber::Rake::Task.new(:features_with_coverage) do |t|
-    t.cucumber_opts = "features --format pretty"
-    t.rcov = true
-    t.rcov_opts = ['--exclude', 'features']
-  end
-
-  task :test => :features
-  task :default => :test
-end
-
 require_or_fail 'rspec', 'RSpec gem not found, RSpec tasks unavailable' do
   require 'rspec/core/rake_task'
   Rspec::Core::RakeTask.new do |t|
