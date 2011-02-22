@@ -58,17 +58,15 @@ module BrighterPlanet
           end
           
           ### Emission factor calculation
-          # Returns the `emission factor` in *kg CO<sub>2</sub>e / kg fuel*.
+          # Returns the `emission factor` in *kg CO<sub>2</sub> / kg fuel*.
           committee :emission_factor do
             #### Emission factor from fuel
-            # Complies: GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # - Looks up the [fuel](http://data.brighterplanet.com/fuels)
-            # - Calculates its `emission factor` by multiplying `energy content` (*MJ / l*) by `carbon content` (*g C / MJ*) by 1/1000 (*kg / g*) by 44/12 (*CO<sub>2</sub> / carbon*) and dividing by `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
             quorum 'from fuel',
               :needs => :fuel,
+              # Complies: GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                (characteristics[:fuel].energy_content * characteristics[:fuel].carbon_content).grams.to(:kilograms).carbon.to(:co2) / characteristics[:fuel].density
+                # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `emission factor` (*kg CO<sub>2</sub> / l*) and divides by its `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
+                characteristics[:fuel].co2_emission_factor / characteristics[:fuel].density
             end
           end
           

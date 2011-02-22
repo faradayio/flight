@@ -485,4 +485,4 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "fuel" committee is calculated
     And the "emission_factor" committee is calculated
-    Then the conclusion of the committee should be "1.001"
+    Then the conclusion of the committee should be "3.25"
