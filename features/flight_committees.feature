@@ -216,9 +216,9 @@ Feature: Flight Committee Calculations
       | 105   | 0.9         | 95.0       |
       | 123   | 0.81385     | 100.0      |
 
-  Scenario: Fuel type committee from default
+  Scenario: Fuel committee from default
     Given a flight emitter
-    When the "fuel_type" committee is calculated
+    When the "fuel" committee is calculated
     Then the conclusion of the committee should have "name" of "Jet Fuel"
 
   Scenario Outline: Fuel use coefficients committee from aircraft with fuel use coefficients
@@ -464,15 +464,15 @@ Feature: Flight Committee Calculations
     And the "fuel_per_segment" committee is calculated
     Then the conclusion of the committee should be "685.35239"
 
-  Scenario Outline: Fuel committee
+  Scenario Outline: Fuel use committee
     Given a flight emitter
     And a characteristic "fuel_per_segment" of "<fuel_per_s>"
     And a characteristic "segments_per_trip" of "<segments>"
     And a characteristic "trips" of "<trips>"
-    When the "fuel" committee is calculated
-    Then the conclusion of the committee should be "<fuel>"
+    When the "fuel_use" committee is calculated
+    Then the conclusion of the committee should be "<fuel_use>"
     Examples:
-      | fuel_per_s | segments | trips   | fuel       |
+      | fuel_per_s | segments | trips   | fuel_use   |
       | 100        | 2        | 2       | 400        |
       | 685.35239  | 1.67     | 1.94100 | 2221.54921 |
 
@@ -481,8 +481,8 @@ Feature: Flight Committee Calculations
     When the "aviation_multiplier" committee is calculated
     Then the conclusion of the committee should be "2"
 
-  Scenario: Emission factor committee from default fuel type
+  Scenario: Emission factor committee from default fuel
     Given a flight emitter
-    When the "fuel_type" committee is calculated
+    When the "fuel" committee is calculated
     And the "emission_factor" committee is calculated
-    Then the conclusion of the committee should be "1.0"
+    Then the conclusion of the committee should be "1.001"

@@ -8,7 +8,7 @@ module BrighterPlanet
           schema do
             float   'distance_estimate'
             string  'distance_class_name'
-            string  'fuel_type_name'
+            string  'fuel_name'
             integer 'seats_estimate'
             float   'load_factor'
             integer 'trips'

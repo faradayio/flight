@@ -5,11 +5,11 @@ module BrighterPlanet
         def empty?
           values.all?(&:nil?) or values.all?(&:zero?)
         end
-
+        
         def values
           [m3, m2, m1, endpoint_fuel]
         end
-
+        
         def to_xml(options = {})
           options[:indent] ||= 2
           xml = options[:builder] ||= Builder::XmlMarkup.new(:indent => options[:indent])
@@ -25,4 +25,3 @@ module BrighterPlanet
     end
   end
 end
-

@@ -8,7 +8,7 @@ module BrighterPlanet
         base.characterize do
           has :distance_estimate
           has :distance_class
-          has :fuel_type
+          has :fuel
           has :seats_estimate
           has :load_factor
           has :trips

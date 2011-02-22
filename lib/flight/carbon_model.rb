@@ -35,22 +35,22 @@ module BrighterPlanet
           # Returns the `emission` estimate in *kg CO<sub>2</sub>e*.
           # This is the passenger's share of the total flight emissions that occurred during the `timeframe`.
           committee :emission do
-            #### Emission from fuel, emission factor, freight share, passengers, multipliers, and date
+            #### Emission from fuel use, emission factor, freight share, passengers, multipliers, and date
             # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
             #
             # - Checks whether the flight occurred during the `timeframe`
-            # - Multiplies `fuel use` (*kg fuel*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*
+            # - Multiplies `fuel use` (*kg*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*
             # - Multiplies by (1 - `freight share`) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage
             # - Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `emission` for the passenger
             # - If the flight did not occur during the `timeframe`, `emission` is zero
-            quorum 'from fuel, emission factor, freight share, passengers, multipliers, and date',
-              :needs => [:fuel, :emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
+            quorum 'from fuel use, emission factor, freight share, passengers, multipliers, and date',
+              :needs => [:fuel_use, :emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
                 date = characteristics[:date].is_a?(Date) ?
                   characteristics[:date] :
                   Date.parse(characteristics[:date].to_s)
                 if timeframe.include? date
-                  characteristics[:fuel] * characteristics[:emission_factor] * characteristics[:aviation_multiplier] * (1 - characteristics[:freight_share]) / characteristics[:passengers] * characteristics[:seat_class_multiplier]
+                  characteristics[:fuel_use] * characteristics[:emission_factor] * characteristics[:aviation_multiplier] * (1 - characteristics[:freight_share]) / characteristics[:passengers] * characteristics[:seat_class_multiplier]
                 else
                   0
                 end
@@ -60,14 +60,15 @@ module BrighterPlanet
           ### Emission factor calculation
           # Returns the `emission factor` in *kg CO<sub>2</sub>e / kg fuel*.
           committee :emission_factor do
-            #### Emission factor from fuel type
+            #### Emission factor from fuel
             # Complies: GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
             #
-            # Looks up the [fuel type](http://data.brighterplanet.com/fuel_types) and divides its `emission factor` (*kg CO<sub>2</sub> / litre fuel*) by its `density` (*kg fuel / litre fuel*) to give *kg CO<sub>2</sub>e / kg fuel*.
-            quorum 'from fuel type',
-              :needs => :fuel_type,
+            # - Looks up the [fuel](http://data.brighterplanet.com/fuels)
+            # - Calculates its `emission factor` by multiplying `energy content` (*MJ / l*) by `carbon content` (*g C / MJ*) by 1/1000 (*kg / g*) by 44/12 (*CO<sub>2</sub> / carbon*) and dividing by `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
+            quorum 'from fuel',
+              :needs => :fuel,
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                characteristics[:fuel_type].emission_factor.to_f / characteristics[:fuel_type].density.to_f
+                (characteristics[:fuel].energy_content * characteristics[:fuel].carbon_content).grams.to(:kilograms).carbon.to(:co2) / characteristics[:fuel].density
             end
           end
           
@@ -84,13 +85,13 @@ module BrighterPlanet
             end
           end
           
-          ### Fuel calculation
-          # Returns the flight's total `fuel` use in *kg fuel*.
-          committee :fuel do
-            #### Fuel from fuel per segment and segments per trip and trips
+          ### Fuel use calculation
+          # Returns the flight's total `fuel use` in *kg*.
+          committee :fuel_use do
+            #### Fuel use from fuel per segment and segments per trip and trips
             # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
             #
-            # Multiplies the `fuel per segment` (*kg fuel*) by the `segments per trip` and the number of `trips` to give *kg fuel*.
+            # Multiplies the `fuel per segment` (*kg*) by the `segments per trip` and the number of `trips` to give *kg*.
             quorum 'from fuel per segment and segments per trip and trips',
               :needs => [:fuel_per_segment, :segments_per_trip, :trips],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
@@ -99,7 +100,7 @@ module BrighterPlanet
           end
           
           ### Fuel per segment calculation
-          # Returns the `fuel per segment` in *kg fuel*.
+          # Returns the `fuel per segment` in *kg*.
           committee :fuel_per_segment do
             #### Fuel per segment from adjusted distance per segment and fuel use coefficients
             # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
@@ -369,20 +370,20 @@ module BrighterPlanet
             end
           end
           
-          ### Fuel type calculation
-          # Returns the `fuel type`.
-          committee :fuel_type do
-            #### Fuel type from client input
+          ### Fuel calculation
+          # Returns the `fuel`.
+          committee :fuel do
+            #### Fuel from client input
             # **Complies:** All
             #
-            # Uses the client-input [fuel type](http://data.brighterplanet.com/fuel_types).
+            # Uses the client-input [fuel](http://data.brighterplanet.com/fuels).
             
-            #### Default fuel type
+            #### Default fuel
             # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
             #
             # Assumes the flight uses **Jet Fuel**.
             quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
-                FuelType.find_by_name 'Jet Fuel'
+                Fuel.find_by_name 'Jet Fuel'
             end
           end
           
