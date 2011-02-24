@@ -207,6 +207,7 @@ DEPENDENCIES
   activerecord (~> 3)
   bundler (~> 1.0)
   cucumber
+  fastercsv
   flight!
   jeweler (~> 1.4.0)
   rake
