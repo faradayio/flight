@@ -36,22 +36,23 @@ module BrighterPlanet
           # This is the passenger's share of the total flight emissions that occurred during the `timeframe`.
           committee :emission do
             #### Emission from fuel use, emission factor, freight share, passengers, multipliers, and date
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # - Checks whether the flight occurred during the `timeframe`
-            # - Multiplies `fuel use` (*kg*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*
-            # - Multiplies by (1 - `freight share`) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage
-            # - Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `emission` for the passenger
-            # - If the flight did not occur during the `timeframe`, `emission` is zero
             quorum 'from fuel use, emission factor, freight share, passengers, multipliers, and date',
               :needs => [:fuel_use, :emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
                 date = characteristics[:date].is_a?(Date) ?
                   characteristics[:date] :
                   Date.parse(characteristics[:date].to_s)
+                  # Checks whether the flight occurred during the `timeframe`
                 if timeframe.include? date
-                  characteristics[:fuel_use] * characteristics[:emission_factor] * characteristics[:aviation_multiplier] * (1 - characteristics[:freight_share]) / characteristics[:passengers] * characteristics[:seat_class_multiplier]
+                  # Multiplies `fuel use` (*kg*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*.
+                  characteristics[:fuel_use] * characteristics[:emission_factor] * characteristics[:aviation_multiplier] *
+                  # Multiplies by (1 - `freight share`) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage
+                  (1 - characteristics[:freight_share]) /
+                  # Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `emission` for the passenger
+                  characteristics[:passengers] * characteristics[:seat_class_multiplier]
                 else
+                  # If the flight did not occur during the `timeframe`, `emission` is zero
                   0
                 end
             end
@@ -74,11 +75,10 @@ module BrighterPlanet
           # Returns the `aviation multiplier`. This approximates the extra climate impact of emissions high in the atmosphere.
           committee :aviation_multiplier do
             #### Default aviation multiplier
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses an `aviation multiplier` of **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
             quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Uses an `aviation multiplier` of **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
                 2.0
             end
           end
@@ -87,12 +87,11 @@ module BrighterPlanet
           # Returns the flight's total `fuel use` in *kg*.
           committee :fuel_use do
             #### Fuel use from fuel per segment and segments per trip and trips
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Multiplies the `fuel per segment` (*kg*) by the `segments per trip` and the number of `trips` to give *kg*.
             quorum 'from fuel per segment and segments per trip and trips',
               :needs => [:fuel_per_segment, :segments_per_trip, :trips],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Multiplies the `fuel per segment` (*kg*) by the `segments per trip` and the number of `trips` to give *kg*.
                 characteristics[:fuel_per_segment] * characteristics[:segments_per_trip].to_f * characteristics[:trips].to_f
             end
           end
@@ -101,16 +100,15 @@ module BrighterPlanet
           # Returns the `fuel per segment` in *kg*.
           committee :fuel_per_segment do
             #### Fuel per segment from adjusted distance per segment and fuel use coefficients
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses a third-order polynomial equation to calculate the fuel used per segment:
-            #
-            # (m<sub>3</sub> * d^3 ) + (m<sub>2</sub> * d^2 ) + (m<sub>1</sub> * d) + endpoint fuel
-            #
-            # Where d is the `adjusted distance per segment` and m<sub>3</sub>, m<sub>2</sub>, m<sub>2</sub>, and endpoint fuel are the `fuel use coefficients`.
             quorum 'from adjusted distance per segment and fuel use coefficients',
               :needs => [:adjusted_distance_per_segment, :fuel_use_coefficients],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Uses a third-order polynomial equation to calculate the fuel used per segment:
+                #
+                # (m<sub>3</sub> * d^3 ) + (m<sub>2</sub> * d^2 ) + (m<sub>1</sub> * d) + endpoint fuel
+                #
+                # Where d is the `adjusted distance per segment` and m<sub>3</sub>, m<sub>2</sub>, m<sub>2</sub>, and endpoint fuel are the `fuel use coefficients`.
                 characteristics[:fuel_use_coefficients].m3.to_f * characteristics[:adjusted_distance_per_segment].to_f ** 3 +
                   characteristics[:fuel_use_coefficients].m2.to_f * characteristics[:adjusted_distance_per_segment].to_f ** 2 +
                   characteristics[:fuel_use_coefficients].m1.to_f * characteristics[:adjusted_distance_per_segment].to_f +
@@ -122,12 +120,11 @@ module BrighterPlanet
           # Returns the `seat class multiplier`. This reflects the amount of cabin space occupied by the passenger's seat.
           committee :seat_class_multiplier do
             #### Seat class multiplier from seat class and distance
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance` and `seat class`.
             quorum 'from seat class name and adjusted distance per segment',
               :needs => [:seat_class_name, :adjusted_distance_per_segment],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance` and `seat class`.
                 if characteristics[:adjusted_distance_per_segment] < 244.06
                   FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", "#{characteristics[:seat_class_name]}").multiplier
                 elsif characteristics[:adjusted_distance_per_segment] < 863.93
@@ -138,12 +135,11 @@ module BrighterPlanet
             end
             
             #### Seat class multiplier from distance
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance`.
             quorum 'from adjusted distance per segment',
               :needs => :adjusted_distance_per_segment,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance`.
                 if characteristics[:adjusted_distance_per_segment] < 244.06
                   FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", "unknown").multiplier
                 elsif characteristics[:adjusted_distance_per_segment] < 863.93
@@ -161,27 +157,24 @@ module BrighterPlanet
           # Returns the `adjusted distance per segment` in *nautical miles*.
           committee :adjusted_distance_per_segment do
             #### Adjusted distance per segment from adjusted distance and segments per trip
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Divides the `adjusted distance` (*nautical miles*) by `segments per trip` to give *nautical miles*.
             quorum 'from adjusted distance and segments per trip',
               :needs => [:adjusted_distance, :segments_per_trip],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Divides the `adjusted distance` (*nautical miles*) by `segments per trip` to give *nautical miles*.
                 characteristics[:adjusted_distance] / characteristics[:segments_per_trip]
             end
           end
           
           ### Adjusted distance calculation
-          # Returns the `adjusted distance` in *nautical miles*.
-          # The `adjusted distance` accounts for factors that increase the actual distance traveled by real world flights.
+          # Returns the `adjusted distance` in *nautical miles*. The `adjusted distance` accounts for factors that increase the actual distance traveled by real world flights.
           committee :adjusted_distance do
             #### Adjusted distance from distance, route inefficiency factor, and dogleg factor
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Multiplies `distance` (*nautical miles*) by a `route inefficiency factor` and a `dogleg factor` to give *nautical miles*.
             quorum 'from distance, route inefficiency factor, and dogleg factor',
               :needs => [:distance, :route_inefficiency_factor, :dogleg_factor],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Multiplies `distance` (*nautical miles*) by a `route inefficiency factor` and a `dogleg factor` to give *nautical miles*.
                 characteristics[:distance] * characteristics[:route_inefficiency_factor] * characteristics[:dogleg_factor]
             end
           end
@@ -190,12 +183,11 @@ module BrighterPlanet
           # Returns the flight's base `distance` in *nautical miles*.
           committee :distance do
             #### Distance from airports
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the great circle distance between the `origin airport` and `destination airport` and converts from *km* to *nautical miles*.
             quorum 'from airports',
               :needs => [:origin_airport, :destination_airport],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Calculates the great circle distance between the `origin airport` and `destination airport` and converts from *km* to *nautical miles*.
                 if  characteristics[:origin_airport].latitude and
                     characteristics[:origin_airport].longitude and
                     characteristics[:destination_airport].latitude and
@@ -205,79 +197,67 @@ module BrighterPlanet
             end
             
             #### Distance from distance estimate
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Converts the `distance_estimate` in *km* to *nautical miles*.
             quorum 'from distance estimate',
               :needs => :distance_estimate,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Converts the `distance_estimate` in *km* to *nautical miles*.
                 characteristics[:distance_estimate].kilometres.to :nautical_miles
             end
             
             #### Distance from distance class
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [distance class](http://data.brighterplanet.com/flight_distance_classes)' `distance` and converts from *km* to *nautical miles*.
             quorum 'from distance class',
               :needs => :distance_class,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [distance class](http://data.brighterplanet.com/flight_distance_classes)' `distance` and converts from *km* to *nautical miles*.
                 characteristics[:distance_class].distance.kilometres.to :nautical_miles
             end
             
             #### Distance from cohort
-            # **Complies:**
-            #
-            # Calculates the average `distance` of the `cohort` segments, weighted by their passengers, and converts from *km* to *nautical miles*.
             quorum 'from cohort', :needs => :cohort do |characteristics| # cohort here will be some combo of origin, airline, and aircraft
+              # Calculates the average `distance` of the `cohort` segments, weighted by their passengers, and converts from *km* to *nautical miles*.
               distance = characteristics[:cohort].weighted_average(:distance, :weighted_by => :passengers).kilometres.to(:nautical_miles)
               distance > 0 ? distance : nil
             end
             
             #### Default distance
-            # **Complies:**
-            #
-            # Calculates the average `distance` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers, and converts from *km* to *nautical miles*.
             quorum 'default' do
+              # Calculates the average `distance` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers, and converts from *km* to *nautical miles*.
               FlightSegment.fallback.distance.kilometres.to :nautical_miles
             end
           end
           
           ### Route inefficiency factor calculation
-          # This calculation returns the `route inefficiency factor`.
-          # This is a measure of how much farther real world flights travel than the great circle distance between their origin and destination.
-          # It accounts for factors like flight path routing around controlled airspace and circling while waiting for clearance to land.
+          # Returns the `route inefficiency factor`. This is a measure of how much farther real world flights travel than the great circle distance between their origin and destination. It accounts for factors like flight path routing around controlled airspace and circling while waiting for clearance to land.
           committee :route_inefficiency_factor do
             #### Route inefficiency factor from country
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the `route inefficiency factor` for the [country](http://data.brighterplanet.com/countries) in which the flight occurs.
             quorum 'from country',
               :needs => :country,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the `route inefficiency factor` for the [country](http://data.brighterplanet.com/countries) in which the flight occurs.
                 characteristics[:country].andand.flight_route_inefficiency_factor
             end
             
             #### Default route inefficiency factor
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses a `route inefficiency factor` of **10%** based on [Kettunen et al. (2005)](http://www.atmseminar.org/seminarContent/seminar6/papers/p_055_MPM.pdf)
             quorum 'default',
+            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Uses a `route inefficiency factor` of **10%** based on [Kettunen et al. (2005)](http://www.atmseminar.org/seminarContent/seminar6/papers/p_055_MPM.pdf)
                 Country.fallback.flight_route_inefficiency_factor
             end
           end
           
           ### Dogleg factor calculation
-          # Returns the `dogleg factor`.
-          # This is a measure of how far out of the way the average layover is compared to a direct flight.
+          # Returns the `dogleg factor`. This is a measure of how far out of the way the average layover is compared to a direct flight.
           committee :dogleg_factor do
             #### Dogleg factor from segments per trip
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Assumes that each layover increases the total flight distance by **25%**.
             quorum 'from segments per trip',
               :needs => :segments_per_trip,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Assumes that each layover increases the total flight distance by **25%**.
                 1.25 ** (characteristics[:segments_per_trip] - 1)
             end
           end
@@ -292,12 +272,11 @@ module BrighterPlanet
           # Returns the `fuel use coefficients`. These are the coefficients of the third-order polynomial equation that describes aircraft fuel use.
           committee :fuel_use_coefficients do
             #### Fuel use coefficients from aircraft
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
             quorum 'from aircraft',
               :needs => :aircraft,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
                 aircraft = characteristics[:aircraft]
                 fuel_use = FuelUseEquation.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
                 if fuel_use.empty?
@@ -319,12 +298,9 @@ module BrighterPlanet
             end
             
             #### Fuel use coefficients from cohort
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average `fuel use coefficients` of the aircraft used by the `cohort` segments, weighted by the segment passengers.
-            # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
             quorum 'from cohort',
               :needs => :cohort,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 flight_segments = characteristics[:cohort]
                 
@@ -338,6 +314,8 @@ module BrighterPlanet
                   hsh
                 end
                 
+                # Calculates the average `fuel use coefficients` of the aircraft used by the `cohort` segments, weighted by the segment passengers.
+                # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
                 sum_coefficients = lambda do |name|
                   flight_segments.inject(0) do |coefficient, flight_segment|
                     bts_code = flight_segment.aircraft_bts_code.to_s
@@ -359,11 +337,10 @@ module BrighterPlanet
             end
             
             #### Default fuel use coefficients
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by the segment passengers.
-            # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by the segment passengers.
                 FuelUseEquation.new Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.endpoint_fuel
             end
           end
@@ -377,10 +354,10 @@ module BrighterPlanet
             # Uses the client-input [fuel](http://data.brighterplanet.com/fuels).
             
             #### Default fuel
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Assumes the flight uses **Jet Fuel**.
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Assumes the flight uses **Jet Fuel**.
                 Fuel.find_by_name 'Jet Fuel'
             end
           end
@@ -389,12 +366,11 @@ module BrighterPlanet
           # Returns the number of `passengers`.
           committee :passengers do
             #### Passengers from seats and load factor
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Multiplies the number of `seats` by the `load factor`.
             quorum 'from seats and load factor',
               :needs => [:seats, :load_factor],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Multiplies the number of `seats` by the `load factor`.
                 (characteristics[:seats] * characteristics[:load_factor]).round
             end
           end
@@ -403,42 +379,38 @@ module BrighterPlanet
           # Returns the number of `seats`.
           committee :seats do
             #### Seats from seats estimate
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses the client-input estimate of the number of `seats`.
             quorum 'from seats estimate',
               :needs => :seats_estimate,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Uses the client-input estimate of the number of `seats`.
                 characteristics[:seats_estimate]
             end
             
             #### Seats from aircraft
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
             quorum 'from aircraft',
               :needs => :aircraft,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
                 characteristics[:aircraft].seats
             end
             
             #### Seats from aircraft class
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)' average number of `seats`.
             quorum 'from aircraft class',
               :needs => :aircraft_class,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)' average number of `seats`.
                 characteristics[:aircraft_class].seats
             end
             
             #### Seats from cohort
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average number of `seats` of the `cohort` segments, weighted by their passengers.
             quorum 'from cohort',
               :needs => :cohort,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Calculates the average number of `seats` of the `cohort` segments, weighted by their passengers.
                 seats = characteristics[:cohort].weighted_average :seats, :weighted_by => :passengers
                 if seats.nil? or seats.zero?
                   nil
@@ -448,10 +420,10 @@ module BrighterPlanet
             end
             
             #### Default seats
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
                 FlightSegment.fallback.seats
             end
           end
@@ -460,8 +432,7 @@ module BrighterPlanet
           # Returns the client-input `seats estimate`.
           
           ### Load factor calculation
-          # Returns the `load factor`.
-          # This is the portion of available seats that are occupied.
+          # Returns the `load factor`. This is the portion of available seats that are occupied.
           committee :load_factor do
             #### Load factor from client input
             # **Complies:** All
@@ -469,50 +440,46 @@ module BrighterPlanet
             # Uses the client-input `load factor`.
             
             #### Load factor from cohort
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average `load factor` of the `cohort` segments, weighted by their passengers.
             quorum 'from cohort',
               :needs => :cohort,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Calculates the average `load factor` of the `cohort` segments, weighted by their passengers.
                 characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
             end
             
             #### Default load factor
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average `load factor` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Calculates the average `load factor` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
                 FlightSegment.fallback.load_factor
             end
           end
           
           ### Freight share calculation
-          # Returns the `freight share`.
-          # This is the percent of the total aircraft weight that is freight cargo and mail (as opposed to passengers and their baggage).
+          # Returns the `freight share`. This is the percent of the total aircraft weight that is freight cargo and mail (as opposed to passengers and their baggage).
           committee :freight_share do
             #### Freight share from cohort
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average `freight share` of the `cohort` segments, weighted by their passengers.
             quorum 'from cohort',
               :needs => :cohort,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Calculates the average `freight share` of the `cohort` segments, weighted by their passengers.
                 characteristics[:cohort].weighted_average(:freight_share, :weighted_by => :passengers)
             end
             
             #### Default freight share
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Calculates the average `freight share` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Calculates the average `freight share` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
                 FlightSegment.fallback.freight_share
             end
           end
           
           ### Trips calculation
-          # Returns the number of `trips`.
-          # A one-way flight has one trip; a round-trip flight has two trips.
+          # Returns the number of `trips`. A one-way flight has one trip; a round-trip flight has two trips.
           committee :trips do
             #### Trips from client input
             # **Complies:** All
@@ -520,10 +487,10 @@ module BrighterPlanet
             # Uses the client-input number of `trips`.
             
             #### Default trips
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses an average number of `trips` of **1.7** calculated from the [BTS Origin and Destination Survey](https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&hl=en&output=html).
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Uses an average number of `trips` of **1.7** calculated from the [BTS Origin and Destination Survey](https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&hl=en&output=html).
                 1.7
             end
           end
@@ -537,13 +504,11 @@ module BrighterPlanet
             # Uses the client-input [country](http://data.brighterplanet.com/countries).
             
             #### Country from origin airport and destination airport
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Checks whether the flight's `origin airport` and `destination airport` are within the same country.
-            # If so, that country is the `country`.
             quorum 'from origin airport and destination airport',
               :needs => [:origin_airport, :destination_airport],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Checks whether the flight's `origin airport` and `destination airport` are within the same country. If so, that country is the `country`.
                 if characteristics[:origin_airport].country == characteristics[:destination_airport].country
                   characteristics[:origin_airport].country
                 end
@@ -559,34 +524,30 @@ module BrighterPlanet
             # Uses the client-input [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
             
             #### Aircraft class from aircraft
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
             quorum 'from aircraft',
               :needs => :aircraft,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
                 characteristics[:aircraft].aircraft_class
             end
           end
           
           ### Cohort calculation
-          # Returns the `cohort`.
-          # This is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
+          # Returns the `cohort`. This is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
           committee :cohort do
             #### Cohort from segments per trip and input
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # - Checks whether the flight is direct
-            # - Takes the input values for `origin airport`, `destination airport`, `aircraft`, and `airline`
-            # - Selects all the records in the T-100 database that match the available input values
-            # - Drops the last input value (initially `airline`, then `aircraft`, etc.) if no records match all of the available input values
-            # - Repeats steps 3 and 4 until some records match or no input values remain
-            # - If no records match any of the input values, or if the flight is indirect, then `cohort` is undefined.
             quorum 'from segments per trip and input',
               :needs => :segments_per_trip, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 cohort = {}
+                # Checks whether the flight is direct
                 if characteristics[:segments_per_trip] == 1
+                  # - Takes the input values for `origin airport`, `destination airport`, `aircraft`, and `airline`
+                  # - Selects all the records in the T-100 database that match the available input values
+                  # - Drops the last input value (initially `airline`, then `aircraft`, etc.) if no records match all of the available input values
+                  # - Repeats steps 3 and 4 until some records match or no input values remain
                   provided_characteristics = [:origin_airport, :destination_airport, :aircraft, :airline].
                     inject(ActiveSupport::OrderedHash.new) do |memo, characteristic_name|
                       memo[characteristic_name] = characteristics[characteristic_name]
@@ -594,6 +555,7 @@ module BrighterPlanet
                     end
                   cohort = FlightSegment.strict_cohort provided_characteristics
                 end
+                # If no records match any of the input values, or if the flight is indirect, then `cohort` is undefined.
                 if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
                   cohort
                 else
@@ -609,14 +571,13 @@ module BrighterPlanet
           # Returns the client-input [destination airport](http://data.brighterplanet.com/airports).
           
           ### Aircraft calculation
-          # Returns the client-input type of [aircraft](http://data.brighterplanet.com/aircraft).
+          # Returns the client-input of [aircraft](http://data.brighterplanet.com/aircraft).
           
           ### Airline calculation
           # Returns the client-input [airline](http://data.brighterplanet.com/airlines) operating the flight.
           
           ### Segments per trip calculation
-          # Returns the `segments per trip`.
-          # Direct flights have a single segment per trip. Indirect flights with one or more layovers have two or more segments per trip.
+          # Returns the `segments per trip`. Direct flights have a single segment per trip. Indirect flights with one or more layovers have two or more segments per trip.
           committee :segments_per_trip do
             #### Segments per trip from client input
             # **Complies:** All
@@ -624,10 +585,10 @@ module BrighterPlanet
             # Uses the client-input `segments per trip`.
             
             #### Default segments per trip
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Uses an average `segments per trip` of **1.68**, calculated from the [BTS Origin and Destination Survey](https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&hl=en&output=html).
-            quorum 'default', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+                # Uses an average `segments per trip` of **1.68**, calculated from the [BTS Origin and Destination Survey](https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&hl=en&output=html).
                 1.68
             end
           end
@@ -641,17 +602,16 @@ module BrighterPlanet
             # Uses the client-input `date`.
             
             #### Date from timeframe
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Assumes the flight occurred on the first day of the `timeframe`.
-            quorum 'from timeframe', :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
+            quorum 'from timeframe',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
+                # Assumes the flight occurred on the first day of the `timeframe`.
                 timeframe.from
             end
           end
           
           ### Timeframe calculation
-          # Returns the `timeframe`.
-          # This is the period during which to calculate emissions.
+          # Returns the `timeframe`. This is the period during which to calculate emissions.
             
             #### Timeframe from client input
             # **Complies:** All
