@@ -211,5 +211,6 @@ DEPENDENCIES
   jeweler (~> 1.4.0)
   rake
   rdoc
+  roo (~> 1.9.3)
   rspec (~> 2)
   sniff (~> 0.6)

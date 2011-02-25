@@ -7,6 +7,7 @@ gem 'leap', :path => ENV['LOCAL_LEAP'] if ENV['LOCAL_LEAP']
 gem 'data_miner', :path => ENV['LOCAL_DATA_MINER'] if ENV['LOCAL_DATA_MINER']
 gem 'earth', :path => ENV['LOCAL_EARTH'] if ENV['LOCAL_EARTH']
 gem 'emitter', :path => ENV['LOCAL_EMITTER'] if ENV['LOCAL_EMITTER']
+gem 'roo', '~>1.9.3'
 
 gem 'fastercsv' if RUBY_VERSION < '1.9'
 
