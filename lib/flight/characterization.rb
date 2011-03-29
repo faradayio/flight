@@ -1,10 +1,7 @@
-require 'characterizable'
-
 module BrighterPlanet
   module Flight
     module Characterization
       def self.included(base)
-        base.send :include, Characterizable
         base.characterize do
           has :distance_estimate
           has :distance_class
