@@ -320,14 +320,14 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "route_inefficiency_factor" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "1.1"
+    And the conclusion of the committee should be "1.2"
 
   Scenario: Route inefficiency factor after country committee has returned nil
     Given a flight emitter
     When the "country" committee is calculated
     And the "route_inefficiency_factor" committee is calculated
     Then the committee should have used quorum "default"
-    And the conclusion of the committee should be "1.1"
+    And the conclusion of the committee should be "1.2"
 
   Scenario Outline: Distance committee from airports
     Given a flight emitter
