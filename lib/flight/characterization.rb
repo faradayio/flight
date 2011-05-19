@@ -15,7 +15,6 @@ module BrighterPlanet
           has :origin_airport
           has :destination_airport
           has :aircraft
-          has :aircraft_class
           has :airline
           has :segments_per_trip
         end

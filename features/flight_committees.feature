@@ -66,12 +66,6 @@ Feature: Flight Committee Calculations
       # origin not in t100, dest in t100
       # valid characteristics but only segments with zero passengers
 
-  Scenario: Aircraft class committee from aircraft
-    Given a flight emitter
-    And a characteristic "aircraft.bp_code" of "BP-FM1"
-    When the "aircraft_class" committee is calculated
-    Then the conclusion of the committee should have "code" of "EX"
-
   Scenario: Country committee from origin and destination
     Given a flight emitter
     And a characteristic "origin_airport.iata_code" of "ADA"
@@ -192,13 +186,6 @@ Feature: Flight Committee Calculations
       |             | WEA              |              | 123.33333 |
       |             |                  | DA           | 122.5     |
 
-  Scenario: Seats committee from aircraft class
-    Given a flight emitter
-    And a characteristic "aircraft_class.code" of "EX"
-    When the "seats" committee is calculated
-    Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should be "121.25"
-
   Scenario: Seats committee from default
     Given a flight emitter
     When the "seats" committee is calculated
@@ -251,16 +238,6 @@ Feature: Flight Committee Calculations
       | BP-XX1f |
       | BP-XX3  |
       | BP-XX4  |
-
-  Scenario: Fuel use coefficients committee from aircraft class
-    Given a flight emitter
-    And a characteristic "aircraft_class.code" of "EX"
-    When the "fuel_use_coefficients" committee is calculated
-    Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should have a record with "m3" equal to "0.0"
-    And the conclusion of the committee should have a record with "m2" equal to "0.0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.75"
-    And the conclusion of the committee should have a record with "endpoint_fuel" equal to "0.0"
 
   Scenario Outline: Fuel use coefficients from various cohorts
     Given a flight emitter
