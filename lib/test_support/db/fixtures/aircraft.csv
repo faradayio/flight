@@ -1,8 +1,6 @@
-bp_code,icao_code,bts_code,class_code,m3,m2,m1,endpoint_fuel,seats,weighting
-BP-FM1,FM1,1,EX,0,0,1,0,125,100
-BP-BA1,BA1,2,EX,0,0,2,0,120,300
-BP-XX1s,,3,BX,,,,,130,100
-BP-XX1f,,3,BX
-BP-XX2,,4,BX,0,0,4,0
-BP-XX3,,5,BX
-BP-XX4,,,BX
+icao_code,description,class_code,fuel_use_code,seats,passengers
+B731,boeing 737-100,Medium 2 engine Jet,FUEL-B731,212.5,320
+B732,boeing 737-200,Medium 3 engine Jet,,212.5,320
+B733,boeing 737-300,Medium 2 engine Jet,,277.2727273,440
+B734,boeing 737-400,Medium 2 engine Jet,FUEL-B734,250,720
+B735,boeing 737-500,Medium 2 engine Jet,FUEL-B734

@@ -112,7 +112,7 @@ module BrighterPlanet
                 characteristics[:fuel_use_coefficients].m3.to_f * characteristics[:adjusted_distance_per_segment].to_f ** 3 +
                   characteristics[:fuel_use_coefficients].m2.to_f * characteristics[:adjusted_distance_per_segment].to_f ** 2 +
                   characteristics[:fuel_use_coefficients].m1.to_f * characteristics[:adjusted_distance_per_segment].to_f +
-                  characteristics[:fuel_use_coefficients].endpoint_fuel.to_f
+                  characteristics[:fuel_use_coefficients].b.to_f
             end
           end
           
@@ -188,7 +188,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Calculates the great circle distance between the `origin airport` and `destination airport` and converts from *km* to *nautical miles*.
-                if  characteristics[:origin_airport].latitude and
+                if characteristics[:origin_airport].latitude and
                     characteristics[:origin_airport].longitude and
                     characteristics[:destination_airport].latitude and
                     characteristics[:destination_airport].longitude
@@ -215,7 +215,7 @@ module BrighterPlanet
             end
             
             #### Distance from cohort
-            quorum 'from cohort', :needs => :cohort do |characteristics| # cohort here will be some combo of origin, airline, and aircraft
+            quorum 'from cohort', :needs => :cohort do |characteristics| # cohort here will be some combo of origin OR destination, airline, and aircraft
               # Calculates the average `distance` of the `cohort` segments, weighted by their passengers, and converts from *km* to *nautical miles*.
               distance = characteristics[:cohort].weighted_average(:distance, :weighted_by => :passengers).kilometres.to(:nautical_miles)
               distance > 0 ? distance : nil
@@ -277,24 +277,9 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
-                aircraft = characteristics[:aircraft]
-                fuel_use = FuelUseEquation.new aircraft.m3, aircraft.m2, aircraft.m1, aircraft.endpoint_fuel
-                if fuel_use.empty?
-                  nil
-                else
-                  fuel_use
+                if equation = characteristics[:aircraft].fuel_use_equation
+                  fuel_use = FuelUseEquation.new equation.m3, equation.m2, equation.m1, equation.b
                 end
-            end
-            
-            #### Fuel use coefficients from aircraft class
-            # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-            #
-            # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)' `fuel use coefficients`.
-            quorum 'from aircraft class',
-              :needs => :aircraft_class,
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                aircraft_class = characteristics[:aircraft_class]
-                FuelUseEquation.new aircraft_class.m3, aircraft_class.m2, aircraft_class.m1, aircraft_class.endpoint_fuel
             end
             
             #### Fuel use coefficients from cohort
@@ -304,36 +289,33 @@ module BrighterPlanet
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 flight_segments = characteristics[:cohort]
                 
-                passengers = flight_segments.inject(0) do |memo, flight_segment|
-                  memo + flight_segment.passengers
-                end
-                                
-                bts_codes = flight_segments.map(&:aircraft_bts_code).uniq
-                relevant_aircraft = Aircraft.find_all_by_bts_code(bts_codes).inject({}) do |hsh, aircraft|
-                  hsh[aircraft.bts_code] = aircraft
-                  hsh
-                end
-                
-                # Calculates the average `fuel use coefficients` of the aircraft used by the `cohort` segments, weighted by the segment passengers.
-                # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
-                sum_coefficients = lambda do |name|
-                  flight_segments.inject(0) do |coefficient, flight_segment|
-                    bts_code = flight_segment.aircraft_bts_code.to_s
-                    aircraft = relevant_aircraft[bts_code]
-                    aircraft_coefficient = aircraft.send(name)
-                    if aircraft_coefficient.nil?
-                      aircraft_coefficient = aircraft.aircraft_class.send(name)
+                total_passengers = flight_segments.map(&:passengers).sum
+                fue = Flight::FuelUseEquation.new(0, 0, 0, 0)
+                flight_segments.each do |fs|
+                  fuel_use_codes = []
+                  class_codes = []
+                  fs.aircraft.each do |a|
+                    if a.fuel_use_code.present?
+                      fuel_use_codes.push(a.fuel_use_code)
+                    else
+                      class_codes.push(a.class_code)
                     end
-                    coefficient + (aircraft_coefficient * flight_segment.passengers)
+                  end
+                  
+                  # combine these into an array because otherwise you have to check whether either ActiveRecord::Relation is empty
+                  equations = AircraftFuelUseEquation.where(:code => fuel_use_codes) + AircraftClass.where(:code => class_codes)
+                  %w{ m3 m2 m1 b }.each do |coefficient|
+                    fue.send("#{coefficient}=",
+                      fue.send("#{coefficient}") +
+                      ((equations.map(&:"#{coefficient}").sum / equations.size) * fs.passengers)
+                    )
                   end
                 end
                 
-                m3 = sum_coefficients.call(:m3) / passengers
-                m2 = sum_coefficients.call(:m2) / passengers
-                m1 = sum_coefficients.call(:m1) / passengers
-                endpoint_fuel = sum_coefficients.call(:endpoint_fuel) / passengers
-                
-                FuelUseEquation.new m3, m2, m1, endpoint_fuel
+                %w{ m3 m2 m1 b }.each do |coefficient|
+                  fue.send("#{coefficient}=", (fue.send("#{coefficient}") / total_passengers))
+                end
+                fue
             end
             
             #### Default fuel use coefficients
@@ -341,7 +323,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by the segment passengers.
-                FuelUseEquation.new Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.endpoint_fuel
+                FuelUseEquation.new AircraftFuelUseEquation.fallback.m3, AircraftFuelUseEquation.fallback.m2, AircraftFuelUseEquation.fallback.m1, AircraftFuelUseEquation.fallback.b
             end
           end
           
@@ -394,15 +376,6 @@ module BrighterPlanet
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
                 characteristics[:aircraft].seats
-            end
-            
-            #### Seats from aircraft class
-            quorum 'from aircraft class',
-              :needs => :aircraft_class,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft_classes)' average number of `seats`.
-                characteristics[:aircraft_class].seats
             end
             
             #### Seats from cohort
@@ -515,51 +488,82 @@ module BrighterPlanet
             end
           end
           
-          ### Aircraft Class calculation
-          # This calculation returns the [aircraft class](http://data.brighterplanet.com/aircraft_classes).
-          committee :aircraft_class do
-            #### Aircraft class from client input
-            # **Complies:** All
-            #
-            # Uses the client-input [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
-            
-            #### Aircraft class from aircraft
-            quorum 'from aircraft',
-              :needs => :aircraft,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
-                characteristics[:aircraft].aircraft_class
-            end
-          end
-          
           ### Cohort calculation
           # Returns the `cohort`. This is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
           committee :cohort do
             #### Cohort from segments per trip and input
             quorum 'from segments per trip and input',
-              :needs => :segments_per_trip, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline],
+              :needs => :segments_per_trip, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline, :date],
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 cohort = {}
-                # Checks whether the flight is direct
+                
+                # Only assemble a cohort if the flight is direct
                 if characteristics[:segments_per_trip] == 1
-                  # - Takes the input values for `origin airport`, `destination airport`, `aircraft`, and `airline`
-                  # - Selects all the records in the T-100 database that match the available input values
-                  # - Drops the last input value (initially `airline`, then `aircraft`, etc.) if no records match all of the available input values
-                  # - Repeats steps 3 and 4 until some records match or no input values remain
-                  provided_characteristics = [:origin_airport, :destination_airport, :aircraft, :airline].
-                    inject(ActiveSupport::OrderedHash.new) do |memo, characteristic_name|
-                      memo[characteristic_name] = characteristics[characteristic_name]
-                      memo
+                  # If we have both an origin and destination airport...
+                  if characteristics[:origin_airport] and characteristics[:destination_airport]
+                    # If either airport is in the US...
+                    if characteristics[:origin_airport].country_iso_3166_code == "US" or characteristics[:destination_airport].country_iso_3166_code == "US"
+                      # Use airport iata code to assemble a cohort of BTS flight segments
+                      provided_characteristics = [
+                        [:origin_airport_iata_code, characteristics[:origin_airport].iata_code],
+                        [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
+                      ]
+                      end
+                    else
+                      # Otherwise, use airport city to assemble a cohort of ICAO flight segments
+                      provided_characteristics = [
+                        [:origin_airport_city, characteristics[:origin_airport].city],
+                        [:destination_airport_city, characteristics[:destination_airport].city]
+                      ]
                     end
-                  cohort = FlightSegment.strict_cohort provided_characteristics
-                end
-                # If no records match any of the input values, or if the flight is indirect, then `cohort` is undefined.
-                if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
-                  cohort
-                else
-                  nil
+                    
+                    # Also use aircraft description and airline name
+                    provided_characteristics.push [:aircraft_description, characteristics[:aircraft].description],
+                      [:airline_name, characteristics[:airline].name]
+                    
+                    # To assemble a cohort, we select all the records in our flight segments database that match
+                    # the input `origin_airport`, `destination_airport`, `aircraft`, and `airline`. If no records
+                    # match all the inputs, we drop the last input (initially `airline`) and try again. We continue
+                    # until some records match or no input values remain.
+                    cohort = FlightSegment.strict_cohort(*provided_characteristics)
+                    
+                    # Ignore the cohort if none of the flight segments have any passengers
+                    if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
+                      cohort
+                    else
+                      nil
+                    end
+                  
+                  # If we don't have both origin and destination
+                  else
+                    # First use airport iata code to assemble a cohort of BTS flight segments
+                    provided_characteristics = [
+                      [:origin_airport_iata_code, characteristics[:origin_airport].iata_code],
+                      [:destination_airport_iata_code, characteristics[:destination_airport].iata_code],
+                      [:aircraft_description, characteristics[:aircraft].description],
+                      [:airline_name, characteristics[:airline].name]
+                    ]
+                    bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
+                    
+                    # Then use airport city to assemble a cohort of ICAO flight segments
+                    provided_characteristics = [
+                      [:origin_airport_city, characteristics[:origin_airport].city],
+                      [:destination_airport_city, characteristics[:destination_airport].city],
+                      [:aircraft_description, characteristics[:aircraft].description],
+                      [:airline_name, characteristics[:airline].name]
+                    ]
+                    icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
+                    
+                    # Combine the two cohorts...
+                    cohort = bts_cohort + icao_cohort
+                    
+                    # And ensure at least one of the flight segments has passengers
+                    if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
+                      cohort
+                    else
+                      nil
+                    end
                 end
             end
           end

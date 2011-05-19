@@ -1,7 +1,5 @@
-iata_code,country_iso_3166_code,latitude,longitude
-ADA,US,41.6640358,-80
-AIA,US,40,-80
-WEA,DE,23.3596415,-80
-XXX,US,40,-90
-AZP
-BZP
+iata_code,city,country_iso_3166_code,latitude,longitude
+JFK,New York,US,23.3596415,-80
+LHR,London,GB,40,-80
+FRA,Frankfurt,DE,41.6640358,-80
+ATL,Atlanta,US

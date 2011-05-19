@@ -1,8 +1,7 @@
-origin_airport_iata_code,destination_airport_iata_code,airline_iata_code,aircraft_bts_code,distance,distance_units,departures_performed,passengers,total_seats,seats,freight,freight_units,payload,payload_units,load_factor,freight_share
-ADA,AIA,DA,1,185.2,kilometres,1,100,125,125,100,kilograms,10100,kilograms,0.8,0.00990
-ADA,AIA,DA,2,185.2,kilometres,1,100,120,120,200,kilograms,10200,kilograms,0.833333333,0.01961
-AIA,WEA,IA,2,1852,kilometres,1,100,120,120,500,kilograms,10500,kilograms,0.833333333,0.04762
-AIA,WEA,IA,2,1852,kilometres,1,100,120,120,500,kilograms,10500,kilograms,0.833333333,0.04762
-AIA,WEA,EA,3,1852,kilometres,1,100,130,130,1000,kilograms,11000,kilograms,0.769230769,0.09091
-AZP,BZP,ZA,6,185.2,kilometres,1,0,110,110,100,kilograms,100,kilograms,0.8,0.009990
-AZP,BZP,ZA,6,185.2,kilometres,1,0,110,110,100,kilograms,100,kilograms,0.8,0.009990
+origin_airport_iata_code,origin_airport_city,origin_country_iso_3166_code,destination_airport_iata_code,destination_airport_city,destination_country_iso_3166_code,airline_name,aircraft_description,flights,passengers,seats,seats_per_flight,load_factor,freight_share
+JFK,,US,LHR,,GB,American Airlines,boeing 737-100/200/300/400,1,200,250,250,0.8,0.02
+JFK,,US,LHR,,GB,American Airlines,boeing 737-400,4,360,400,100,0.9,0.04
+LHR,,GB,JFK,,US,American Airlines,boeing 737-300,1,240,300,300,0.8,0.04
+,London,GB,,Frankfurt,DE,British Airways,boeing 737-100/200,1,120,150,150,0.8,0.05
+,Frankfurt,DE,,London,GB,British Airways,boeing 737-400,1,360,400,400,0.9,0.05
+JFK,,US,SFO,,US,American Airlines,boeing 737-300,1,0,300,300,0,0.01
