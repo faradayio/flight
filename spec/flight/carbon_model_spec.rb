@@ -13,7 +13,7 @@ describe BrighterPlanet::Flight::CarbonModel do
         eq.to_xml.should == <<-XML
 <?xml version="1.0" encoding="UTF-8"?>
 <fuel_use_equation>
-  <endpoint_fuel type="float">2.762</endpoint_fuel>
+  <b type="float">2.762</b>
   <m1 type="float">0.575</m1>
   <m2 type="float">0.783</m2>
   <m3 type="float">0.01</m3>
