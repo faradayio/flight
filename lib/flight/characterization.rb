@@ -10,7 +10,6 @@ module BrighterPlanet
           has :load_factor
           has :trips
           has :seat_class_name
-          has :country
           has :date
           has :origin_airport
           has :destination_airport

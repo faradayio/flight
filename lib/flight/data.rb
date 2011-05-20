@@ -13,13 +13,11 @@ module BrighterPlanet
             float   'load_factor'
             integer 'trips'
             string  'seat_class_name'
-            string  'country_iso_3166_code'
             date    'date'
             string  'origin_airport_iata_code'
             string  'destination_airport_iata_code'
-            string  'aircraft_bp_code'
-            string  'aircraft_class_code'
-            string  'airline_iata_code'
+            string  'aircraft_icao_code'
+            string  'airline_name'
             integer 'segments_per_trip'
           end
           
