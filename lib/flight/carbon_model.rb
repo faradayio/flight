@@ -150,8 +150,8 @@ module BrighterPlanet
             end
           end
           
-          ### Seat class calculation
-          # Returns the client-input [seat class](http://data.brighterplanet.com/seat_classes).
+          ### Seat class name calculation
+          # Returns the client-input [seat class](http://data.brighterplanet.com/seat_classes) name.
           
           ### Adjusted distance per segment calculation
           # Returns the `adjusted distance per segment` in *nautical miles*.
@@ -471,11 +471,6 @@ module BrighterPlanet
           ### Country calculation
           # Returns the [country](http://data.brighterplanet.com/countries) in which a flight occurs.
           committee :country do
-            #### Country from client input
-            # **Complies:** All
-            #
-            # Uses the client-input [country](http://data.brighterplanet.com/countries).
-            
             #### Country from origin airport and destination airport
             quorum 'from origin airport and destination airport',
               :needs => [:origin_airport, :destination_airport],
