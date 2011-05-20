@@ -215,7 +215,8 @@ module BrighterPlanet
             end
             
             #### Distance from cohort
-            quorum 'from cohort', :needs => :cohort do |characteristics| # cohort here will be some combo of origin OR destination, airline, and aircraft
+            # This should NOT be prioritized over distance estimate or distance class because cohort here never has both airports
+            quorum 'from cohort', :needs => :cohort do |characteristics|
               # Calculates the average `distance` of the `cohort` segments, weighted by their passengers, and converts from *km* to *nautical miles*.
               distance = characteristics[:cohort].weighted_average(:distance, :weighted_by => :passengers).kilometres.to(:nautical_miles)
               distance > 0 ? distance : nil
@@ -271,17 +272,6 @@ module BrighterPlanet
           ### Fuel use coefficients calculation
           # Returns the `fuel use coefficients`. These are the coefficients of the third-order polynomial equation that describes aircraft fuel use.
           committee :fuel_use_coefficients do
-            #### Fuel use coefficients from aircraft
-            quorum 'from aircraft',
-              :needs => :aircraft,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
-                if equation = characteristics[:aircraft].fuel_use_equation
-                  fuel_use = FuelUseEquation.new equation.m3, equation.m2, equation.m1, equation.b
-                end
-            end
-            
             #### Fuel use coefficients from cohort
             quorum 'from cohort',
               :needs => :cohort,
@@ -336,6 +326,18 @@ module BrighterPlanet
                 end
             end
             
+            #### Fuel use coefficients from aircraft
+            quorum 'from aircraft',
+              :needs => :aircraft,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
+                if equation = characteristics[:aircraft].fuel_use_equation
+                  fuel_use = equation.valid_fuel_use_equation? ? FuelUseEquation.new(equation.m3, equation.m2, equation.m1, equation.b) : nil
+                  fuel_use
+                end
+            end
+            
             #### Default fuel use coefficients
             quorum 'default',
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
@@ -387,6 +389,16 @@ module BrighterPlanet
                 characteristics[:seats_estimate]
             end
             
+            #### Seats from cohort
+            quorum 'from cohort',
+              :needs => :cohort,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Calculates the average number of `seats` of the `cohort` segments, weighted by their passengers.
+                seats = characteristics[:cohort].weighted_average(:seats_per_flight, :weighted_by => :passengers)
+                seats.present? && seats > 0 ? seats : nil
+            end
+            
             #### Seats from aircraft
             quorum 'from aircraft',
               :needs => :aircraft,
@@ -396,18 +408,8 @@ module BrighterPlanet
                 characteristics[:aircraft].seats
             end
             
-            #### Seats from cohort
-            quorum 'from cohort',
-              :needs => :cohort,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Calculates the average number of `seats` of the `cohort` segments, weighted by their passengers.
-                seats = characteristics[:cohort].weighted_average :seats, :weighted_by => :passengers
-                if seats.nil? or seats.zero?
-                  nil
-                else
-                  seats
-                end
             end
             
             #### Default seats
