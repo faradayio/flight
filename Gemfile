@@ -1,12 +1,15 @@
-gem 'characterizable', :path => ENV['LOCAL_CHARACTERIZABLE'] if ENV['LOCAL_CHARACTERIZABLE']
-gem 'sniff', :path => ENV['LOCAL_SNIFF'] if ENV['LOCAL_SNIFF']
-gem 'falls_back_on', :path => ENV['LOCAL_FALLS_BACK_ON'] if ENV['LOCAL_FALLS_BACK_ON']
-gem 'loose_tight_dictionary', :path => ENV['LOCAL_LOOSE_TIGHT_DICTIONARY'] if ENV['LOCAL_LOOSE_TIGHT_DICTIONARY']
-gem 'cohort_scope', :path => ENV['LOCAL_COHORT_SCOPE'] if ENV['LOCAL_COHORT_SCOPE']
-gem 'leap', :path => ENV['LOCAL_LEAP'] if ENV['LOCAL_LEAP']
-gem 'data_miner', :path => ENV['LOCAL_DATA_MINER'] if ENV['LOCAL_DATA_MINER']
+# To use a local copy of one of these, specify the path e.g.
+# gem 'sniff', :path => ENV['LOCAL_SNIFF'] if ENV['LOCAL_SNIFF']
+
+gem 'characterizable'
+gem 'sniff'
+gem 'falls_back_on'
+gem 'loose_tight_dictionary'
+gem 'cohort_scope', :git => 'git://github.com/seamusabshere/cohort_scope.git'
+gem 'leap', '<0.5.0'
+gem 'data_miner'
 gem 'earth', :path => ENV['LOCAL_EARTH'] if ENV['LOCAL_EARTH']
-gem 'emitter', :path => ENV['LOCAL_EMITTER'] if ENV['LOCAL_EMITTER']
+gem 'emitter'
 gem 'roo', '~>1.9.3'
 
 gem 'fastercsv' if RUBY_VERSION < '1.9'
