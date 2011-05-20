@@ -1,8 +1,9 @@
 origin_airport_iata_code,origin_airport_city,origin_country_iso_3166_code,destination_airport_iata_code,destination_airport_city,destination_country_iso_3166_code,airline_name,aircraft_description,passengers,seats_per_flight,load_factor,freight_share,distance,year
-JFK,,US,LHR,,GB,American Airlines,boeing 737-100/200/300/400,200,250,0.8,0.02,1852,2010
-JFK,,US,LHR,,GB,American Airlines,boeing 737-400,360,100,0.9,0.04,1852,2010
-LHR,,GB,JFK,,US,American Airlines,boeing 737-300,225,300,0.75,0.04,1852,2010
-,London,GB,,Frankfurt,DE,British Airways,boeing 737-100/200,120,150,0.8,0.05,185.2,2010
-,Frankfurt,DE,,London,GB,British Airways,boeing 737-400,360,400,0.9,0.05,185.2,2010
-MEX,,MX,JFK,,US,American Airlines,boeing 737-200,240,300,0.8,0.04,2778,2010
-LGA,,US,SFO,,US,American Airlines,boeing 737-300,0,300,0,0.01,2778,2010
+JFK,,US,LHR,,GB,Delta,boeing 737-100/200/300/400,200,250,0.8,0.02,1852,2011
+JFK,,US,LHR,,GB,Delta,boeing 737-400,360,100,0.9,0.04,1852,2011
+LHR,,GB,JFK,,US,Delta,boeing 737-300,225,300,0.75,0.04,1852,2011
+,London,GB,,Frankfurt,DE,Lufthansa,boeing 737-100/200,120,150,0.8,0.05,185.2,2011
+,Frankfurt,DE,,London,GB,Lufthansa,boeing 737-400,360,400,0.9,0.05,185.2,2011
+MEX,,MX,JFK,,US,Delta,boeing 737-200,240,300,0.8,0.04,2778,2011
+LGA,,US,SFO,,US,Delta,boeing 737-300,0,300,0,0.01,2778,2011
+JFK,,US,LHR,,GB,Delta,,1,257.4750831,0.840365449,0.040531561,1468.063787,2009

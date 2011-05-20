@@ -8,6 +8,7 @@ require 'date'
 require 'weighted_average'
 require 'builder'
 require 'flight/carbon_model/fuel_use_equation'
+require 'ruby-debug'
 
 ## Flight carbon model
 # This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
@@ -549,6 +550,11 @@ module BrighterPlanet
                 if characteristics[:segments_per_trip] == 1
                   cohort = {}
                   provided_characteristics = []
+                  date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
+                  
+                  # We'll want to restrict the cohort to flight segments that occurred the same year as the flight or the previous year.
+                  # We need to include the previous year because our flight segment data lags by about 6 months.
+                  relevant_years = [date.year - 1, date.year]
                   
                   # If we have both an origin and destination airport...
                   if characteristics[:origin_airport] and characteristics[:destination_airport]
@@ -584,10 +590,11 @@ module BrighterPlanet
                       provided_characteristics.push [:airline_name, characteristics[:airline].name]
                     end
                     
-                    # To assemble a cohort, we select all the records in flight segments that match the input `origin_airport`,
-                    # `destination_airport`, `aircraft`, and `airline`. If no records match all the inputs, we drop the last
-                    # input (initially `airline`) and try again. We continue until some records match or no inputs remain.
-                    cohort = FlightSegment.strict_cohort(*provided_characteristics)
+                    # To assemble a cohort, we start with all the flight segments that are the same year as the flight or the
+                    # previous year. Then we find all the segments that match the input `origin_airport`, `destination_airport`,
+                    # `aircraft`, and `airline`. If no segments match all the inputs, we drop the last input (initially `airline`)
+                    # and try again. We continue until some segments match or no inputs remain.
+                    cohort = FlightSegment.where(:year => relevant_years).strict_cohort(*provided_characteristics)
                     
                     # Ignore the cohort if none of its flight segments have any passengers
                     # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
@@ -639,8 +646,10 @@ module BrighterPlanet
                     
                     icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
-                    # Combine the two cohorts, and ignore the result if none of its flight segments have any passengers
-                    cohort = bts_cohort + icao_cohort
+                    # Combine the two cohorts, making sure to restrict to relevant years
+                    cohort = CohortScope::StrictCohort.new((bts_cohort + icao_cohort).where(:year => relevant_years))
+                    
+                    # Ignore the resulting cohort if none of its flight segments have any passengers 
                     # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
                     if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
                       cohort
@@ -658,7 +667,7 @@ module BrighterPlanet
                       provided_characteristics.push [:airline_name, characteristics[:airline].name]
                     end
                     
-                    cohort = FlightSegment.strict_cohort(*provided_characteristics)
+                    cohort = FlightSegment.where(:year => relevant_years).strict_cohort(*provided_characteristics)
                     
                     # Ignore the cohort if none of its flight segments have any passengers
                     # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
