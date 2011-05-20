@@ -219,6 +219,7 @@ module BrighterPlanet
             # This should NOT be prioritized over distance estimate or distance class because cohort here never has both airports
             quorum 'from cohort', :needs => :cohort do |characteristics|
               # Calculates the average `distance` of the `cohort` segments, weighted by their passengers, and converts from *km* to *nautical miles*.
+              # Ensure that `distance` > 0
               distance = characteristics[:cohort].weighted_average(:distance, :weighted_by => :passengers).kilometres.to(:nautical_miles)
               distance > 0 ? distance : nil
             end
@@ -430,8 +431,9 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Calculates the average number of `seats` of the `cohort` segments, weighted by their passengers.
+                # Ensure that `seats` > 0
                 seats = characteristics[:cohort].weighted_average(:seats_per_flight, :weighted_by => :passengers)
-                seats.present? && seats > 0 ? seats : nil
+                seats > 0 ? seats : nil
             end
             
             #### Default seats
@@ -473,11 +475,9 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Calculates the average `load factor` of the `cohort` segments, weighted by their passengers.
+                # Ensure that `load_factor` > 0
                 load_factor = characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
-                a = 1
-                debugger
-                a = 1
-                load_factor.nonzero? ? load_factor : nil
+                load_factor > 0 ? load_factor : nil
             end
             
             #### Default load factor
@@ -485,9 +485,6 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average `load factor` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
-                a = 1
-                debugger
-                a = 1
                 FlightSegment.fallback.load_factor
             end
           end
@@ -501,6 +498,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Calculates the average `freight share` of the `cohort` segments, weighted by their passengers.
+                # Don't need checks because zero is a valid `freight share`
                 characteristics[:cohort].weighted_average(:freight_share, :weighted_by => :passengers)
             end
             
