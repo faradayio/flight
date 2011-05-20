@@ -287,35 +287,53 @@ module BrighterPlanet
               :needs => :cohort,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Calculates the passenger-weighted average fuel use equation for all the flight segments in the cohort
                 flight_segments = characteristics[:cohort]
                 
-                total_passengers = flight_segments.map(&:passengers).sum
-                fue = Flight::FuelUseEquation.new(0, 0, 0, 0)
+                # Initialize a blank fuel use equation for this flight and set a passengers counter to zero
+                fue = FuelUseEquation.new(0, 0, 0, 0)
+                cumulative_passengers = 0
+                
+                # For each flight segment in the cohort...
                 flight_segments.each do |fs|
-                  fuel_use_codes = []
-                  class_codes = []
+                  fuel_use_equations = []
+                  aircraft_classes = []
+                  
+                  # For each aircraft the flight segment refers to...
                   fs.aircraft.each do |a|
-                    if a.fuel_use_code.present?
-                      fuel_use_codes.push(a.fuel_use_code)
-                    else
-                      class_codes.push(a.class_code)
+                    # If the aircraft is associated with a valid fuel use equation, add that fuel use equation to an array
+                    if a.fuel_use_equation && a.fuel_use_equation.valid_fuel_use_equation?
+                      fuel_use_equations.push(a.fuel_use_equation)
+                    # Otherwise, if the aircraft's class contains a valid fuel use equation, add the aircraft class to an array
+                    elsif a.aircraft_class && a.aircraft_class.valid_fuel_use_equation?
+                      aircraft_classes.push(a.aircraft_class)
                     end
                   end
                   
-                  # combine these into an array because otherwise you have to check whether either ActiveRecord::Relation is empty
-                  equations = AircraftFuelUseEquation.where(:code => fuel_use_codes) + AircraftClass.where(:code => class_codes)
-                  %w{ m3 m2 m1 b }.each do |coefficient|
-                    fue.send("#{coefficient}=",
-                      fue.send("#{coefficient}") +
-                      ((equations.map(&:"#{coefficient}").sum / equations.size) * fs.passengers)
-                    )
+                  # Combine the valid fuel use equations and aircraft classes to get an array of equation objects
+                  equation_objects = fuel_use_equations + aircraft_classes
+                  
+                  # If we found at least one valid fuel use equation...
+                  unless equation_objects.empty?
+                    # Average each coefficient across all the valid fuel use equations, multiply that average by the 
+                    # flight segment's passengers, and add the resulting value to the overall flight fuel use equation
+                    %w{ m3 m2 m1 b }.each do |coefficient|
+                      value = (equation_objects.map(&:"#{coefficient}").sum / equation_objects.size) * fs.passengers
+                      fue.send("#{coefficient}=", fue.send("#{coefficient}") + value)
+                    end
+                    # Add the flight segment's passengers to our passengers counter
+                    cumulative_passengers += fs.passengers
                   end
                 end
                 
-                %w{ m3 m2 m1 b }.each do |coefficient|
-                  fue.send("#{coefficient}=", (fue.send("#{coefficient}") / total_passengers))
+                # Check to make sure at least one of the segments had passengers and a valid fuel use equation
+                if cumulative_passengers > 0
+                  # Divide each coefficient in our overall fuel use equation by the passengers counter and return the result
+                  %w{ m3 m2 m1 b }.each do |coefficient|
+                    fue.send("#{coefficient}=", (fue.send("#{coefficient}") / cumulative_passengers))
+                  end
+                  fue
                 end
-                fue
             end
             
             #### Default fuel use coefficients
