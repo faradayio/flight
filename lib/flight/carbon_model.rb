@@ -473,7 +473,11 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Calculates the average `load factor` of the `cohort` segments, weighted by their passengers.
-                characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
+                load_factor = characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
+                a = 1
+                debugger
+                a = 1
+                load_factor.nonzero? ? load_factor : nil
             end
             
             #### Default load factor
@@ -481,6 +485,9 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average `load factor` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
+                a = 1
+                debugger
+                a = 1
                 FlightSegment.fallback.load_factor
             end
           end
