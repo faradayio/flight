@@ -338,6 +338,17 @@ module BrighterPlanet
                 end
             end
             
+            #### Fuel use coefficients from aircraft class
+            quorum 'from aircraft class',
+              :needs => :aircraft_class,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
+                ac = characteristics[:aircraft_class]
+                fuel_use = ac.valid_fuel_use_equation? ? FuelUseEquation.new(ac.m3, ac.m2, ac.m1, ac.b) : nil
+                fuel_use
+            end
+            
             #### Default fuel use coefficients
             quorum 'default',
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
@@ -408,8 +419,14 @@ module BrighterPlanet
                 characteristics[:aircraft].seats
             end
             
+            #### Seats from aircraft class
+            quorum 'from aircraft class',
+              :needs => :aircraft_class,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
+                seats = characteristics[:aircraft_class].seats
+                seats.present? && seats > 0 ? seats : nil
             end
             
             #### Default seats
