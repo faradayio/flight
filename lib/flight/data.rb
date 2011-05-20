@@ -19,6 +19,7 @@ module BrighterPlanet
             float   'distance_estimate'
             string  'distance_class_name'
             string  'seat_class_name'
+            string  'flight_segment_row_hash'
           end
           
           process "pull orphans" do

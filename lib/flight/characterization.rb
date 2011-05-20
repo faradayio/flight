@@ -16,6 +16,7 @@ module BrighterPlanet
           has :distance_estimate
           has :distance_class
           has :seat_class_name
+          has :flight_segment_row_hash
         end
       end
     end
