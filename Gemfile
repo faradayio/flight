@@ -8,7 +8,7 @@ gem 'loose_tight_dictionary'
 gem 'cohort_scope', :git => 'git://github.com/seamusabshere/cohort_scope.git'
 gem 'leap', '<0.5.0'
 gem 'data_miner'
-gem 'earth', :path => ENV['LOCAL_EARTH'] if ENV['LOCAL_EARTH']
+gem 'earth', :git => 'git://github.com/brighterplanet/earth.git', :branch => 'icao_flights'
 gem 'emitter'
 gem 'roo', '~>1.9.3'
 
