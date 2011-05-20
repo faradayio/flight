@@ -6,19 +6,19 @@ module BrighterPlanet
       def self.included(base)
         base.data_miner do
           schema do
-            float   'distance_estimate'
-            string  'distance_class_name'
-            string  'fuel_name'
-            integer 'seats_estimate'
-            float   'load_factor'
-            integer 'trips'
-            string  'seat_class_name'
             date    'date'
+            integer 'segments_per_trip'
             string  'origin_airport_iata_code'
             string  'destination_airport_iata_code'
             string  'aircraft_icao_code'
             string  'airline_name'
-            integer 'segments_per_trip'
+            integer 'trips'
+            float   'load_factor'
+            integer 'seats_estimate'
+            string  'fuel_name'
+            float   'distance_estimate'
+            string  'distance_class_name'
+            string  'seat_class_name'
           end
           
           process "pull orphans" do
