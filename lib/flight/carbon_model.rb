@@ -397,7 +397,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Uses the client-input estimate of the number of `seats`.
-                characteristics[:seats_estimate]
+                characteristics[:seats_estimate] > 0 ? characteristics[:seats_estimate] : nil
             end
             
             #### Seats from cohort
@@ -416,7 +416,8 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
-                characteristics[:aircraft].seats
+                seats = characteristics[:aircraft].seats
+                seats.present? && seats > 0 ? seats : nil
             end
             
             #### Seats from aircraft class
@@ -434,7 +435,9 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
-                FlightSegment.fallback.seats
+                FlightSegment.fallback.seats_per_flight
+            end
+          end
           
           ### Aircraft Class calculation
           # Returns the [aircraft class](http://data.brighterplanet.com/aircraft_classes).
