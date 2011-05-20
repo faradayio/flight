@@ -398,6 +398,17 @@ module BrighterPlanet
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
                 FlightSegment.fallback.seats
+          
+          ### Aircraft Class calculation
+          # Returns the [aircraft class](http://data.brighterplanet.com/aircraft_classes).
+          committee :aircraft_class do
+            #### Aircraft class from aircraft
+            quorum 'from aircraft',
+              :needs => :aircraft,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
+                characteristics[:aircraft].aircraft_class
             end
           end
           
