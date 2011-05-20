@@ -238,7 +238,10 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the `route inefficiency factor` for the [country](http://data.brighterplanet.com/countries) in which the flight occurs.
-                characteristics[:country].andand.flight_route_inefficiency_factor
+                # FIXME: why do we always end up in this quorum even when country is nil?
+                if characteristics[:country].present?
+                  characteristics[:country].flight_route_inefficiency_factor
+                end
             end
             
             #### Default route inefficiency factor
