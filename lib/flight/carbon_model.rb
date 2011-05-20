@@ -542,9 +542,9 @@ module BrighterPlanet
           # Returns the `cohort`. This is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
           committee :cohort do
             quorum 'from flight segment row hash',
-              :needs => :flight_segment_row_hash, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline, :date] do |characteristics|
+              :needs => [:flight_segment_row_hash, :segments_per_trip], :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline, :date] do |characteristics|
                 if characteristics[:segments_per_trip] == 1
-                  cohort = CohortScope::StrictCohort.new(FlightSegment.where(:row_hash => characterstics[:flight_segment_row_hash]))
+                  cohort = CohortScope::StrictCohort.new(FlightSegment.where(:row_hash => characteristics[:flight_segment_row_hash]))
                   if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
                     cohort
                   else
