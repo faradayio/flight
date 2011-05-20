@@ -1,6 +1,6 @@
-icao_code,description,class_code,fuel_use_code,seats,passengers
-B731,boeing 737-100,Medium 2 engine Jet,FUEL-B731,212.5,320
-B732,boeing 737-200,Medium 3 engine Jet,,212.5,320
-B733,boeing 737-300,Medium 2 engine Jet,,277.2727273,440
-B734,boeing 737-400,Medium 2 engine Jet,FUEL-B734,250,720
+icao_code,description,class_code,fuel_use_code
+B731,boeing 737-100,Medium 2 engine Jet,FUEL-B731
+B732,boeing 737-200,Medium 3 engine Jet
+B733,boeing 737-300,Medium 2 engine Jet
+B734,boeing 737-400,Medium 2 engine Jet,FUEL-B734
 B735,boeing 737-500,Medium 2 engine Jet,FUEL-B734
