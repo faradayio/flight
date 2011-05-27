@@ -5,12 +5,6 @@ Feature: Flight Emissions Calculations
     Given a flight has nothing
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "94.66"
-    And the calculation should comply with standards "iso, tcr"
-
-  Scenario: Calculations from default
-    Given a flight has nothing
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "94.66"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Calculations from date
@@ -37,52 +31,6 @@ Feature: Flight Emissions Calculations
       | 2009-06-25 | 2009-01-01/2009-12-31 | 94.66    |
       | 2009-06-25 | 2009-12-01/2009-12-31 | 0        |
 
-      Scenario Outline: Calculations from cohorts
-        Given a flight has "segments_per_trip" of "1"
-        And it is the year "2011"
-        And it has "origin_airport.iata_code" of "<origin>"
-        And it has "destination_airport.iata_code" of "<dest>"
-        And it has "airline.name" of "<airline>"
-        And it has "aircraft.description" of "<aircraft>"
-        When emissions are calculated
-        Then the emission value should be within "0.01" kgs of "<emission>"
-        And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
-        Examples:
-          | origin | dest | aircraft       | airline   | emission |
-          | JFK    |      |                |           | 178.41   |
-          | FRA    |      |                |           | 7.00     |
-          | LHR    |      |                |           | 68.05    |
-          |        | JFK  |                |           | 119.73   |
-          |        | FRA  |                |           | 10.50    |
-          |        | LHR  |                |           | 71.58    |
-          |        |      | boeing 737-400 |           | 75.00    |
-          |        |      | boeing 737-200 |           | 89.07    |
-          |        |      |                | Lufthansa | 7.47     |
-          | JFK    | LHR  |                |           | 178.41   |
-          | LHR    | JFK  |                |           | 98.55    |
-          | FRA    | LHR  |                |           | 7.00     |
-          | JFK    | ATL  | boeing 737-400 |           | 10.88    |
-          | JFK    | FRA  |                |           | 196.25   |
-          | FRA    | FRA  |                |           | 0.0      |
-          # origin with just BTS segments
-          # origin with just ICAO segments
-          # origin with BTS and ICAO segments
-          # dest with just BTS segments
-          # dest with just ICAO segments
-          # dest with BTS and ICAO segments
-          # aircraft with simple description
-          # aircraft with simple and complex descriptions
-          # airline
-          # origin US destination foreign (BTS)
-          # origin foreign destination US (BTS)
-          # origin/destination foreign (ICAO)
-          # origin/destination + airline but destination not in flight segments
-          # origin + dest don't match; origin or dest in US, origin has BTS segments only
-          # origin + dest don't match; origin + dest not in US, origin has ICAO segments only
-
-
-
-
   Scenario Outline: Calculations from cohorts that do not comply with standards
     Given a flight has "segments_per_trip" of "1"
     And it is the year "2011"
@@ -101,7 +49,7 @@ Feature: Flight Emissions Calculations
       |        | JFK  |                |           | 119.73   |
       |        | FRA  |                |           | 10.50    |
       |        | LHR  |                |           | 71.58    |
-      |        |      | boeing 737-400 |           | 75.00    |
+      |        |      | boeing 737-400 |           | 71.58    |
       |        |      | boeing 737-200 |           | 89.07    |
       |        |      |                | Lufthansa | 7.47     |
       # origin with just BTS segments
@@ -129,7 +77,7 @@ Feature: Flight Emissions Calculations
       | JFK    | LHR  |                |           | 178.41   |
       | LHR    | JFK  |                |           | 98.55    |
       | FRA    | LHR  |                |           | 7.00     |
-      | JFK    | ATL  | boeing 737-400 |           | 10.88    |
+      | JFK    | ATL  | boeing 737-400 |           | 16.35    |
       | JFK    | FRA  |                |           | 196.25   |
       | FRA    | FRA  |                |           | 0.0      |
       # origin US destination foreign (BTS)
@@ -143,13 +91,13 @@ Feature: Flight Emissions Calculations
     Given a flight has "segments_per_trip" of "2"
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "101.66"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class
     Given a flight has "seat_class_name" of "economy"
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "91.87"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class and distance estimate
     Given a flight has "seat_class_name" of "economy"
@@ -162,19 +110,19 @@ Feature: Flight Emissions Calculations
     Given a flight has "trips" of "2"
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "111.36"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from load factor
     Given a flight has "load_factor" of "1"
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "79.56"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seats estimate
     Given a flight has "seats_estimate" of "100"
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "243.41"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance estimate
     Given a flight has "distance_estimate" of "185.2"
@@ -192,4 +140,4 @@ Feature: Flight Emissions Calculations
     Given a flight has "fuel.name" of "Aviation Gasoline"
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "91.54"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"

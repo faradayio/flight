@@ -225,7 +225,7 @@ module BrighterPlanet
             end
             
             #### Default distance
-            quorum 'default', :complies => [:tcr] do
+            quorum 'default' do
               # Calculates the average `distance` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers, and converts from *km* to *nautical miles*.
               FlightSegment.fallback.distance.kilometres.to :nautical_miles
             end

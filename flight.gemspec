@@ -25,6 +25,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   
   s.add_runtime_dependency 'emitter'
-  s.add_development_dependency 'sniff' unless ENV['LOCAL_SNIFF']
+  s.add_development_dependency 'sniff', '~>0.7.3'
   s.add_development_dependency 'ruby-debug19'
 end
