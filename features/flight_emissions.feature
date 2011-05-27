@@ -5,7 +5,7 @@ Feature: Flight Emissions Calculations
     Given a flight has nothing
     When emissions are calculated
     Then the emission value should be within "0.01" kgs of "94.66"
-    And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    And the calculation should comply with standards "iso, tcr"
 
   Scenario: Calculations from default
     Given a flight has nothing
