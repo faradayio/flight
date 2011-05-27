@@ -2,7 +2,7 @@
 # gem 'sniff', :path => ENV['LOCAL_SNIFF'] if ENV['LOCAL_SNIFF']
 
 gem 'characterizable'
-gem 'sniff'
+gem 'sniff', :path => ENV['LOCAL_SNIFF'] if ENV['LOCAL_SNIFF']
 gem 'falls_back_on'
 gem 'loose_tight_dictionary'
 gem 'cohort_scope', :git => 'git://github.com/seamusabshere/cohort_scope.git'

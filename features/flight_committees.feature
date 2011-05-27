@@ -6,11 +6,13 @@ Feature: Flight Committee Calculations
     And a characteristic "timeframe" of "2010-07-15/2010-07-20"
     When the "date" committee is calculated
     Then the conclusion of the committee should be "2010-07-15"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Segments per trip committee from default
     Given a flight emitter
     When the "segments_per_trip" committee is calculated
     Then the conclusion of the committee should be "1.68"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Cohort committee from various characteristics
     Given a flight emitter
@@ -23,6 +25,7 @@ Feature: Flight Committee Calculations
     When the "date" committee is calculated
     And the "cohort" committee is calculated
     Then the conclusion of the committee should have a record with "count" equal to "<records>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | records |
       | JFK    |      |                |           | 2       |
@@ -64,6 +67,7 @@ Feature: Flight Committee Calculations
     When the "date" committee is calculated
     And the "cohort" committee is calculated
     Then the conclusion of the committee should have a record with "count" equal to "1"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Cohort committe from various unusable characteristics
     Given a flight emitter
@@ -107,6 +111,7 @@ Feature: Flight Committee Calculations
     And a characteristic "destination_airport.iata_code" of "ATL"
     When the "country" committee is calculated
     Then the conclusion of the committee should have "iso_3166_code" of "US"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Country committee from origin only
     Given a flight emitter
@@ -125,6 +130,7 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "trips" committee is calculated
     Then the conclusion of the committee should be "1.7"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Freight share committee from cohort
     Given a flight emitter
@@ -139,6 +145,7 @@ Feature: Flight Committee Calculations
     And the "freight_share" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<freight_share>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | freight_share |
       | JFK    |      |                |           | 0.03286       |
@@ -177,6 +184,7 @@ Feature: Flight Committee Calculations
     When the "freight_share" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "0.04053"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Load factor committee from cohort
     Given a flight emitter
@@ -191,6 +199,7 @@ Feature: Flight Committee Calculations
     And the "load_factor" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<load_factor>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | load_factor |
       | JFK    |      |                |           | 0.86429     |
@@ -229,6 +238,7 @@ Feature: Flight Committee Calculations
     When the "load_factor" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "0.84037"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Seats committee from seats estimate
     Given a flight emitter
@@ -236,6 +246,7 @@ Feature: Flight Committee Calculations
     When the "seats" committee is calculated
     Then the committee should have used quorum "from seats estimate"
     And the conclusion of the committee should be "100"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Seats committee from cohort
     Given a flight emitter
@@ -249,6 +260,7 @@ Feature: Flight Committee Calculations
     And the "seats" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<seats>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
     | origin | dest | airline   | seats     |
     | JFK    |      |           | 153.57143 |
@@ -284,6 +296,7 @@ Feature: Flight Committee Calculations
     When the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft"
     And the conclusion of the committee should be "<seats>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | aircraft       | seats |
       | boeing 737-100 | 212.5 |
@@ -296,12 +309,14 @@ Feature: Flight Committee Calculations
     And the "seats" committee is calculated
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should be "249.54955"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Seats committee from default
     Given a flight emitter
     When the "seats" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "257.47508"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Passengers committee from seats and load factor
     Given a flight emitter
@@ -309,6 +324,7 @@ Feature: Flight Committee Calculations
     And a characteristic "load_factor" of "<load_factor>"
     When the "passengers" committee is calculated
     Then the conclusion of the committee should be "<passengers>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | seats | load_factor | passengers |
       | 105   | 0.9         | 95.0       |
@@ -318,6 +334,7 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "fuel" committee is calculated
     Then the conclusion of the committee should have "name" of "Jet Fuel"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Fuel use coefficients from various cohorts
     Given a flight emitter
@@ -333,6 +350,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m2" equal to "<m2>"
     And the conclusion of the committee should have a record with "m1" equal to "<m1>"
     And the conclusion of the committee should have a record with "b" equal to "<b>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | m3  | m2  | m1      | b   |
       | FRA    |      | 0.0 | 0.0 | 2.0     | 0.0 |
@@ -356,7 +374,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "1.74194"
     And the conclusion of the committee should have a record with "b" equal to "0.0"
-
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Fuel use coefficients committee from aircraft with fuel use coefficients
     Given a flight emitter
@@ -367,6 +385,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m2" equal to "<m2>"
     And the conclusion of the committee should have a record with "m1" equal to "<m1>"
     And the conclusion of the committee should have a record with "b" equal to "<b>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | aircraft       | m3  | m2  | m1  | b   |
       | boeing 737-100 | 0.0 | 0.0 | 1.0 | 0.0 |
@@ -382,6 +401,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "1.74194"
     And the conclusion of the committee should have a record with "b" equal to "0.0"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | aircraft       |
       | boeing 737-300 |
@@ -394,6 +414,7 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "1.74194"
     And the conclusion of the committee should have a record with "b" equal to "0.0"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Dogleg factor committee from segments per trip
     Given a flight emitter
@@ -401,6 +422,7 @@ Feature: Flight Committee Calculations
     When the "dogleg_factor" committee is calculated
     Then the committee should have used quorum "from segments per trip"
     And the conclusion of the committee should be "1.25"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Dogleg factor committee from default segments per trip
     Given a flight emitter
@@ -408,6 +430,7 @@ Feature: Flight Committee Calculations
     And the "dogleg_factor" committee is calculated
     Then the committee should have used quorum "from segments per trip"
     And the conclusion of the committee should be "1.16385"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Route inefficiency factor committee from country
     Given a flight emitter
@@ -415,12 +438,14 @@ Feature: Flight Committee Calculations
     When the "route_inefficiency_factor" committee is calculated
     Then the committee should have used quorum "from country"
     And the conclusion of the committee should be "1.1"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Route inefficiency factor committee from default
     Given a flight emitter
     When the "route_inefficiency_factor" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "1.2"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Route inefficiency factor after country committee has returned nil
     Given a flight emitter
@@ -428,6 +453,7 @@ Feature: Flight Committee Calculations
     And the "route_inefficiency_factor" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "1.2"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Distance committee from airports
     Given a flight emitter
@@ -436,6 +462,7 @@ Feature: Flight Committee Calculations
     When the "distance" committee is calculated
     Then the committee should have used quorum "from airports"
     And the conclusion of the committee should be "<distance>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | distance |
       | LHR    | JFK  | 1000.0   |
@@ -447,6 +474,7 @@ Feature: Flight Committee Calculations
     When the "distance" committee is calculated
     Then the committee should have used quorum "from distance estimate"
     And the conclusion of the committee should be "100.0"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Distance committee from distance class
     Given a flight emitter
@@ -454,6 +482,7 @@ Feature: Flight Committee Calculations
     When the "distance" committee is calculated
     Then the committee should have used quorum "from distance class"
     And the conclusion of the committee should be "100.0"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Distance committee from cohort based on origin only
     Given a flight emitter
@@ -465,6 +494,7 @@ Feature: Flight Committee Calculations
     And the "distance" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "1000.0"
+    And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Distance committee from cohort based on destination only
     Given a flight emitter
@@ -476,6 +506,7 @@ Feature: Flight Committee Calculations
     And the "distance" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "100.0"
+    And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Distance committee from cohort based on airline / aircraft
     Given a flight emitter
@@ -488,6 +519,7 @@ Feature: Flight Committee Calculations
     And the "distance" committee is calculated
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<distance>"
+    And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | aircraft       | airline   | distance |
       | boeing 737-100 |           | 662.5    |
@@ -498,6 +530,7 @@ Feature: Flight Committee Calculations
     When the "distance" committee is calculated
     Then the committee should have used quorum "default"
     And the conclusion of the committee should be "792.69103"
+    And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Adjusted distance committee from distance, route inefficiency factor, and dogleg factor
     Given a flight emitter
@@ -506,6 +539,7 @@ Feature: Flight Committee Calculations
     And a characteristic "dogleg_factor" of "<dogleg>"
     When the "adjusted_distance" committee is calculated
     Then the conclusion of the committee should be "<adj_dist>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | distance | route_factor | dogleg  | adj_dist  |
       | 100      | 1.1          | 1.25    | 137.5     |
@@ -517,6 +551,7 @@ Feature: Flight Committee Calculations
     And a characteristic "segments_per_trip" of "<segments>"
     When the "adjusted_distance_per_segment" committee is calculated
     Then the conclusion of the committee should be "<adj_d_per_s>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | adj_dist  | segments | adj_d_per_s |
       | 100       | 2        | 50          |
@@ -528,6 +563,7 @@ Feature: Flight Committee Calculations
     When the "seat_class_multiplier" committee is calculated
     Then the committee should have used quorum "from adjusted distance per segment"
     And the conclusion of the committee should be "<multiplier>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | distance | multiplier |
       | 1        | 1.0        |
@@ -542,6 +578,7 @@ Feature: Flight Committee Calculations
     When the "seat_class_multiplier" committee is calculated
     Then the committee should have used quorum "from seat class name and adjusted distance per segment"
     And the conclusion of the committee should be "<multiplier>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | distance | seat_class     | multiplier |
       | 1        | unknown        | 1.0        |
@@ -562,6 +599,7 @@ Feature: Flight Committee Calculations
     When the "fuel_use_coefficients" committee is calculated
     And the "fuel_per_segment" committee is calculated
     Then the conclusion of the committee should be "200"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Fuel per segment committee
     Given a flight emitter
@@ -569,6 +607,7 @@ Feature: Flight Committee Calculations
     When the "fuel_use_coefficients" committee is calculated
     And the "fuel_per_segment" committee is calculated
     Then the conclusion of the committee should be "1741.93548"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Fuel use committee
     Given a flight emitter
@@ -577,6 +616,7 @@ Feature: Flight Committee Calculations
     And a characteristic "trips" of "<trips>"
     When the "fuel_use" committee is calculated
     Then the conclusion of the committee should be "<fuel_use>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | fuel_per_s | segments | trips   | fuel_use   |
       | 100        | 2        | 2       | 400        |
@@ -586,15 +626,18 @@ Feature: Flight Committee Calculations
     Given a flight emitter
     When the "aviation_multiplier" committee is calculated
     Then the conclusion of the committee should be "2"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Emission factor from fuel
     Given a flight emitter
     And a characteristic "fuel.name" of "Aviation Gasoline"
     When the "emission_factor" committee is calculated
     Then the conclusion of the committee should be "3.14286"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Emission factor committee from default fuel
     Given a flight emitter
     When the "fuel" committee is calculated
     And the "emission_factor" committee is calculated
     Then the conclusion of the committee should be "3.25"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
