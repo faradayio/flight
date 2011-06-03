@@ -8,7 +8,6 @@ require 'date'
 require 'weighted_average'
 require 'builder'
 require 'flight/carbon_model/fuel_use_equation'
-require 'ruby-debug'
 
 ## Flight carbon model
 # This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
