@@ -561,7 +561,7 @@ module BrighterPlanet
                   relevant_years = [date.year - 1, date.year]
                   
                   # If we have both an origin and destination airport...
-                  if characteristics[:origin_airport] and characteristics[:destination_airport]
+                  if characteristics[:origin_airport].present? and characteristics[:destination_airport].present?
                     # If either airport is in the US, use airport iata code to assemble a cohort of BTS flight segments
                     if characteristics[:origin_airport].country_iso_3166_code == "US" or characteristics[:destination_airport].country_iso_3166_code == "US"
                       # NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
@@ -628,6 +628,8 @@ module BrighterPlanet
                       provided_characteristics.push [:airline_name, characteristics[:airline].name]
                     end
                     
+                    # Note: can't use where(:year => relevant_years) here because then when we combine the cohorts you get
+                    # WHERE year IN (*relevant_years*) OR *other conditions* which returns every flight segment where(:year => relevant_years)
                     bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
                     # Then use airport city to assemble a cohort of ICAO flight segments
@@ -651,7 +653,8 @@ module BrighterPlanet
                     icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
                     # Combine the two cohorts, making sure to restrict to relevant years
-                    cohort = CohortScope::StrictCohort.new((bts_cohort + icao_cohort).where(:year => relevant_years))
+                    # Note: cohort_scope 0.2.1 provides cohort + cohort => cohort; cohort.where() => relation; relation.to_cohort => cohort
+                    cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).to_cohort
                     
                     # Ignore the resulting cohort if none of its flight segments have any passengers 
                     # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints

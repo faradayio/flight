@@ -24,5 +24,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   
   s.add_runtime_dependency 'emitter'
-  s.add_development_dependency 'sniff', '~>0.7.3'
+  s.add_runtime_dependency 'cohort_scope', '~>0.2.1'
+  s.add_runtime_dependency 'earth', '~>0.5.0'
+  s.add_development_dependency 'sniff', '~>0.8.0'
 end
