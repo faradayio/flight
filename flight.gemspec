@@ -23,8 +23,6 @@ Gem::Specification.new do |s|
   s.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
   
-  s.add_runtime_dependency 'emitter'
-  s.add_runtime_dependency 'cohort_scope', '~>0.2.1'
-  s.add_runtime_dependency 'earth', '~>0.5.0'
-  s.add_development_dependency 'sniff', '~>0.8.0'
+  s.add_runtime_dependency 'emitter' unless ENV['LOCAL_EMITTER']
+  s.add_development_dependency 'sniff' unless ENV['LOCAL_SNIFF']
 end
