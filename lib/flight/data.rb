@@ -22,6 +22,7 @@ module BrighterPlanet
         
         base.data_miner do
           process "pull orphans" do
+            FlightSeatClass.run_data_miner!
             FlightSegment.run_data_miner!
           end
         end
