@@ -4,7 +4,19 @@
   <meta http-equiv="content-type" content="text/html;charset=utf-8">
   <title>carbon_model.rb</title>
   <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1667526-20']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
 </head>
+
 <body>
 <div id='container'>
   <div id="background"></div>
@@ -2025,7 +2037,9 @@ origin airport city, because we know the flight was going to the US and ICAO seg
         <div class="pilwrap">
           <a class="pilcrow" href="#section-156">&#182;</a>
         </div>
-        <p>If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments</p>
+        <p>If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
+FIXME TODO make this work for duplicate cities &ndash; currently does this:
+MEX to BCN &ndash;> Mexico City to Barcelona &ndash;> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela</p>
       </td>
       <td class=code>
         <div class='highlight'><pre>                    <span class="k">else</span>
@@ -2146,7 +2160,9 @@ WHERE year IN (<em>relevant_years</em>) OR <em>other conditions</em> which retur
         <div class="pilwrap">
           <a class="pilcrow" href="#section-163">&#182;</a>
         </div>
-        <p>Then use airport city to assemble a cohort of ICAO flight segments</p>
+        <p>Then use airport city to assemble a cohort of ICAO flight segments
+FIXME TODO make this work for duplicate cities &ndash; currently does this:
+MEX to BCN &ndash;> Mexico City to Barcelona &ndash;> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela</p>
       </td>
       <td class=code>
         <div class='highlight'><pre>                    <span class="n">provided_characteristics</span> <span class="o">=</span> <span class="o">[]</span>
