@@ -575,6 +575,8 @@ module BrighterPlanet
                         provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
                       end
                     # If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
+                    # FIXME TODO make this work for duplicate cities - currently does this:
+                    # MEX to BCN -> Mexico City to Barcelona -> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela
                     else
                       if characteristics[:origin_airport].present?
                         provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
@@ -633,6 +635,8 @@ module BrighterPlanet
                     bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
                     # Then use airport city to assemble a cohort of ICAO flight segments
+                    # FIXME TODO make this work for duplicate cities - currently does this:
+                    # MEX to BCN -> Mexico City to Barcelona -> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela
                     provided_characteristics = []
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
