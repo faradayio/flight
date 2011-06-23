@@ -571,24 +571,20 @@ module BrighterPlanet
                       # NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
                       # cohort based just on origin. If that happens, even if the origin is not in the US we still don't want to use
                       # origin airport city, because we know the flight was going to the US and ICAO segments never touch the US.
-                      if characteristics[:origin_airport].present?
-                        provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
-                      end
-                      
-                      if characteristics[:destination_airport].present?
-                        provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
-                      end
+                      provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
+                      provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
+                    
                     # If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
-                    # FIXME TODO make this work for duplicate cities - currently does this:
-                    # MEX to BCN -> Mexico City to Barcelona -> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela
+                    # FIXME TODO: deal with cities in multiple countries that share a name
+                    # pushing country works if we're trying to go from Mexico City to Barcelona, Spain and so the cohort
+                    # should NOT include flights to Barcelona, Venezuela
+                    # BUT it won't work if we're trying to go from Montreal to London, Canada - there are no direct flights to
+                    # London, Canada but there ARE flights to London, United Kingdom so we end up with those
                     else
-                      if characteristics[:origin_airport].present?
-                        provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
-                      end
-                      
-                      if characteristics[:destination_airport].present?
-                        provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
-                      end
+                      provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
+                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
+                      provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
+                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     # Also use aircraft description and airline name
@@ -620,10 +616,12 @@ module BrighterPlanet
                     # First use airport iata code to assemble a cohort of BTS flight segments
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
+                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:destination_airport].present?
                       provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
+                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:aircraft].present?
@@ -639,15 +637,20 @@ module BrighterPlanet
                     bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
                     # Then use airport city to assemble a cohort of ICAO flight segments
-                    # FIXME TODO make this work for duplicate cities - currently does this:
-                    # MEX to BCN -> Mexico City to Barcelona -> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela
+                    # FIXME TODO: deal with cities in multiple countries that share a name
+                    # pushing country works if we're trying to go from Mexico City to Barcelona, Spain and so the cohort
+                    # should NOT include flights to Barcelona, Venezuela
+                    # BUT it won't work if we're trying to go from Montreal to London, Canada - there are no direct flights to
+                    # London, Canada but there ARE flights to London, United Kingdom so we end up with those
                     provided_characteristics = []
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
+                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:destination_airport].present?
                       provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
+                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:aircraft].present?
