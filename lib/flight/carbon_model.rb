@@ -545,6 +545,10 @@ module BrighterPlanet
           ### Cohort calculation
           # Returns the `cohort`. This is a set of flight segment records in the [T-100 database](http://data.brighterplanet.com/flight_segments) that match certain client-input values.
           committee :cohort do
+            quorum 'from row_hash', :needs => [:flight_segment_row_hash] do |characteristics|
+              FlightSegment.where(:row_hash => characteristics[:flight_segment_row_hash].value).to_cohort
+            end
+            
             #### Cohort from segments per trip and input
             quorum 'from segments per trip and input',
               :needs => :segments_per_trip, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline, :date],
