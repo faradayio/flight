@@ -78,7 +78,7 @@ module BrighterPlanet
             quorum 'default',
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
-                # Uses an `aviation multiplier` of **2.0** after [Kolmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
+                # Uses an `aviation multiplier` of **2.0** after [Kollmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
                 2.0
             end
           end
