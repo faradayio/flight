@@ -49,7 +49,7 @@ To run a specific scenario: `cucumber features/name_of_feature.feature:line_numb
 
 The sniff gem is used to provide a testing environment that loads dependent data models (defined in the earth gem), a database, and testing fixtures.
 
-See: [http://github.com/brighterplanet/sniff](http://github.com/brighterplanet/sniff)
+See: [https://github.com/brighterplanet/sniff](https://github.com/brighterplanet/sniff)
 
 ### Earth
 
@@ -57,7 +57,7 @@ The earth gem contains the model definitions for dependent data models. For inst
 
 ## Implementation
 
-See the README for the sniff gem: [http://github.com/brighterplanet/sniff/blob/master/README.markdown](http://github.com/brighterplanet/sniff/blob/master/README.markdown)
+See the README for the sniff gem: [https://github.com/brighterplanet/sniff/blob/master/README.markdown](https://github.com/brighterplanet/sniff/blob/master/README.markdown)
 
 ## Collaboration cycle 
 Brighter Planet vigorously encourages collaborative improvement of its emitter libraries. Collaboration requires a (free) GitHub account.

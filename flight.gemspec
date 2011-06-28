@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary = %q{A carbon model}
   s.description = %q{A software model in Ruby for the greenhouse gas emissions of a flight}
   s.email = %q{andy@rossmeissl.net}
-  s.homepage = %q{http://github.com/brighterplanet/flight}
+  s.homepage = %q{https://github.com/brighterplanet/flight}
   
   s.extra_rdoc_files = [
     "LICENSE",
