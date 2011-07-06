@@ -13,7 +13,7 @@ module BrighterPlanet
           has :load_factor
           has :seats_estimate
           has :fuel
-          has :distance_estimate
+          has :distance_estimate, :measures => Measurement::BigLength
           has :distance_class
           has :seat_class_name
         end
