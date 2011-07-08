@@ -73,7 +73,7 @@ Contact Brighter Planet for dual-license arrangements.</p>
 
 <h4>Collaboration</h4>
 
-<p>Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see <a href="http://github.com/brighterplanet/sniff#readme">sniff</a>, our emitter testing framework, for more information.</p>
+<p>Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see <a href="https://github.com/brighterplanet/sniff#readme">sniff</a>, our emitter testing framework, for more information.</p>
       </td>
       <td class=code>
         <div class='highlight'><pre><span class="k">module</span> <span class="nn">BrighterPlanet</span>
@@ -273,7 +273,7 @@ This is the passenger&rsquo;s share of the total flight emissions that occurred 
         <div class="pilwrap">
           <a class="pilcrow" href="#section-18">&#182;</a>
         </div>
-        <p>Uses an <code>aviation multiplier</code> of <strong>2.0</strong> after <a href="http://sei-us.org/publications/id/13">Kolmuss and Crimmins (2009)</a>.</p>
+        <p>Uses an <code>aviation multiplier</code> of <strong>2.0</strong> after <a href="http://sei-us.org/publications/id/13">Kollmuss and Crimmins (2009)</a>.</p>
       </td>
       <td class=code>
         <div class='highlight'><pre>                <span class="mi">2</span><span class="o">.</span><span class="mi">0</span>
@@ -1937,7 +1937,11 @@ Don&rsquo;t need checks because zero is a valid <code>freight share</code></p>
 <p>Returns the <code>cohort</code>. This is a set of flight segment records in the <a href="http://data.brighterplanet.com/flight_segments">T-100 database</a> that match certain client-input values.</p>
       </td>
       <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:cohort</span> <span class="k">do</span></pre></div>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:cohort</span> <span class="k">do</span>
+            <span class="n">quorum</span> <span class="s1">&#39;from row_hash&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:flight_segment_row_hash</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:row_hash</span> <span class="o">=&gt;</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:flight_segment_row_hash</span><span class="o">].</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to_cohort</span>
+            <span class="k">end</span>
+            </pre></div>
       </td>
     </tr>
     <tr id='section-Cohort_from_segments_per_trip_and_input'>
@@ -2023,13 +2027,9 @@ cohort based just on origin. If that happens, even if the origin is not in the U
 origin airport city, because we know the flight was going to the US and ICAO segments never touch the US.</p>
       </td>
       <td class=code>
-        <div class='highlight'><pre>                      <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span>
-                        <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
-                      <span class="k">end</span>
-                      
-                      <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span>
-                        <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
-                      <span class="k">end</span></pre></div>
+        <div class='highlight'><pre>                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                    </pre></div>
       </td>
     </tr>
     <tr id='section-156'>
@@ -2038,18 +2038,18 @@ origin airport city, because we know the flight was going to the US and ICAO seg
           <a class="pilcrow" href="#section-156">&#182;</a>
         </div>
         <p>If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
-FIXME TODO make this work for duplicate cities &ndash; currently does this:
-MEX to BCN &ndash;> Mexico City to Barcelona &ndash;> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela</p>
+FIXME TODO: deal with cities in multiple countries that share a name
+pushing country works if we&rsquo;re trying to go from Mexico City to Barcelona, Spain and so the cohort
+should NOT include flights to Barcelona, Venezuela
+BUT it won&rsquo;t work if we&rsquo;re trying to go from Montreal to London, Canada &ndash; there are no direct flights to
+London, Canada but there ARE flights to London, United Kingdom so we end up with those</p>
       </td>
       <td class=code>
         <div class='highlight'><pre>                    <span class="k">else</span>
-                      <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span>
-                        <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
-                      <span class="k">end</span>
-                      
-                      <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span>
-                        <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
-                      <span class="k">end</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_country_iso_3166_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_country_iso_3166_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span><span class="o">]</span>
                     <span class="k">end</span>
                     </pre></div>
       </td>
@@ -2126,10 +2126,12 @@ BTS and ICAO cohorts, and combined them the resulting cohort would have two copi
       <td class=code>
         <div class='highlight'><pre>                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span>
                       <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_country_iso_3166_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span><span class="o">]</span>
                     <span class="k">end</span>
                     
                     <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span>
                       <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_country_iso_3166_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span><span class="o">]</span>
                     <span class="k">end</span>
                     
                     <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">present?</span>
@@ -2161,17 +2163,22 @@ WHERE year IN (<em>relevant_years</em>) OR <em>other conditions</em> which retur
           <a class="pilcrow" href="#section-163">&#182;</a>
         </div>
         <p>Then use airport city to assemble a cohort of ICAO flight segments
-FIXME TODO make this work for duplicate cities &ndash; currently does this:
-MEX to BCN &ndash;> Mexico City to Barcelona &ndash;> Mexico City, Mexico to Barcelona, Spain AND Mexico City, Mexico to Barcelona, Venezuela</p>
+FIXME TODO: deal with cities in multiple countries that share a name
+pushing country works if we&rsquo;re trying to go from Mexico City to Barcelona, Spain and so the cohort
+should NOT include flights to Barcelona, Venezuela
+BUT it won&rsquo;t work if we&rsquo;re trying to go from Montreal to London, Canada &ndash; there are no direct flights to
+London, Canada but there ARE flights to London, United Kingdom so we end up with those</p>
       </td>
       <td class=code>
         <div class='highlight'><pre>                    <span class="n">provided_characteristics</span> <span class="o">=</span> <span class="o">[]</span>
                     <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span>
                       <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_country_iso_3166_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span><span class="o">]</span>
                     <span class="k">end</span>
                     
                     <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span>
                       <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_country_iso_3166_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span><span class="o">]</span>
                     <span class="k">end</span>
                     
                     <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">present?</span>
