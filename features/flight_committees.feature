@@ -76,8 +76,8 @@ Feature: Flight Committee Calculations
       | 1        |        |      | boeing 737-500 |         | aircraft exists but not in flight segments |
       | 1        |        |      |                | KLM     | airline exists but not in flight segments |
       | 1        | ATL    | LHR  |                | Delta   | origin not in flight segments, destination + airline in flight segments |
-      | 1        | LGA    | SFO  |                |         | valid origin/destination but only segments with zero passengers |
       | 1        |        | SFO  |                |         | valid destination only but only segments with zero passengers |
+      # | 1        | LGA    | SFO  |                |         | valid origin/destination but only segments with zero passengers |
 
   Scenario: Country committee from origin and destination
     Given a flight emitter
