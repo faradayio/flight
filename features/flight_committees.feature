@@ -27,37 +27,22 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should have a record with "count" equal to "<records>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | records |
-      | JFK    |      |                |           | 3       |
-      | FRA    |      |                |           | 1       |
-      | LHR    |      |                |           | 2       |
-      |        | JFK  |                |           | 3       |
-      |        | FRA  |                |           | 1       |
-      |        | LHR  |                |           | 3       |
-      |        |      | boeing 737-400 |           | 3       |
-      |        |      | boeing 737-200 |           | 3       |
-      |        |      |                | Lufthansa | 2       |
-      | JFK    | LHR  |                |           | 2       |
-      | LHR    | JFK  |                |           | 1       |
-      | FRA    | LHR  |                |           | 1       |
-      | JFK    | ATL  |                | Delta     | 2       |
-      | JFK    | FRA  |                |           | 2       |
-      | FRA    | FRA  |                |           | 1       |
-      # origin with just BTS segments
-      # origin with just ICAO segments
-      # origin with BTS and ICAO segments
-      # dest with just BTS segments
-      # dest with just ICAO segments
-      # dest with BTS and ICAO segments
-      # aircraft with simple description
-      # aircraft with simple and complex descriptions
-      # airline
-      # origin US destination foreign (BTS)
-      # origin foreign destination US (BTS)
-      # origin/destination foreign (ICAO)
-      # origin/destination + airline but destination not in flight segments
-      # origin + dest don't match; origin or dest in US, origin has BTS segments only
-      # origin + dest don't match; origin + dest not in US, origin has ICAO segments only
+      | origin | dest | aircraft       | airline   | records | comment                        |
+      | JFK    |      |                |           | 3       | origin with just BTS segments  |
+      | FRA    |      |                |           | 1       | origin with just ICAO segments |
+      | LHR    |      |                |           | 2       | origin with BTS and ICAO segments |
+      |        | JFK  |                |           | 3       | dest with just BTS segments |
+      |        | FRA  |                |           | 1       | dest with just ICAO segments |
+      |        | LHR  |                |           | 3       | dest with BTS and ICAO segments |
+      |        |      | boeing 737-400 |           | 3       | aircraft with simple description |
+      |        |      | boeing 737-200 |           | 3       | aircraft with simple and complex descriptions |
+      |        |      |                | Lufthansa | 2       | airline |
+      | JFK    | LHR  |                |           | 2       | origin US destination foreign (BTS) |
+      | LHR    | JFK  |                |           | 1       | origin foreign destination US (BTS) |
+      | FRA    | LHR  |                |           | 1       | origin/destination foreign (ICAO) |
+      | JFK    | ATL  |                | Delta     | 2       | origin/destination + airline but destination not in flight segments |
+      | JFK    | FRA  |                |           | 2       | origin + dest don't match; origin or dest in US, origin has BTS segments only |
+      | FRA    | FRA  |                |           | 1       | origin + dest don't match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario: Cohort committee from origin and date
     Given a flight emitter
@@ -81,29 +66,18 @@ Feature: Flight Committee Calculations
     And the "cohort" committee is calculated
     Then the conclusion of the committee should be nil
     Examples:
-      | segments | origin | dest | aircraft       | airline |
-      | 2        | JFK    | LHR  |                |         |
-      | 1        | FRA    | JFK  |                |         |
-      | 1        | MEX    | FRA  |                |         |
-      | 1        | ATL    |      |                |         |
-      | 1        | XXX    |      |                |         |
-      | 1        |        | ATL  |                |         |
-      | 1        |        |      | boeing 737-500 |         |
-      | 1        |        |      |                | KLM     |
-      | 1        | ATL    | LHR  |                | Delta   |
-      | 1        | LGA    | SFO  |                |         |
-      | 1        |        | SFO  |                |         |
-      # indirect flight
-      # origin and dest don't match, origin or dest in US, origin has no BTS segments
-      # origin and dest don't match, neither in US, origin has no ICAO segments
-      # origin exists but not in flight segments
-      # origin does not exist
-      # dest exists but not in flight segments
-      # aircraft exists but not in flight segments
-      # airline exists but not in flight segments
-      # origin not in flight segments, destination + airline in flight segments
-      # valid origin/destination but only segments with zero passengers
-      # valid destination only but only segments with zero passengers
+      | segments | origin | dest | aircraft       | airline | comment |
+      | 2        | JFK    | LHR  |                |         | indirect flight |
+      | 1        | FRA    | JFK  |                |         | origin and dest don't match, origin or dest in US, origin has no BTS segments |
+      | 1        | MEX    | FRA  |                |         | origin and dest don't match, neither in US, origin has no ICAO segments |
+      | 1        | ATL    |      |                |         | origin exists but not in flight segments |
+      | 1        | XXX    |      |                |         | origin does not exist |
+      | 1        |        | ATL  |                |         | dest exists but not in flight segments |
+      | 1        |        |      | boeing 737-500 |         | aircraft exists but not in flight segments |
+      | 1        |        |      |                | KLM     | airline exists but not in flight segments |
+      | 1        | ATL    | LHR  |                | Delta   | origin not in flight segments, destination + airline in flight segments |
+      | 1        | LGA    | SFO  |                |         | valid origin/destination but only segments with zero passengers |
+      | 1        |        | SFO  |                |         | valid destination only but only segments with zero passengers |
 
   Scenario: Country committee from origin and destination
     Given a flight emitter
