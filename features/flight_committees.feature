@@ -28,10 +28,10 @@ Feature: Flight Committee Calculations
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | records |
-      | JFK    |      |                |           | 2       |
+      | JFK    |      |                |           | 3       |
       | FRA    |      |                |           | 1       |
       | LHR    |      |                |           | 2       |
-      |        | JFK  |                |           | 2       |
+      |        | JFK  |                |           | 3       |
       |        | FRA  |                |           | 1       |
       |        | LHR  |                |           | 3       |
       |        |      | boeing 737-400 |           | 3       |
