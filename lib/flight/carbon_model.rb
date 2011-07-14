@@ -288,13 +288,19 @@ module BrighterPlanet
                 fue = FuelUseEquation.new(0, 0, 0, 0)
                 cumulative_passengers = 0
                 
+                fs_aircraft_cache = {}
+                
                 # For each flight segment in the cohort...
                 flight_segments.each do |fs|
+                  
+                  # Since we're pulling each member of a cohort in Ruby, rather than just running statistics on the database server level, we're going to cheat a little more
+                  fs_aircraft = (fs_aircraft_cache[fs.aircraft_description] ||= fs.aircraft.to_a)
+                  
                   fuel_use_equations = []
                   aircraft_classes = []
                   
                   # For each aircraft the flight segment refers to...
-                  fs.aircraft.each do |a|
+                  fs_aircraft.each do |a|
                     # If the aircraft is associated with a valid fuel use equation, add that fuel use equation to an array
                     if a.fuel_use_equation && a.fuel_use_equation.valid_fuel_use_equation?
                       fuel_use_equations.push(a.fuel_use_equation)
@@ -319,6 +325,9 @@ module BrighterPlanet
                     cumulative_passengers += fs.passengers
                   end
                 end
+                
+                # We don't need this cache any more, so we'll help the GC by clearing it
+                fs_aircraft_cache.clear
                 
                 # Check to make sure at least one of the segments had passengers and a valid fuel use equation
                 if cumulative_passengers > 0
