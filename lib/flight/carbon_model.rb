@@ -311,10 +311,10 @@ module BrighterPlanet
                   unless equation_objects.empty?
                     # Average each coefficient across all the valid fuel use equations, multiply that average by the 
                     # flight segment's passengers, and add the resulting value to the overall flight fuel use equation
-                    %w{ m3 m2 m1 b }.each do |coefficient|
-                      value = (equation_objects.map(&:"#{coefficient}").sum / equation_objects.size) * fs.passengers
-                      fue.send("#{coefficient}=", fue.send("#{coefficient}") + value)
-                    end
+                    fue.m3 += (equation_objects.sum(&:m3) / equation_objects.length) * fs.passengers
+                    fue.m2 += (equation_objects.sum(&:m2) / equation_objects.length) * fs.passengers
+                    fue.m1 += (equation_objects.sum(&:m1) / equation_objects.length) * fs.passengers
+                    fue.b  += (equation_objects.sum(&:b) / equation_objects.length) * fs.passengers
                     # Add the flight segment's passengers to our passengers counter
                     cumulative_passengers += fs.passengers
                   end
@@ -323,9 +323,10 @@ module BrighterPlanet
                 # Check to make sure at least one of the segments had passengers and a valid fuel use equation
                 if cumulative_passengers > 0
                   # Divide each coefficient in our overall fuel use equation by the passengers counter and return the result
-                  %w{ m3 m2 m1 b }.each do |coefficient|
-                    fue.send("#{coefficient}=", (fue.send("#{coefficient}") / cumulative_passengers))
-                  end
+                  fue.m3 /= cumulative_passengers
+                  fue.m2 /= cumulative_passengers
+                  fue.m1 /= cumulative_passengers
+                  fue.b /= cumulative_passengers
                   fue
                 end
             end
