@@ -2,7 +2,7 @@ module BrighterPlanet
   module Flight
     module Data
       def self.included(base)
-        base.create_table do
+        base.force_schema do
           date    'date'
           integer 'segments_per_trip'
           string  'origin_airport_iata_code'
