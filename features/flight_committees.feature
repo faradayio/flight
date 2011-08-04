@@ -602,16 +602,16 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be "2"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Emission factor from fuel
+  Scenario: Greenhouse gas emission factor from fuel
     Given a flight emitter
     And a characteristic "fuel.name" of "Aviation Gasoline"
-    When the "emission_factor" committee reports
+    When the "ghg_emission_factor" committee reports
     Then the conclusion of the committee should be "3.14286"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Emission factor committee from default fuel
+  Scenario: Greenhouse gas emission factor committee from default fuel
     Given a flight emitter
     When the "fuel" committee reports
-    And the "emission_factor" committee reports
+    And the "ghg_emission_factor" committee reports
     Then the conclusion of the committee should be "3.25"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"

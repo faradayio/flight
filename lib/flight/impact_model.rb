@@ -10,13 +10,13 @@ require 'builder'
 require 'flight/impact_model/fuel_use_equation'
 
 ## Flight impact model
-# This model is used by [Brighter Planet](http://brighterplanet.com)'s [CM1 web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
+# This model is used by [Brighter Planet](http://brighterplanet.com)'s [CM1 web service](http://carbon.brighterplanet.com) to estimate the **environmental impacts of passenger air travel**.
 #
 ##### Timeframe and date
-# The model estimates the emissions that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occurred on January 5, 2010 will have emissions but a flight that occurred on February 1, 2010 will not.
+# The model estimates the environmental impacts that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occurred on January 5, 2010 will have environmental impacts but a flight that occurred on February 1, 2010 will not.
 #
 ##### Calculations
-# The final estimate is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the `emission` calculation. Each calculation is named according to the value it returns.
+# Each environmental impact is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the first. Each calculation is named according to the value it returns.
 #
 ##### Methods
 # To accomodate varying client input, each calculation may have one or more **methods**. These are listed under each calculation in order from most to least preferred. Each method is named according to the values it requires. If any of these values is not available the method will be ignored. If all the methods for a calculation are ignored, the calculation will not return a value. "Default" methods do not require any values, and so a calculation with a default method will always return a value.
@@ -31,13 +31,13 @@ module BrighterPlanet
     module ImpactModel
       def self.included(base)
         base.decide :impact, :with => :characteristics do
-          ### Emission calculation
-          # Returns the `emission` estimate in *kg CO<sub>2</sub>e*.
-          # This is the passenger's share of the total flight emissions that occurred during the `timeframe`.
+          ### Greenhouse gas emission calculation
+          # Returns the `greenhouse gas emission` estimate in *kg CO<sub>2</sub>e*.
+          # This is the passenger's share of the total greenhouse emissions produced by the flight during the `timeframe`.
           committee :carbon do
-            #### Emission from fuel use, emission factor, freight share, passengers, multipliers, and date
-            quorum 'from fuel use, emission factor, freight share, passengers, multipliers, and date',
-              :needs => [:fuel_use, :emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
+            #### Greenhouse gas emission from fuel use, emission factor, freight share, passengers, multipliers, and date
+            quorum 'from fuel use, greenhouse gas emission factor, freight share, passengers, multipliers, and date',
+              :needs => [:fuel_use, :ghg_emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
                 date = characteristics[:date].is_a?(Date) ?
@@ -45,34 +45,34 @@ module BrighterPlanet
                   Date.parse(characteristics[:date].to_s)
                   # Checks whether the flight occurred during the `timeframe`
                 if timeframe.include? date
-                  # Multiplies `fuel use` (*kg*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*.
-                  characteristics[:fuel_use] * characteristics[:emission_factor] * characteristics[:aviation_multiplier] *
-                  # Multiplies by (1 - `freight share`) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage
+                  # Multiplies `fuel use` (*kg*) by a `greenhouse gas emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight greenhouse gas emissions in *kg CO<sub>2</sub>e*.
+                  characteristics[:fuel_use] * characteristics[:ghg_emission_factor] * characteristics[:aviation_multiplier] *
+                  # Multiplies by (1 - `freight share`) to take out greenhouse gas emissions attributed to freight cargo and mail, leaving greenhouse gas emissions attributed to passengers and their baggage
                   (1 - characteristics[:freight_share]) /
-                  # Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `emission` for the passenger
+                  # Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `greenhouse gas emission` for the passenger
                   characteristics[:passengers] * characteristics[:seat_class_multiplier]
                 else
-                  # If the flight did not occur during the `timeframe`, `emission` is zero
+                  # If the flight did not occur during the `timeframe`, `greenhouse gas emission` is zero
                   0
                 end
             end
           end
           
-          ### Emission factor calculation
-          # Returns the `emission factor` in *kg CO<sub>2</sub> / kg fuel*.
-          committee :emission_factor do
-            #### Emission factor from fuel
+          ### Greenhouse gas emission factor calculation
+          # Returns the `greenhouse gas emission factor` in *kg CO<sub>2</sub> / kg fuel*.
+          committee :ghg_emission_factor do
+            #### Greenhouse gas emission factor from fuel
             quorum 'from fuel',
               :needs => :fuel,
               # Complies: GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `emission factor` (*kg CO<sub>2</sub> / l*) and divides by its `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
+                # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `carbon dioxide emission factor` (*kg CO<sub>2</sub> / l*) and divides by its `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
                 characteristics[:fuel].co2_emission_factor / characteristics[:fuel].density
             end
           end
           
           ### Aviation multiplier calculation
-          # Returns the `aviation multiplier`. This approximates the extra climate impact of emissions high in the atmosphere.
+          # Returns the `aviation multiplier`. This approximates the extra climate impact of greenhouse gas emissions high in the atmosphere.
           committee :aviation_multiplier do
             #### Default aviation multiplier
             quorum 'default',
@@ -756,7 +756,7 @@ module BrighterPlanet
           end
           
           ### Timeframe calculation
-          # Returns the `timeframe`. This is the period during which to calculate emissions.
+          # Returns the `timeframe`. This is the period during which to calculate impacts.
             
             #### Timeframe from client input
             # **Complies:** All
