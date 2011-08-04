@@ -7,10 +7,10 @@ require 'timeframe'
 require 'date'
 require 'weighted_average'
 require 'builder'
-require 'flight/carbon_model/fuel_use_equation'
+require 'flight/impact_model/fuel_use_equation'
 
-## Flight carbon model
-# This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
+## Flight impact model
+# This model is used by [Brighter Planet](http://brighterplanet.com)'s [CM1 web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
 #
 ##### Timeframe and date
 # The model estimates the emissions that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occurred on January 5, 2010 will have emissions but a flight that occurred on February 1, 2010 will not.
@@ -25,16 +25,16 @@ require 'flight/carbon_model/fuel_use_equation'
 # Each method lists any established calculation standards with which it **complies**. When compliance with a standard is requested, all methods that do not comply with that standard are ignored. This means that any values a particular method requires will have been calculated using a compliant method, because those are the only methods available. If any value did not have a compliant method in its calculation then it would be undefined, and the current method would have been ignored.
 #
 ##### Collaboration
-# Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](https://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
+# Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](https://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
 module BrighterPlanet
   module Flight
-    module CarbonModel
+    module ImpactModel
       def self.included(base)
-        base.decide :emission, :with => :characteristics do
+        base.decide :impact, :with => :characteristics do
           ### Emission calculation
           # Returns the `emission` estimate in *kg CO<sub>2</sub>e*.
           # This is the passenger's share of the total flight emissions that occurred during the `timeframe`.
-          committee :emission do
+          committee :carbon do
             #### Emission from fuel use, emission factor, freight share, passengers, multipliers, and date
             quorum 'from fuel use, emission factor, freight share, passengers, multipliers, and date',
               :needs => [:fuel_use, :emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],

@@ -1,20 +1,20 @@
-Feature: Flight Emissions Calculations
-  The flight model should generate correct emission calculations
+Feature: Flight Impacts Calculations
+  The flight model should generate correct impact calculations
 
   Scenario: Calculations from default
     Given a flight has nothing
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "94.66"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "94.66"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Calculations from date
     Given a flight has "date" of "<date>"
     And it is the year "2010"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "<emission>"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | date       | emission |
+      | date       | impact |
       | 2009-06-25 | 0.0      |
       | 2010-06-25 | 94.66    |
       | 2011-06-25 | 0.0      |
@@ -22,11 +22,11 @@ Feature: Flight Emissions Calculations
   Scenario Outline: Calculations from date and timeframe
     Given a flight has "date" of "<date>"
     And it has "timeframe" of "<timeframe>"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "<emission>"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | date       | timeframe             | emission |
+      | date       | timeframe             | impact |
       | 2009-06-25 | 2009-01-01/2009-01-31 | 0        |
       | 2009-06-25 | 2009-01-01/2009-12-31 | 94.66    |
       | 2009-06-25 | 2009-12-01/2009-12-31 | 0        |
@@ -38,11 +38,11 @@ Feature: Flight Emissions Calculations
     And it has "destination_airport.iata_code" of "<dest>"
     And it has "airline.name" of "<airline>"
     And it has "aircraft.description" of "<aircraft>"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "<emission>"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | emission |
+      | origin | dest | aircraft       | airline   | impact |
       | JFK    |      |                |           | 178.41   |
       | FRA    |      |                |           | 7.00     |
       | LHR    |      |                |           | 68.05    |
@@ -69,11 +69,11 @@ Feature: Flight Emissions Calculations
     And it has "destination_airport.iata_code" of "<dest>"
     And it has "airline.name" of "<airline>"
     And it has "aircraft.description" of "<aircraft>"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "<emission>"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "<impact>"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | emission |
+      | origin | dest | aircraft       | airline   | impact |
       | JFK    | LHR  |                |           | 178.41   |
       | LHR    | JFK  |                |           | 98.55    |
       | FRA    | LHR  |                |           | 7.00     |
@@ -89,55 +89,55 @@ Feature: Flight Emissions Calculations
 
   Scenario: Calculations from segments per trip
     Given a flight has "segments_per_trip" of "2"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "101.66"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "101.66"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class
     Given a flight has "seat_class_name" of "economy"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "91.87"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "91.87"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class and distance estimate
     Given a flight has "seat_class_name" of "economy"
     And it has "distance_estimate" of "2000"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "94.06"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "94.06"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from trips
     Given a flight has "trips" of "2"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "111.36"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "111.36"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from load factor
     Given a flight has "load_factor" of "1"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "79.56"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "79.56"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seats estimate
     Given a flight has "seats_estimate" of "100"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "243.41"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "243.41"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance estimate
     Given a flight has "distance_estimate" of "185.2"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "11.94"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "11.94"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance class
     Given a flight has "distance_class.name" of "short haul"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "11.94"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "11.94"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from fuel
     Given a flight has "fuel.name" of "Aviation Gasoline"
-    When emissions are calculated
-    Then the emission value should be within "0.01" kgs of "91.54"
+    When carbon is calculated
+    Then the impact value should be within "0.01" kgs of "91.54"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"

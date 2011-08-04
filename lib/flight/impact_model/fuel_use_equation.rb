@@ -1,6 +1,6 @@
 module BrighterPlanet
   module Flight
-    module CarbonModel
+    module ImpactModel
       class FuelUseEquation < Struct.new(:m3, :m2, :m1, :b)
         def empty?
           values.all?(&:nil?) or values.all?(&:zero?)
