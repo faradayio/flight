@@ -92,6 +92,7 @@ module BrighterPlanet
               :needs => [:fuel_use, :fuel, :date],
               # **Complies:**
               :complies => [] do |characteristics, timeframe|
+                date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
                 if timeframe.include? date
                   # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `energy content` (*MJ / l*), divides by its `density` (*kg / l*), and multiplies by `fuel use` (*kg*) to give *MJ*.
                   characteristics[:fuel].energy_content / characteristics[:fuel].density * characteristics[:fuel_use]
