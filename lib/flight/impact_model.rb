@@ -87,9 +87,9 @@ module BrighterPlanet
           # Returns the `energy` in *MJ*.
           # This is the passenger's share of the total energy consumed by the flight during the `timeframe`.
           committee :energy do
-            #### Energy from fuel use, fuel type, and date
-            quorum 'from fuel use, fuel type, and date',
-              :needs => [:fuel_use, :fuel_type, :date],
+            #### Energy from fuel use, fuel, and date
+            quorum 'from fuel use, fuel, and date',
+              :needs => [:fuel_use, :fuel, :date],
               # **Complies:**
               :complies => [] do |characteristics, timeframe|
                 if timeframe.include? date
