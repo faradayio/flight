@@ -2,21 +2,19 @@ module BrighterPlanet
   module Flight
     module Data
       def self.included(base)
-        base.force_schema do
-          date    'date'
-          integer 'segments_per_trip'
-          string  'origin_airport_iata_code'
-          string  'destination_airport_iata_code'
-          string  'aircraft_icao_code'
-          string  'airline_name'
-          integer 'trips'
-          float   'load_factor'
-          integer 'seats_estimate'
-          string  'fuel_name'
-          float   'distance_estimate'
-          string  'distance_class_name'
-          string  'seat_class_name'
-        end
+        base.col :date, :type => :date   
+        base.col :segments_per_trip, :type => :integer
+        base.col :origin_airport_iata_code
+        base.col :destination_airport_iata_code
+        base.col :aircraft_icao_code
+        base.col :airline_name
+        base.col :trips, :type => :integer
+        base.col :load_factor, :type => :float  
+        base.col :seats_estimate, :type => :integer
+        base.col :fuel_name
+        base.col :distance_estimate, :type => :float  
+        base.col :distance_class_name
+        base.col :seat_class_name
         
         base.data_miner do
           process "pull orphans" do
