@@ -18,5 +18,7 @@ Aircraft.update_averages!
 
 # Derive characteristics of AircraftClass from aircraft
 require 'earth/air/aircraft_class/data_miner'
+Aircraft.data_miner_config.steps.clear
+AircraftFuelUseEquation.data_miner_config.steps.clear
 AircraftClass.data_miner_config.steps.detect { |s| s.class == DataMiner::Process and s.description =~ /Derive aircraft classes/i }.run
-AircraftClass.data_miner_config.steps.detect { |s| s.class == DataMiner::Process and s.description =~ /Derive some average/i }.run
+AircraftClass.update_averages!

@@ -2,17 +2,17 @@ module BrighterPlanet
   module Flight
     module Data
       def self.included(base)
-        base.col :date, :type => :date   
+        base.col :date, :type => :date
         base.col :segments_per_trip, :type => :integer
         base.col :origin_airport_iata_code
         base.col :destination_airport_iata_code
         base.col :aircraft_icao_code
         base.col :airline_name
         base.col :trips, :type => :integer
-        base.col :load_factor, :type => :float  
+        base.col :load_factor, :type => :float
         base.col :seats_estimate, :type => :integer
         base.col :fuel_name
-        base.col :distance_estimate, :type => :float  
+        base.col :distance_estimate, :type => :float
         base.col :distance_class_name
         base.col :seat_class_name
         

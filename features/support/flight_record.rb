@@ -4,7 +4,7 @@ require 'flight'
 require 'sniff'
 
 class FlightRecord < ActiveRecord::Base
-  include Sniff::Emitter
+  include BrighterPlanet::Emitter
   include BrighterPlanet::Flight
   set_table_name 'flight_records'
 end
