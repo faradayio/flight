@@ -456,38 +456,73 @@ Feature: Flight Committee Calculations
       | 100       | 2        | 50          |
       | 817.52749 | 1.67     | 489.53742   |
 
-  Scenario Outline: Seat class multiplier committee from adjusted distance per segment
-    And a characteristic "adjusted_distance_per_segment" of "<distance>"
-    When the "seat_class_multiplier" committee reports
-    Then the committee should have used quorum "from adjusted distance per segment"
-    And the conclusion of the committee should be "<multiplier>"
+  Scenario Outline: distance class committee from adjusted distance per segment
+    Given a characteristic "adjusted_distance_per_segment" of "<distance>"
+    When the "distance_class" committee reports
+    Then the conclusion of the committee should have "name" of "<class>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | distance | multiplier |
-      | 1        | 1.0        |
-      | 245      | 1.0        |
-      | 864      | 1.0        |
-      | 9000     | 1.0        |
+      | distance | class      |
+      | 0        | short haul |
+      | 100      | short haul |
+      | 3700     | long haul  |
+      | 9999     | long haul  |
 
-  Scenario Outline: Seat class multiplier committee from adjusted distance per segment and seat class name
-    And a characteristic "adjusted_distance_per_segment" of "<distance>"
-    And a characteristic "seat_class_name" of "<seat_class>"
-    When the "seat_class_multiplier" committee reports
-    Then the committee should have used quorum "from seat class name and adjusted distance per segment"
+  Scenario Outline: distance class seat class committee from distance class and seat class
+    Given a characteristic "distance_class.name" of "<distance_class>"
+    And a characteristic "seat_class.name" of "<seat_class>"
+    When the "distance_class_seat_class" committee reports
+    Then the committee should have used quorum "from distance class and seat class"
+    Then the conclusion of the committee should have "name" of "<distance_seat_class>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    Examples:
+      | distance_class | seat_class | distance_seat_class |
+      | short haul     | economy    | short haul economy  |
+      | short haul     | business   | short haul business |
+      | short haul     | first      | short haul first    |
+      | long haul      | economy    | long haul economy   |
+      | long haul      | economy+   | long haul economy+  |
+      | long haul      | business   | long haul business  |
+      | long haul      | first      | long haul first     |
+
+  Scenario Outline: Seat class multiplier committee from distance class seat class
+    Given a characteristic "distance_class.name" of "<distance_class>"
+    And a characteristic "seat_class.name" of "<seat_class>"
+    When the "distance_class_seat_class" committee reports
+    And the "seat_class_multiplier" committee reports
+    Then the committee should have used quorum "from distance class seat class"
     And the conclusion of the committee should be "<multiplier>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | distance | seat_class     | multiplier |
-      | 1        | unknown        | 1.0        |
-      | 244      | unknown        | 1.0        |
-      | 245      | unknown        | 1.0        |
-      | 500      | economy        | 0.9706     |
-      | 863      | first/business | 1.4410     |
-      | 864      | unknown        | 1.0        |
-      | 1000     | economy        | 0.7294     |
-      | 2000     | economy+       | 1.1680     |
-      | 3000     | business       | 2.1160     |
-      | 4000     | first          | 3.4360     |
+      | distance_class | seat_class | multiplier |
+      | short haul     | economy    | 0.9532     |
+      | short haul     | business   | 1.4293     |
+      | short haul     | first      | 1.4293     |
+      | long haul      | economy    | 0.7297     |
+      | long haul      | economy+   | 1.1673     |
+      | long haul      | business   | 2.1157     |
+      | long haul      | first      | 2.9186     |
+
+  Scenario Outline: Seat class multiplier committee from seat class
+    Given a characteristic "distance_class.name" of "<distance_class>"
+    And a characteristic "seat_class.name" of "<seat_class>"
+    When the "seat_class_multiplier" committee reports
+    Then the committee should have used quorum "from seat class"
+    And the conclusion of the committee should be "<multiplier>"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    Examples:
+      | distance_class | seat_class     | multiplier |
+      |                | economy        | 0.92297    |
+      | short haul     | economy+       | 1.1673     |
+      |                | economy+       | 1.1673     |
+      |                | business       | 1.52214    |
+      |                | first          | 1.63074    |
+
+  Scenario: Seat class multiplier from default
+    When the "seat_class_multiplier" committee reports
+    Then the committee should have used quorum "default"
+    And the conclusion of the committee should be "1.0"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Fuel per segment committee
     Given a characteristic "adjusted_distance_per_segment" of "100"
