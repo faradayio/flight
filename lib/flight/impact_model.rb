@@ -591,6 +591,8 @@ module BrighterPlanet
                   # We need to include the previous year because our flight segment data lags by about 6 months.
                   relevant_years = [date.year - 1, date.year]
                   
+                  # FIXME TODO could probably refactor this...
+                  
                   # If we have both an origin and destination airport...
                   if characteristics[:origin_airport].present? and characteristics[:destination_airport].present?
                     # If either airport is in the US, use airport iata code to assemble a cohort of BTS flight segments
@@ -603,15 +605,14 @@ module BrighterPlanet
                     
                     # If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
                     # FIXME TODO: deal with cities in multiple countries that share a name
-                    # pushing country works if we're trying to go from Mexico City to Barcelona, Spain and so the cohort
-                    # should NOT include flights to Barcelona, Venezuela
-                    # BUT it won't work if we're trying to go from Montreal to London, Canada - there are no direct flights to
-                    # London, Canada but there ARE flights to London, United Kingdom so we end up with those
+                    # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+                    # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
+                    # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
+                    # statements get changed to 'OR' so you end up with all flights to that country
+                    # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
                     else
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
-                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                       provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
-                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     # Also use aircraft description and airline name
@@ -627,7 +628,7 @@ module BrighterPlanet
                     # previous year. Then we find all the segments that match the input `origin_airport`, `destination_airport`,
                     # `aircraft`, and `airline`. If no segments match all the inputs, we drop the last input (initially `airline`)
                     # and try again. We continue until some segments match or no inputs remain.
-                    cohort = FlightSegment.where(:year => relevant_years).strict_cohort(*provided_characteristics)
+                    cohort = FlightSegment.where(:year => relevant_years).where("passengers > 0").strict_cohort(*provided_characteristics)
                     
                     # Ignore the cohort if none of its flight segments have any passengers
                     # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
@@ -636,19 +637,15 @@ module BrighterPlanet
                     else
                       nil
                     end
-                  # If we have either origin or destination but not both...
-                  # NOTE: This needs to be a special case because if we had neither origin nor destination, generated separate
-                  # BTS and ICAO cohorts, and combined them the resulting cohort would have two copies of each flight segment.
-                  elsif characteristics[:origin_airport].present? or characteristics[:destination_airport].present?
+                  # If we don't have both an origin and destination airport...
+                  else
                     # First use airport iata code to assemble a cohort of BTS flight segments
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
-                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:destination_airport].present?
                       provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
-                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:aircraft].present?
@@ -659,25 +656,26 @@ module BrighterPlanet
                       provided_characteristics.push [:airline_name, characteristics[:airline].name]
                     end
                     
-                    # Note: can't use where(:year => relevant_years) here because then when we combine the cohorts you get
-                    # WHERE year IN (*relevant_years*) OR *other conditions* which returns every flight segment where(:year => relevant_years)
+                    # Note: can't use where conditions here e.g. where(:year => relevant_years) because when we combine the cohorts
+                    # all AND become OR so we get WHERE year IN (*relevant_years*) OR *other conditions* which returns every
+                    # flight segment in the relevant_years
                     bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
                     # Then use airport city to assemble a cohort of ICAO flight segments
                     # FIXME TODO: deal with cities in multiple countries that share a name
-                    # pushing country works if we're trying to go from Mexico City to Barcelona, Spain and so the cohort
-                    # should NOT include flights to Barcelona, Venezuela
-                    # BUT it won't work if we're trying to go from Montreal to London, Canada - there are no direct flights to
-                    # London, Canada but there ARE flights to London, United Kingdom so we end up with those
+                    # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+                    # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
+                    # to London, Canada because there are no direct flights to London, Canada so country gets dropped and we
+                    # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
+                    # statements get changed to 'OR' so you end up with all flights to that country
+                    # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
                     provided_characteristics = []
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
-                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:destination_airport].present?
                       provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
-                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:aircraft].present?
@@ -690,37 +688,12 @@ module BrighterPlanet
                     
                     icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
-                    # Combine the two cohorts, making sure to restrict to relevant years
+                    # Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
                     # Note: cohort_scope 0.2.1 provides cohort + cohort => cohort; cohort.where() => relation; relation.to_cohort => cohort
-                    cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).to_cohort
+                    cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).where("passengers > 0").to_cohort
                     
-                    # Ignore the resulting cohort if none of its flight segments have any passengers 
-                    # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
-                    if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
-                      cohort
-                    else
-                      nil
-                    end
-                  # If we have neither origin nor destination...
-                  else
-                    # Use aircraft description and airline name to assemble a cohort
-                    if characteristics[:aircraft].present?
-                      provided_characteristics.push [:aircraft_description, characteristics[:aircraft].flight_segments_foreign_keys]
-                    end
-                    
-                    if characteristics[:airline].present?
-                      provided_characteristics.push [:airline_name, characteristics[:airline].name]
-                    end
-                    
-                    cohort = FlightSegment.where(:year => relevant_years).strict_cohort(*provided_characteristics)
-                    
-                    # Ignore the cohort if none of its flight segments have any passengers
-                    # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
-                    if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
-                      cohort
-                    else
-                      nil
-                    end
+                    # Ignore the resulting cohort if it's empty
+                    cohort.any? ? cohort : nil
                   end
                 end
             end
