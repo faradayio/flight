@@ -14,62 +14,69 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be "1.68"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
+  Scenario: Make sure we have at least one segment not in 2011
+    Given a flight emitter
+    And a characteristic "date" of "2009-05-01"
+    And a characteristic "segments_per_trip" of "1"
+    And a characteristic "origin_airport.iata_code" of "JFK"
+    And a characteristic "destination_airport.iata_code" of "LHF"
+    When the "cohort" committee reports
+    Then the conclusion of the committee should have a record with "count" equal to "1"
+    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
+
   Scenario Outline: Cohort committee from various characteristics
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
     And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     Then the conclusion of the committee should have a record with "count" equal to "<records>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | records | comment                        |
-      | JFK    |      |                |           | 3       | origin with just BTS segments  |
+      | origin | dest | aircraft       | airline   | records | comment |
+      | JFK    |      |                |           | 2       | origin with just BTS segments |
       | FRA    |      |                |           | 1       | origin with just ICAO segments |
       | LHR    |      |                |           | 2       | origin with BTS and ICAO segments |
-      |        | JFK  |                |           | 3       | dest with just BTS segments |
+      |        | JFK  |                |           | 2       | dest with just BTS segments |
       |        | FRA  |                |           | 1       | dest with just ICAO segments |
       |        | LHR  |                |           | 3       | dest with BTS and ICAO segments |
-      |        |      | boeing 737-400 |           | 3       | aircraft with simple description |
+      |        |      | boeing 737-400 |           | 2       | aircraft with simple description |
       |        |      | boeing 737-200 |           | 3       | aircraft with simple and complex descriptions |
       |        |      |                | Lufthansa | 2       | airline |
       | JFK    | LHR  |                |           | 2       | origin US destination foreign (BTS) |
       | LHR    | JFK  |                |           | 1       | origin foreign destination US (BTS) |
       | FRA    | LHR  |                |           | 1       | origin/destination foreign (ICAO) |
       | JFK    | ATL  |                | Delta     | 2       | origin/destination + airline but destination not in flight segments |
-      | JFK    | FRA  |                |           | 2       | origin + dest don't match; origin or dest in US, origin has BTS segments only |
-      | FRA    | FRA  |                |           | 1       | origin + dest don't match; origin + dest not in US, origin has ICAO segments only |
+      | JFK    | FRA  |                |           | 2       | origin + dest no match; origin or dest in US, origin has BTS segments only |
+      | FRA    | FRA  |                |           | 1       | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario: Cohort committee from origin and date
     Given a flight emitter
-    And a characteristic "timeframe" of "2009-01-01/2010-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "JFK"
-    When the "date" committee reports
-    And the "cohort" committee reports
-    Then the conclusion of the committee should have a record with "count" equal to "1"
+    When the "cohort" committee reports
+    Then the conclusion of the committee should have a record with "count" equal to "2"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Cohort committe from various unusable characteristics
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "<segments>"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
     And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     Then the conclusion of the committee should be nil
     Examples:
       | segments | origin | dest | aircraft       | airline | comment |
       | 2        | JFK    | LHR  |                |         | indirect flight |
-      | 1        | FRA    | JFK  |                |         | origin and dest don't match, origin or dest in US, origin has no BTS segments |
-      | 1        | MEX    | FRA  |                |         | origin and dest don't match, neither in US, origin has no ICAO segments |
+      | 1        | FRA    | JFK  |                |         | origin and dest no match, origin or dest in US, origin has no BTS segments |
+      | 1        | MEX    | FRA  |                |         | origin and dest no match, neither in US, origin has no ICAO segments |
       | 1        | ATL    |      |                |         | origin exists but not in flight segments |
       | 1        | XXX    |      |                |         | origin does not exist |
       | 1        |        | ATL  |                |         | dest exists but not in flight segments |
@@ -77,7 +84,8 @@ Feature: Flight Committee Calculations
       | 1        |        |      |                | KLM     | airline exists but not in flight segments |
       | 1        | ATL    | LHR  |                | Delta   | origin not in flight segments, destination + airline in flight segments |
       | 1        |        | SFO  |                |         | valid destination only but only segments with zero passengers |
-      # | 1        | LGA    | SFO  |                |         | valid origin/destination but only segments with zero passengers |
+      | 1        | LGA    | SFO  |                |         | valid origin/destination but only segments with zero passengers |
+      | 1        | LGA    |      |                |         | valid origin but only segments with zero passengers |
 
   Scenario: Country committee from origin and destination
     Given a flight emitter
@@ -108,50 +116,34 @@ Feature: Flight Committee Calculations
 
   Scenario Outline: Freight share committee from cohort
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
     And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "freight_share" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<freight_share>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | freight_share |
-      | JFK    |      |                |           | 0.03286       |
-      | FRA    |      |                |           | 0.05          |
-      | LHR    |      |                |           | 0.04348       |
-      |        | JFK  |                |           | 0.04          |
-      |        | FRA  |                |           | 0.05          |
-      |        | LHR  |                |           | 0.03957       |
-      |        |      | boeing 737-400 |           | 0.03957       |
-      |        |      | boeing 737-200 |           | 0.03500       |
-      |        |      |                | Lufthansa | 0.05          |
-      | JFK    | LHR  |                |           | 0.03286       |
-      | LHR    | JFK  |                |           | 0.04          |
-      | FRA    | LHR  |                |           | 0.05          |
-      | JFK    | ATL  |                | Delta     | 0.03286       |
-      | JFK    | FRA  |                |           | 0.03286       |
-      | FRA    | FRA  |                |           | 0.05          |
-      # origin with just BTS segments
-      # origin with just ICAO segments
-      # origin with BTS and ICAO segments
-      # dest with just BTS segments
-      # dest with just ICAO segments
-      # dest with BTS and ICAO segments
-      # aircraft with simple description
-      # aircraft with simple and complex descriptions
-      # airline
-      # origin US destination foreign (BTS)
-      # origin foreign destination US (BTS)
-      # origin/destination foreign (ICAO)
-      # origin/destination + airline but destination not in flight segments
-      # origin + dest don't match; origin or dest in US, origin has BTS segments only
-      # origin + dest don't match; origin + dest not in US, origin has ICAO segments only
+      | origin | dest | aircraft       | airline   | freight_share | comment |
+      | JFK    |      |                |           | 0.03286       | origin with just BTS segments |
+      | FRA    |      |                |           | 0.05          | origin with just ICAO segments |
+      | LHR    |      |                |           | 0.04348       | origin with BTS and ICAO segments |
+      |        | JFK  |                |           | 0.04          | dest with just BTS segments |
+      |        | FRA  |                |           | 0.05          | dest with just ICAO segments |
+      |        | LHR  |                |           | 0.03957       | dest with BTS and ICAO segments |
+      |        |      | boeing 737-400 |           | 0.045         | aircraft with simple description |
+      |        |      | boeing 737-200 |           | 0.03500       | aircraft with simple and complex descriptions |
+      |        |      |                | Lufthansa | 0.05          | airline |
+      | JFK    | LHR  |                |           | 0.03286       | origin US destination foreign (BTS) |
+      | LHR    | JFK  |                |           | 0.04          | origin foreign destination US (BTS) |
+      | FRA    | LHR  |                |           | 0.05          | origin/destination foreign (ICAO) |
+      | JFK    | ATL  |                | Delta     | 0.03286       | origin/destination + airline but destination not in flight segments |
+      | JFK    | FRA  |                |           | 0.03286       | origin + dest no match; origin or dest in US, origin has BTS segments only |
+      | FRA    | FRA  |                |           | 0.05          | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario: Freight share committee from default
     Given a flight emitter
@@ -162,50 +154,34 @@ Feature: Flight Committee Calculations
 
   Scenario Outline: Load factor committee from cohort
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
     And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "load_factor" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<load_factor>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | load_factor |
-      | JFK    |      |                |           | 0.86429     |
-      | FRA    |      |                |           | 0.9         |
-      | LHR    |      |                |           | 0.76739     |
-      |        | JFK  |                |           | 0.77581     |
-      |        | FRA  |                |           | 0.8         |
-      |        | LHR  |                |           | 0.87826     |
-      |        |      | boeing 737-400 |           | 0.87826     |
-      |        |      | boeing 737-200 |           | 0.8         |
-      |        |      |                | Lufthansa | 0.875       |
-      | JFK    | LHR  |                |           | 0.86429     |
-      | LHR    | JFK  |                |           | 0.75        |
-      | FRA    | LHR  |                |           | 0.9         |
-      | JFK    | ATL  |                | Delta     | 0.86429     |
-      | JFK    | FRA  |                |           | 0.86429     |
-      | FRA    | FRA  |                |           | 0.9         |
-      # origin with just BTS segments
-      # origin with just ICAO segments
-      # origin with BTS and ICAO segments
-      # dest with just BTS segments
-      # dest with just ICAO segments
-      # dest with BTS and ICAO segments
-      # aircraft with simple description
-      # aircraft with simple and complex descriptions
-      # airline
-      # origin US destination foreign (BTS)
-      # origin foreign destination US (BTS)
-      # origin/destination foreign (ICAO)
-      # origin/destination + airline but destination not in flight segments
-      # origin + dest don't match; origin or dest in US, origin has BTS segments only
-      # origin + dest don't match; origin + dest not in US, origin has ICAO segments only
+      | origin | dest | aircraft       | airline   | load_factor | comment |
+      | JFK    |      |                |           | 0.86429     | origin with just BTS segments |
+      | FRA    |      |                |           | 0.9         | origin with just ICAO segments |
+      | LHR    |      |                |           | 0.76739     | origin with BTS and ICAO segments |
+      |        | JFK  |                |           | 0.77581     | dest with just BTS segments |
+      |        | FRA  |                |           | 0.8         | dest with just ICAO segments |
+      |        | LHR  |                |           | 0.87826     | dest with BTS and ICAO segments |
+      |        |      | boeing 737-400 |           | 0.9         | aircraft with simple description |
+      |        |      | boeing 737-200 |           | 0.8         | aircraft with simple and complex descriptions |
+      |        |      |                | Lufthansa | 0.875       | airline |
+      | JFK    | LHR  |                |           | 0.86429     | origin US destination foreign (BTS) |
+      | LHR    | JFK  |                |           | 0.75        | origin foreign destination US (BTS) |
+      | FRA    | LHR  |                |           | 0.9         | origin/destination foreign (ICAO) |
+      | JFK    | ATL  |                | Delta     | 0.86429     | origin/destination + airline but destination not in flight segments |
+      | JFK    | FRA  |                |           | 0.86429     | origin + dest no match; origin or dest in US, origin has BTS segments only |
+      | FRA    | FRA  |                |           | 0.9         | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario: Load factor committee from default
     Given a flight emitter
@@ -224,45 +200,34 @@ Feature: Flight Committee Calculations
 
   Scenario Outline: Seats committee from cohort
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
+    And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "seats" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<seats>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-    | origin | dest | airline   | seats     |
-    | JFK    |      |           | 153.57143 |
-    | FRA    |      |           | 400       |
-    | LHR    |      |           | 247.82609 |
-    |        | JFK  |           | 300       |
-    |        | FRA  |           | 150       |
-    |        | LHR  |           | 250       |
-    |        |      | Lufthansa | 337.5     |
-    | JFK    | LHR  |           | 153.57143 |
-    | LHR    | JFK  |           | 300       |
-    | FRA    | LHR  |           | 400       |
-    | JFK    | ATL  | Delta     | 153.57143 |
-    | JFK    | FRA  |           | 153.57143 |
-    | FRA    | FRA  |           | 400       |
-    # origin with just BTS segments
-    # origin with just ICAO segments
-    # origin with BTS and ICAO segments
-    # dest with just BTS segments
-    # dest with just ICAO segments
-    # dest with BTS and ICAO segments
-    # airline
-    # origin US destination foreign (BTS)
-    # origin foreign destination US (BTS)
-    # origin/destination foreign (ICAO)
-    # origin/destination + airline but destination not in flight segments
-    # origin + dest don't match; origin or dest in US, origin has BTS segments only
-    # origin + dest don't match; origin + dest not in US, origin has ICAO segments only
+    | origin | dest | aircraft       | airline   | seats     | comment |
+    | JFK    |      |                |           | 153.57143 | origin with just BTS segments |
+    | FRA    |      |                |           | 400       | origin with just ICAO segments |
+    | LHR    |      |                |           | 247.82609 | origin with BTS and ICAO segments |
+    |        | JFK  |                |           | 300       | dest with just BTS segments |
+    |        | FRA  |                |           | 150       | dest with just ICAO segments |
+    |        | LHR  |                |           | 250       | dest with BTS and ICAO segments |
+    |        |      | boeing 737-400 |           | 250       | aircraft with simple description |
+    |        |      | boeing 737-200 |           | 250.0     | aircraft with simple and complex descriptions |
+    |        |      |                | Lufthansa | 337.5     | airline |
+    | JFK    | LHR  |                |           | 153.57143 | origin US destination foreign (BTS) |
+    | LHR    | JFK  |                |           | 300       | origin foreign destination US (BTS) |
+    | FRA    | LHR  |                |           | 400       | origin/destination foreign (ICAO) |
+    | JFK    | ATL  |                | Delta     | 153.57143 | origin/destination + airline but destination not in flight segments |
+    | JFK    | FRA  |                |           | 153.57143 | origin + dest no match; origin or dest in US, origin has BTS segments only |
+    | FRA    | FRA  |                |           | 400       | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario Outline: Seats committee from aircraft with seats
     Given a flight emitter
@@ -272,9 +237,11 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<seats>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | aircraft       | seats |
-      | boeing 737-100 | 212.5 |
-      | boeing 737-400 | 250   |
+      | aircraft       | seats     |
+      | boeing 737-100 | 212.5     |
+      | boeing 737-200 | 250.0     |
+      | boeing 737-300 | 276.47059 |
+      | boeing 737-400 | 250.0     |
 
   Scenario: Seats committee from aircraft missing seats
     Given a flight emitter
@@ -282,7 +249,7 @@ Feature: Flight Committee Calculations
     When the "aircraft_class" committee reports
     And the "seats" committee reports
     Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should be "249.54955"
+    And the conclusion of the committee should be "249.48805"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Seats committee from default
@@ -312,12 +279,11 @@ Feature: Flight Committee Calculations
 
   Scenario Outline: Fuel use coefficients from various cohorts
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "fuel_use_coefficients" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should have a record with "m3" equal to "<m3>"
@@ -326,27 +292,26 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "b" equal to "<b>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | m3  | m2  | m1      | b   |
-      | FRA    |      | 0.0 | 0.0 | 2.0     | 0.0 |
-      | JFK    | LHR  | 0.0 | 0.0 | 1.85023 | 0.0 |
-      | LHR    | JFK  | 0.0 | 0.0 | 1.74194 | 0.0 |
-      # all aircraft have fuel use equation
-      # some aircraft missing fuel use equation
-      # all aircraft missing fuel use equation but have aircraft class fuel use equation
+      | origin | dest | m3  | m2  | m1      | b   | comment |
+      | FRA    |      | 0.0 | 0.0 | 2.0     | 0.0 | all aircraft have fuel use equation |
+      | LHR    |      | 0.0 | 0.0 | 1.45151 | 0.0 | some aircraft missing fuel use equation |
+      |        | FRA  | 0.0 | 0.0 | 1.0     | 0.0 | all aircraft have fuel use equation |
+      |        | LHR  | 0.0 | 0.0 | 1.85786 | 0.0 | some aircraft missing fuel use equation |
+      | JFK    | LHR  | 0.0 | 0.0 | 1.76648 | 0.0 | some aircraft missing fuel use equation |
+      | LHR    | JFK  | 0.0 | 0.0 | 1.69231 | 0.0 | all aircraft missing fuel use equation but have aircraft class fuel use equation |
 
   Scenario: Fuel use coefficients from cohorts where no aircraft have fuel use equation
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "MEX"
     And a characteristic "destination_airport.iata_code" of "JFK"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "fuel_use_coefficients" committee reports
     Then the committee should have used quorum "default"
     And the conclusion of the committee should have a record with "m3" equal to "0.0"
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.74194"
+    And the conclusion of the committee should have a record with "m1" equal to "1.69231"
     And the conclusion of the committee should have a record with "b" equal to "0.0"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
@@ -373,7 +338,7 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "from aircraft class"
     And the conclusion of the committee should have a record with "m3" equal to "0.0"
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.74194"
+    And the conclusion of the committee should have a record with "m1" equal to "1.69231"
     And the conclusion of the committee should have a record with "b" equal to "0.0"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
@@ -386,7 +351,7 @@ Feature: Flight Committee Calculations
     Then the committee should have used quorum "default"
     And the conclusion of the committee should have a record with "m3" equal to "0.0"
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
-    And the conclusion of the committee should have a record with "m1" equal to "1.74194"
+    And the conclusion of the committee should have a record with "m1" equal to "1.69231"
     And the conclusion of the committee should have a record with "b" equal to "0.0"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
@@ -460,11 +425,10 @@ Feature: Flight Committee Calculations
 
   Scenario: Distance committee from cohort based on origin only
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "JFK"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "distance" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "1000.0"
@@ -472,11 +436,10 @@ Feature: Flight Committee Calculations
 
   Scenario: Distance committee from cohort based on destination only
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "destination_airport.iata_code" of "FRA"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "distance" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "100.0"
@@ -484,12 +447,11 @@ Feature: Flight Committee Calculations
 
   Scenario Outline: Distance committee from cohort based on airline / aircraft
     Given a flight emitter
-    And a characteristic "timeframe" of "2011-01-01/2012-01-01"
+    And a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
-    When the "date" committee reports
-    And the "cohort" committee reports
+    When the "cohort" committee reports
     And the "distance" committee reports
     Then the committee should have used quorum "from cohort"
     And the conclusion of the committee should be "<distance>"
@@ -580,7 +542,7 @@ Feature: Flight Committee Calculations
     And a characteristic "adjusted_distance_per_segment" of "1000"
     When the "fuel_use_coefficients" committee reports
     And the "fuel_per_segment" committee reports
-    Then the conclusion of the committee should be "1741.93548"
+    Then the conclusion of the committee should be "1692.30769"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Fuel use committee
