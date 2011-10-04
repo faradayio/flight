@@ -42,25 +42,16 @@ Feature: Flight Impacts Calculations
     Then the impact value should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | impact |
-      | JFK    |      |                |           | 178.41   |
-      | FRA    |      |                |           | 7.00     |
-      | LHR    |      |                |           | 68.05    |
-      |        | JFK  |                |           | 119.73   |
-      |        | FRA  |                |           | 10.50    |
-      |        | LHR  |                |           | 71.58    |
-      |        |      | boeing 737-400 |           | 71.58    |
-      |        |      | boeing 737-200 |           | 89.07    |
-      |        |      |                | Lufthansa | 7.47     |
-      # origin with just BTS segments
-      # origin with just ICAO segments
-      # origin with BTS and ICAO segments
-      # dest with just BTS segments
-      # dest with just ICAO segments
-      # dest with BTS and ICAO segments
-      # aircraft with simple description
-      # aircraft with simple and complex descriptions
-      # airline
+      | origin | dest | aircraft       | airline   | impact | comment |
+      | JFK    |      |                |           | 178.41 | origin with just BTS segments |
+      | FRA    |      |                |           | 7.00   | origin with just ICAO segments |
+      | LHR    |      |                |           | 68.05  | origin with BTS and ICAO segments |
+      |        | JFK  |                |           | 119.73 | dest with just BTS segments |
+      |        | FRA  |                |           | 10.50  | dest with just ICAO segments |
+      |        | LHR  |                |           | 71.58  | dest with BTS and ICAO segments |
+      |        |      | boeing 737-400 |           | 71.58  | aircraft with simple description |
+      |        |      | boeing 737-200 |           | 89.07  | aircraft with simple and complex descriptions |
+      |        |      |                | Lufthansa | 7.47   | airline |
 
   Scenario Outline: Calculations from cohorts that comply with standards
     Given a flight has "segments_per_trip" of "1"
@@ -73,19 +64,13 @@ Feature: Flight Impacts Calculations
     Then the impact value should be within "0.01" kgs of "<impact>"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | aircraft       | airline   | impact |
-      | JFK    | LHR  |                |           | 178.41   |
-      | LHR    | JFK  |                |           | 98.55    |
-      | FRA    | LHR  |                |           | 7.00     |
-      | JFK    | ATL  | boeing 737-400 |           | 16.35    |
-      | JFK    | FRA  |                |           | 196.25   |
-      | FRA    | FRA  |                |           | 0.0      |
-      # origin US destination foreign (BTS)
-      # origin foreign destination US (BTS)
-      # origin/destination foreign (ICAO)
-      # origin/destination + airline but destination not in flight segments
-      # origin + dest don't match; origin or dest in US, origin has BTS segments only
-      # origin + dest don't match; origin + dest not in US, origin has ICAO segments only
+      | origin | dest | aircraft       | airline   | impact | comment |
+      | JFK    | LHR  |                |           | 178.41 | origin US destination foreign (BTS) |
+      | LHR    | JFK  |                |           | 98.55  | origin foreign destination US (BTS) |
+      | FRA    | LHR  |                |           | 7.00   | origin/destination foreign (ICAO) |
+      | JFK    | ATL  | boeing 737-400 |           | 16.35  | origin/destination + airline but destination not in flight segments |
+      | JFK    | FRA  |                |           | 196.25 | origin + dest don't match; origin or dest in US, origin has BTS segments only |
+      | FRA    | FRA  |                |           | 0.0    | origin + dest don't match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario: Calculations from segments per trip
     Given a flight has "segments_per_trip" of "2"
