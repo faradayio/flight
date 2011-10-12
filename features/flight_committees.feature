@@ -2,7 +2,7 @@ Feature: Flight Committee Calculations
   The flight model should generate correct committee calculations
 
   Background:
-    Given a flight emitter
+    Given a flight
 
   Scenario: Date committee from timeframe
     Given a characteristic "timeframe" of "2010-07-15/2010-07-20"

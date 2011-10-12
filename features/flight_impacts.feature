@@ -6,15 +6,15 @@ Feature: Flight Impacts Calculations
 
   Scenario: Calculations from default
     Given a flight has nothing
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "94.66"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "94.66"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Calculations from date
     Given it has "date" of "<date>"
     And it is the year "2010"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "<impact>"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | date       | impact |
@@ -25,8 +25,8 @@ Feature: Flight Impacts Calculations
   Scenario Outline: Calculations from date and timeframe
     Given it has "date" of "<date>"
     And it has "timeframe" of "<timeframe>"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "<impact>"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | date       | timeframe             | impact |
@@ -41,8 +41,8 @@ Feature: Flight Impacts Calculations
     And it has "destination_airport.iata_code" of "<dest>"
     And it has "airline.name" of "<airline>"
     And it has "aircraft.description" of "<aircraft>"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "<impact>"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "<impact>"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | impact | comment |
@@ -63,8 +63,8 @@ Feature: Flight Impacts Calculations
     And it has "destination_airport.iata_code" of "<dest>"
     And it has "airline.name" of "<airline>"
     And it has "aircraft.description" of "<aircraft>"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "<impact>"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "<impact>"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | impact | comment |
@@ -77,55 +77,55 @@ Feature: Flight Impacts Calculations
 
   Scenario: Calculations from segments per trip
     Given it has "segments_per_trip" of "2"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "101.66"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "101.66"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class
     Given it has "seat_class_name" of "economy"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "91.87"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "91.87"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class and distance estimate
     Given it has "seat_class_name" of "economy"
     And it has "distance_estimate" of "2000"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "94.06"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "94.06"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from trips
     Given it has "trips" of "2"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "111.36"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "111.36"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from load factor
     Given it has "load_factor" of "1"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "79.56"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "79.56"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seats estimate
     Given it has "seats_estimate" of "100"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "243.41"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "243.41"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance estimate
     Given it has "distance_estimate" of "185.2"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "11.94"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "11.94"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance class
     Given it has "distance_class.name" of "short haul"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "11.94"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "11.94"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from fuel
     Given it has "fuel.name" of "Aviation Gasoline"
-    When carbon is calculated
-    Then the impact value should be within "0.01" kgs of "91.54"
+    When impacts are calculated
+    Then the amount of "carbon" should be within "0.01" kgs of "91.54"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
