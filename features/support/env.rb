@@ -7,7 +7,8 @@ require 'cucumber/formatter/unicode' # Remove this line if you don't want Cucumb
 require 'sniff'
 Sniff.init File.join(File.dirname(__FILE__), '..', '..'), :earth => [:air, :locality, :fuel], :cucumber => true, :logger => 'log/test_log.txt'
 
-# Set up fuzzy matching between Aircraft and FlightSegment and derive Aircraft seats and passengers from FlightSegment
+# Set up fuzzy matching between Aircraft and FlightSegment for testing
+# Also, derive characteristics of Aircraft from flight_segments
 require 'loose_tight_dictionary'
 require 'earth/air/flight_segment/data_miner'
 require 'earth/air/aircraft/data_miner'
@@ -17,4 +18,6 @@ Aircraft.update_averages!
 # Derive AircraftClass fuel use equations and seats from Aircraft
 require 'earth/air/aircraft_class/data_miner'
 Aircraft.data_miner_config.steps.clear
-AircraftClass.run_data_miner!
+AircraftFuelUseEquation.data_miner_config.steps.clear
+AircraftClass.data_miner_config.steps.detect { |s| s.class == DataMiner::Process and s.description =~ /Derive aircraft classes/i }.run
+AircraftClass.update_averages!

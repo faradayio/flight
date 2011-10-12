@@ -1,0 +1,8 @@
+name,distance_class_name,seat_class_name,multiplier
+short haul economy,short haul,economy,0.9532
+short haul business,short haul,business,1.4293
+short haul first,short haul,first,1.4293
+long haul economy,long haul,economy,0.7297
+long haul economy+,long haul,economy+,1.1673
+long haul business,long haul,business,2.1157
+long haul first,long haul,first,2.9186

@@ -7,16 +7,16 @@ require 'timeframe'
 require 'date'
 require 'weighted_average'
 require 'builder'
-require 'flight/carbon_model/fuel_use_equation'
+require 'flight/impact_model/fuel_use_equation'
 
-## Flight carbon model
-# This model is used by [Brighter Planet](http://brighterplanet.com)'s carbon emission [web service](http://carbon.brighterplanet.com) to estimate the **greenhouse gas emissions of passenger air travel**.
+## Flight impact model
+# This model is used by [Brighter Planet](http://brighterplanet.com)'s [CM1 web service](http://carbon.brighterplanet.com) to estimate the **environmental impacts of passenger air travel**.
 #
 ##### Timeframe and date
-# The model estimates the emissions that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occurred on January 5, 2010 will have emissions but a flight that occurred on February 1, 2010 will not.
+# The model estimates the environmental impacts that occur during a particular `timeframe`. To do this it needs to know the `date` on which the flight occurred. For example, if the `timeframe` is January 2010, a flight that occurred on January 5, 2010 will have environmental impacts but a flight that occurred on February 1, 2010 will not.
 #
 ##### Calculations
-# The final estimate is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the `emission` calculation. Each calculation is named according to the value it returns.
+# Each environmental impact is the result of the **calculations** detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the first. Each calculation is named according to the value it returns.
 #
 ##### Methods
 # To accomodate varying client input, each calculation may have one or more **methods**. These are listed under each calculation in order from most to least preferred. Each method is named according to the values it requires. If any of these values is not available the method will be ignored. If all the methods for a calculation are ignored, the calculation will not return a value. "Default" methods do not require any values, and so a calculation with a default method will always return a value.
@@ -25,19 +25,19 @@ require 'flight/carbon_model/fuel_use_equation'
 # Each method lists any established calculation standards with which it **complies**. When compliance with a standard is requested, all methods that do not comply with that standard are ignored. This means that any values a particular method requires will have been calculated using a compliant method, because those are the only methods available. If any value did not have a compliant method in its calculation then it would be undefined, and the current method would have been ignored.
 #
 ##### Collaboration
-# Contributions to this carbon model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](https://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
+# Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](https://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
 module BrighterPlanet
   module Flight
-    module CarbonModel
+    module ImpactModel
       def self.included(base)
-        base.decide :emission, :with => :characteristics do
-          ### Emission calculation
-          # Returns the `emission` estimate in *kg CO<sub>2</sub>e*.
-          # This is the passenger's share of the total flight emissions that occurred during the `timeframe`.
-          committee :emission do
-            #### Emission from fuel use, emission factor, freight share, passengers, multipliers, and date
-            quorum 'from fuel use, emission factor, freight share, passengers, multipliers, and date',
-              :needs => [:fuel_use, :emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
+        base.decide :impact, :with => :characteristics do
+          ### Greenhouse gas emission calculation
+          # Returns the `greenhouse gas emission` estimate in *kg CO<sub>2</sub>e*.
+          # This is the passenger's share of the total greenhouse emissions produced by the flight during the `timeframe`.
+          committee :carbon do
+            #### Greenhouse gas emission from fuel use, emission factor, freight share, passengers, multipliers, and date
+            quorum 'from fuel use, greenhouse gas emission factor, freight share, passengers, multipliers, and date',
+              :needs => [:fuel_use, :ghg_emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
                 date = characteristics[:date].is_a?(Date) ?
@@ -45,34 +45,34 @@ module BrighterPlanet
                   Date.parse(characteristics[:date].to_s)
                   # Checks whether the flight occurred during the `timeframe`
                 if timeframe.include? date
-                  # Multiplies `fuel use` (*kg*) by an `emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight emissions in *kg CO<sub>2</sub>e*.
-                  characteristics[:fuel_use] * characteristics[:emission_factor] * characteristics[:aviation_multiplier] *
-                  # Multiplies by (1 - `freight share`) to take out emissions attributed to freight cargo and mail, leaving emissions attributed to passengers and their baggage
+                  # Multiplies `fuel use` (*kg*) by a `greenhouse gas emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight greenhouse gas emissions in *kg CO<sub>2</sub>e*.
+                  characteristics[:fuel_use] * characteristics[:ghg_emission_factor] * characteristics[:aviation_multiplier] *
+                  # Multiplies by (1 - `freight share`) to take out greenhouse gas emissions attributed to freight cargo and mail, leaving greenhouse gas emissions attributed to passengers and their baggage
                   (1 - characteristics[:freight_share]) /
-                  # Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `emission` for the passenger
+                  # Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `greenhouse gas emission` for the passenger
                   characteristics[:passengers] * characteristics[:seat_class_multiplier]
                 else
-                  # If the flight did not occur during the `timeframe`, `emission` is zero
+                  # If the flight did not occur during the `timeframe`, `greenhouse gas emission` is zero
                   0
                 end
             end
           end
           
-          ### Emission factor calculation
-          # Returns the `emission factor` in *kg CO<sub>2</sub> / kg fuel*.
-          committee :emission_factor do
-            #### Emission factor from fuel
+          ### Greenhouse gas emission factor calculation
+          # Returns the `greenhouse gas emission factor` in *kg CO<sub>2</sub> / kg fuel*.
+          committee :ghg_emission_factor do
+            #### Greenhouse gas emission factor from fuel
             quorum 'from fuel',
               :needs => :fuel,
               # Complies: GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `emission factor` (*kg CO<sub>2</sub> / l*) and divides by its `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
+                # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `carbon dioxide emission factor` (*kg CO<sub>2</sub> / l*) and divides by its `density` (*kg / l*) to give *kg CO<sub>2</sub> / kg fuel*.
                 characteristics[:fuel].co2_emission_factor / characteristics[:fuel].density
             end
           end
           
           ### Aviation multiplier calculation
-          # Returns the `aviation multiplier`. This approximates the extra climate impact of emissions high in the atmosphere.
+          # Returns the `aviation multiplier`. This approximates the extra climate impact of greenhouse gas emissions high in the atmosphere.
           committee :aviation_multiplier do
             #### Default aviation multiplier
             quorum 'default',
@@ -80,6 +80,23 @@ module BrighterPlanet
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Uses an `aviation multiplier` of **2.0** after [Kollmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
                 2.0
+            end
+          end
+          
+          ### Energy calculation
+          # Returns the `energy` in *MJ*.
+          # This is the passenger's share of the total energy consumed by the flight during the `timeframe`.
+          committee :energy do
+            #### Energy from fuel use, fuel, and date
+            quorum 'from fuel use, fuel, and date',
+              :needs => [:fuel_use, :fuel, :date],
+              # **Complies:**
+              :complies => [] do |characteristics, timeframe|
+                date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
+                if timeframe.include? date
+                  # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `energy content` (*MJ / l*), divides by its `density` (*kg / l*), and multiplies by `fuel use` (*kg*) to give *MJ*.
+                  characteristics[:fuel].energy_content / characteristics[:fuel].density * characteristics[:fuel_use]
+                end
             end
           end
           
@@ -119,39 +136,61 @@ module BrighterPlanet
           ### Seat class multiplier calculation
           # Returns the `seat class multiplier`. This reflects the amount of cabin space occupied by the passenger's seat.
           committee :seat_class_multiplier do
-            #### Seat class multiplier from seat class and distance
-            quorum 'from seat class name and adjusted distance per segment',
-              :needs => [:seat_class_name, :adjusted_distance_per_segment],
+            #### Seat class multiplier from distance class seat class
+            quorum 'from distance class seat class',
+              :needs => :distance_class_seat_class,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance` and `seat class`.
-                if characteristics[:adjusted_distance_per_segment] < 244.06
-                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", "#{characteristics[:seat_class_name]}").multiplier
-                elsif characteristics[:adjusted_distance_per_segment] < 863.93
-                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Short haul", "#{characteristics[:seat_class_name]}").multiplier
-                else
-                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Long haul", "#{characteristics[:seat_class_name]}").multiplier
-                end
+                # Looks up the [distance class seat class](http://data.brighterplanet.com/flight_distance_class_seat_classes) multiplier.
+                characteristics[:distance_class_seat_class].multiplier
             end
             
-            #### Seat class multiplier from distance
+            #### Seat class multiplier from seat class
+            quorum 'from seat class',
+              :needs => :seat_class,
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [seat class](http://data.brighterplanet.com/flight_seat_classes) multiplier.
+                characteristics[:seat_class].multiplier
+            end
+            
+            #### Default seat class multiplier
+            quorum 'default',
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
+              # Looks up the default [seat class](http://data.brighterplanet.com/flight_seat_classes) multiplier.
+              FlightSeatClass.fallback.multiplier
+            end
+          end
+          
+          ### Distance class seat class calculation
+          # Calculates the [distance class seat class](http://data.brighterplanet.com/flight_distance_class_seat_classes). This is the distance class-specific seat class.
+          committee :distance_class_seat_class do
+            #### Distance class seat class from distance class and seat class
+            quorum 'from distance class and seat class',
+              :needs => [:distance_class, :seat_class],
+              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                # Looks up the [distance class seat class](http://data.brighterplanet.com/flight_distance_class_seat_classes) corresponding to the `distance class` and `seat class`.
+                FlightDistanceClassSeatClass.find_by_distance_class_name_and_seat_class_name(characteristics[:distance_class].name, characteristics[:seat_class].name)
+            end
+          end
+          
+          ### Distance class calculation
+          # Calculates the [distance class](http://data.brighterplanet.com/flight_distance_classes) if it hasn't been provided by the client.
+          committee :distance_class do
+            #### Distance class from adjusted distance per segment
             quorum 'from adjusted distance per segment',
               :needs => :adjusted_distance_per_segment,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [seat class multiplier](http://data.brighterplanet.com/flight_seat_classes) based on `distance`.
-                if characteristics[:adjusted_distance_per_segment] < 244.06
-                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Domestic", "unknown").multiplier
-                elsif characteristics[:adjusted_distance_per_segment] < 863.93
-                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Short haul", "unknown").multiplier
-                else
-                  FlightSeatClass.find_by_distance_class_name_and_seat_class_name("Long haul", "unknown").multiplier
-                end
+                # Looks up the [distance class](http://data.brighterplanet.com/flight_distance_classes) corresponding to the `adjusted distance per segment`.
+                FlightDistanceClass.find_by_distance(characteristics[:adjusted_distance_per_segment])
             end
           end
           
-          ### Seat class name calculation
-          # Returns the client-input [seat class](http://data.brighterplanet.com/seat_classes) name.
+          ### Seat class calculation
+          # Returns the client-input [seat class](http://data.brighterplanet.com/flight_seat_classes).
           
           ### Adjusted distance per segment calculation
           # Returns the `adjusted distance per segment` in *nautical miles*.
@@ -574,6 +613,8 @@ module BrighterPlanet
                   # We need to include the previous year because our flight segment data lags by about 6 months.
                   relevant_years = [date.year - 1, date.year]
                   
+                  # FIXME TODO could probably refactor this...
+                  
                   # If we have both an origin and destination airport...
                   if characteristics[:origin_airport].present? and characteristics[:destination_airport].present?
                     # If either airport is in the US, use airport iata code to assemble a cohort of BTS flight segments
@@ -586,15 +627,14 @@ module BrighterPlanet
                     
                     # If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
                     # FIXME TODO: deal with cities in multiple countries that share a name
-                    # pushing country works if we're trying to go from Mexico City to Barcelona, Spain and so the cohort
-                    # should NOT include flights to Barcelona, Venezuela
-                    # BUT it won't work if we're trying to go from Montreal to London, Canada - there are no direct flights to
-                    # London, Canada but there ARE flights to London, United Kingdom so we end up with those
+                    # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+                    # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
+                    # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
+                    # statements get changed to 'OR' so you end up with all flights to that country
+                    # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
                     else
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
-                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                       provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
-                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     # Also use aircraft description and airline name
@@ -610,7 +650,7 @@ module BrighterPlanet
                     # previous year. Then we find all the segments that match the input `origin_airport`, `destination_airport`,
                     # `aircraft`, and `airline`. If no segments match all the inputs, we drop the last input (initially `airline`)
                     # and try again. We continue until some segments match or no inputs remain.
-                    cohort = FlightSegment.where(:year => relevant_years).strict_cohort(*provided_characteristics)
+                    cohort = FlightSegment.where(:year => relevant_years).where("passengers > 0").strict_cohort(*provided_characteristics)
                     
                     # Ignore the cohort if none of its flight segments have any passengers
                     # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
@@ -619,19 +659,15 @@ module BrighterPlanet
                     else
                       nil
                     end
-                  # If we have either origin or destination but not both...
-                  # NOTE: This needs to be a special case because if we had neither origin nor destination, generated separate
-                  # BTS and ICAO cohorts, and combined them the resulting cohort would have two copies of each flight segment.
-                  elsif characteristics[:origin_airport].present? or characteristics[:destination_airport].present?
+                  # If we don't have both an origin and destination airport...
+                  else
                     # First use airport iata code to assemble a cohort of BTS flight segments
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
-                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:destination_airport].present?
                       provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
-                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:aircraft].present?
@@ -642,25 +678,26 @@ module BrighterPlanet
                       provided_characteristics.push [:airline_name, characteristics[:airline].name]
                     end
                     
-                    # Note: can't use where(:year => relevant_years) here because then when we combine the cohorts you get
-                    # WHERE year IN (*relevant_years*) OR *other conditions* which returns every flight segment where(:year => relevant_years)
+                    # Note: can't use where conditions here e.g. where(:year => relevant_years) because when we combine the cohorts
+                    # all AND become OR so we get WHERE year IN (*relevant_years*) OR *other conditions* which returns every
+                    # flight segment in the relevant_years
                     bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
                     # Then use airport city to assemble a cohort of ICAO flight segments
                     # FIXME TODO: deal with cities in multiple countries that share a name
-                    # pushing country works if we're trying to go from Mexico City to Barcelona, Spain and so the cohort
-                    # should NOT include flights to Barcelona, Venezuela
-                    # BUT it won't work if we're trying to go from Montreal to London, Canada - there are no direct flights to
-                    # London, Canada but there ARE flights to London, United Kingdom so we end up with those
+                    # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+                    # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
+                    # to London, Canada because there are no direct flights to London, Canada so country gets dropped and we
+                    # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
+                    # statements get changed to 'OR' so you end up with all flights to that country
+                    # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
                     provided_characteristics = []
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
-                      provided_characteristics.push [:origin_country_iso_3166_code, characteristics[:origin_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:destination_airport].present?
                       provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
-                      provided_characteristics.push [:destination_country_iso_3166_code, characteristics[:destination_airport].country_iso_3166_code]
                     end
                     
                     if characteristics[:aircraft].present?
@@ -673,37 +710,12 @@ module BrighterPlanet
                     
                     icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
                     
-                    # Combine the two cohorts, making sure to restrict to relevant years
+                    # Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
                     # Note: cohort_scope 0.2.1 provides cohort + cohort => cohort; cohort.where() => relation; relation.to_cohort => cohort
-                    cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).to_cohort
+                    cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).where("passengers > 0").to_cohort
                     
-                    # Ignore the resulting cohort if none of its flight segments have any passengers 
-                    # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
-                    if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
-                      cohort
-                    else
-                      nil
-                    end
-                  # If we have neither origin nor destination...
-                  else
-                    # Use aircraft description and airline name to assemble a cohort
-                    if characteristics[:aircraft].present?
-                      provided_characteristics.push [:aircraft_description, characteristics[:aircraft].flight_segments_foreign_keys]
-                    end
-                    
-                    if characteristics[:airline].present?
-                      provided_characteristics.push [:airline_name, characteristics[:airline].name]
-                    end
-                    
-                    cohort = FlightSegment.where(:year => relevant_years).strict_cohort(*provided_characteristics)
-                    
-                    # Ignore the cohort if none of its flight segments have any passengers
-                    # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
-                    if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
-                      cohort
-                    else
-                      nil
-                    end
+                    # Ignore the resulting cohort if it's empty
+                    cohort.any? ? cohort : nil
                   end
                 end
             end
@@ -756,7 +768,7 @@ module BrighterPlanet
           end
           
           ### Timeframe calculation
-          # Returns the `timeframe`. This is the period during which to calculate emissions.
+          # Returns the `timeframe`. This is the period during which to calculate impacts.
             
             #### Timeframe from client input
             # **Complies:** All

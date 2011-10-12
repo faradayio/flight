@@ -1,2 +1,3 @@
-name,distance,distance_units
-short haul,185.2,kilometres
+name,distance,distance_units,min_distance,min_distance_units,max_distance,max_distance_units,passengers
+long haul,6482,kilometres,3700,kilometres,1000000,kilometres,9566990
+short haul,1108,kilometres,0,kilometres,3700,kilometres,61163900

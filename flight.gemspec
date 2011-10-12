@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   
   s.authors = ["Andy Rossmeissl", "Seamus Abshere", "Ian Hough", "Matt Kling", "Derek Kastner"]
   s.date = %q{2011-02-25}
-  s.summary = %q{A carbon model}
-  s.description = %q{A software model in Ruby for the greenhouse gas emissions of a flight}
+  s.summary = %q{Brighter Planet's impact model for flights}
+  s.description = %q{Brighter Planet's impact model for flights}
   s.email = %q{andy@rossmeissl.net}
   s.homepage = %q{https://github.com/brighterplanet/flight}
   
@@ -24,5 +24,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   
   s.add_runtime_dependency 'emitter' unless ENV['LOCAL_EMITTER']
+  s.add_runtime_dependency 'earth', '~>0.6.6' unless ENV['LOCAL_EARTH']
   s.add_development_dependency 'sniff' unless ENV['LOCAL_SNIFF']
 end

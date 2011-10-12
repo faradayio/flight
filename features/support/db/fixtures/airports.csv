@@ -2,6 +2,8 @@ iata_code,city,country_iso_3166_code,latitude,longitude
 JFK,New York,US,23.3596415,-80
 LHR,London,GB,40,-80
 FRA,Frankfurt,DE,41.6640358,-80
-MEX,Mexico City,MX,,
-LGA,New York,US,,
+MEX,Mexico City,MX
+LGA,New York,US
 ATL,Atlanta,US,25.0236773,-80
+SFO,San Francisco,US
+YXU,London,CA
