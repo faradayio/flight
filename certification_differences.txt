@@ -1,0 +1,307 @@
+ADDED:
+Seat class multiplier calculation
++  #### Seat class multiplier from seat class
++  quorum 'from seat class',
++    :needs => :seat_class,
++    # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
++    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
++      # Looks up the [seat class](http://data.brighterplanet.com/flight_seat_classes) multiplier.
++      characteristics[:seat_class].multiplier
++  end
++  
++  #### Default seat class multiplier
++  quorum 'default',
++    # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
++    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
++    # Looks up the default [seat class](http://data.brighterplanet.com/flight_seat_classes) multiplier.
++    FlightSeatClass.fallback.multiplier
++  end
+
++### Distance class seat class calculation
++# Calculates the [distance class seat class](http://data.brighterplanet.com/flight_distance_class_seat_classes). This is the distance class-specific seat class.
++committee :distance_class_seat_class do
++  #### Distance class seat class from distance class and seat class
++  quorum 'from distance class and seat class',
++    :needs => [:distance_class, :seat_class],
++    # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
++    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
++      # Looks up the [distance class seat class](http://data.brighterplanet.com/flight_distance_class_seat_classes) corresponding to the `distance class` and `seat class`.
++      FlightDistanceClassSeatClass.find_by_distance_class_name_and_seat_class_name(characteristics[:distance_class].name, characteristics[:seat_class].name)
++  end
++end
+
++### Distance class calculation
++# Calculates the [distance class](http://data.brighterplanet.com/flight_distance_classes) if it hasn't been provided by the client.
++committee :distance_class do
++  #### Distance class from adjusted distance per segment
++   quorum 'from adjusted distance per segment',
++     :needs => :adjusted_distance_per_segment,
++     # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
++     :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
++      # Looks up the [distance class](http://data.brighterplanet.com/flight_distance_classes) corresponding to the `adjusted distance per segment`.
++      FlightDistanceClass.find_by_distance(characteristics[:adjusted_distance_per_segment])
++   end
++ end
++end
+
+Cohort calculation
++  quorum 'from row_hash', :needs => [:flight_segment_row_hash] do |characteristics|
++    FlightSegment.where(:row_hash => characteristics[:flight_segment_row_hash].value).to_cohort
++  end
+
+
+CHANGED:
+-### Fuel use coefficients calculation
+-# Returns the `fuel use coefficients`. These are the coefficients of the third-order polynomial equation that describes aircraft fuel use.
+-committee :fuel_use_coefficients do
+-  #### Fuel use coefficients from cohort
+-  quorum 'from cohort',
+-    :needs => :cohort,
+-    # **Complies:** GHG Protocol Scope 3, ISO 14064-1, Climate Registry Protocol
+-    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+-      flight_segments = characteristics[:cohort]
+-      
+-      passengers = flight_segments.inject(0) do |memo, flight_segment|
+-        memo + flight_segment.passengers
+-      end
+-                      
+-      bts_codes = flight_segments.map(&:aircraft_bts_code).uniq
+-      relevant_aircraft = Aircraft.find_all_by_bts_code(bts_codes).inject({}) do |hsh, aircraft|
+-        hsh[aircraft.bts_code] = aircraft
+-        hsh
+-      end
+-      
+-      # Calculates the average `fuel use coefficients` of the aircraft used by the `cohort` segments, weighted by the segment passengers.
+-      # If an aircraft does not have `fuel use coefficients`, it takes the `fuel use coefficients` for the aircraft's [aircraft class](http://data.brighterplanet.com/aircraft_classes).
+-      sum_coefficients = lambda do |name|
+-        flight_segments.inject(0) do |coefficient, flight_segment|
+-          bts_code = flight_segment.aircraft_bts_code.to_s
+-          aircraft = relevant_aircraft[bts_code]
+-          aircraft_coefficient = aircraft.send(name)
+-          if aircraft_coefficient.nil?
+-            aircraft_coefficient = aircraft.aircraft_class.send(name)
+-          end
+-          coefficient + (aircraft_coefficient * flight_segment.passengers)
+-        end
+-      end
+-      
+-      m3 = sum_coefficients.call(:m3) / passengers
+-      m2 = sum_coefficients.call(:m2) / passengers
+-      m1 = sum_coefficients.call(:m1) / passengers
+-      endpoint_fuel = sum_coefficients.call(:endpoint_fuel) / passengers
+-      
+-      FuelUseEquation.new m3, m2, m1, endpoint_fuel
+-  end
+-end
+
++### Fuel use coefficients calculation
++# Returns the `fuel use coefficients`. These are the coefficients of the third-order polynomial equation that describes aircraft fuel use.
++committee :fuel_use_coefficients do
++  #### Fuel use coefficients from cohort
++  quorum 'from cohort',
++    :needs => :cohort,
++    # **Complies:** GHG Protocol Scope 3, ISO 14064-1, Climate Registry Protocol
++    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
++      # Calculates the passenger-weighted average fuel use equation for all the flight segments in the cohort
++      flight_segments = characteristics[:cohort]
++      
++      # Initialize a blank fuel use equation for this flight and set a passengers counter to zero
++      fue = FuelUseEquation.new(0, 0, 0, 0)
++      cumulative_passengers = 0
++      
++      fs_aircraft_cache = {}
++      
++      # For each flight segment in the cohort...
++      flight_segments.each do |fs|
++        
++        # Since we're pulling each member of a cohort in Ruby, rather than just running statistics on the database server level, we're going to cheat a little more
++        fs_aircraft = (fs_aircraft_cache[fs.aircraft_description] ||= fs.aircraft.to_a)
++        
++        fuel_use_equations = []
++        aircraft_classes = []
++        
++        # For each aircraft the flight segment refers to...
++        fs_aircraft.each do |a|
++          # If the aircraft is associated with a valid fuel use equation, add that fuel use equation to an array
++          if a.fuel_use_equation && a.fuel_use_equation.valid_fuel_use_equation?
++            fuel_use_equations.push(a.fuel_use_equation)
++          # Otherwise, if the aircraft's class contains a valid fuel use equation, add the aircraft class to an array
++          elsif a.aircraft_class && a.aircraft_class.valid_fuel_use_equation?
++            aircraft_classes.push(a.aircraft_class)
++          end
++        end
++        
++        # Combine the valid fuel use equations and aircraft classes to get an array of equation objects
++        equation_objects = fuel_use_equations + aircraft_classes
++        
++        # If we found at least one valid fuel use equation...
++        unless equation_objects.empty?
++          # Average each coefficient across all the valid fuel use equations, multiply that average by the 
++          # flight segment's passengers, and add the resulting value to the overall flight fuel use equation
++          fue.m3 += (equation_objects.sum(&:m3) / equation_objects.length) * fs.passengers
++          fue.m2 += (equation_objects.sum(&:m2) / equation_objects.length) * fs.passengers
++          fue.m1 += (equation_objects.sum(&:m1) / equation_objects.length) * fs.passengers
++          fue.b  += (equation_objects.sum(&:b) / equation_objects.length) * fs.passengers
++          # Add the flight segment's passengers to our passengers counter
++          cumulative_passengers += fs.passengers
++        end
++      end
++      
++      # We don't need this cache any more, so we'll help the GC by clearing it
++      fs_aircraft_cache.clear
++      
++      # Check to make sure at least one of the segments had passengers and a valid fuel use equation
++      if cumulative_passengers > 0
++        # Divide each coefficient in our overall fuel use equation by the passengers counter and return the result
++        fue.m3 /= cumulative_passengers
++        fue.m2 /= cumulative_passengers
++        fue.m1 /= cumulative_passengers
++        fue.b /= cumulative_passengers
++        fue
++      end
++  end
++end
+
+Cohort calculation
+-  quorum 'from segments per trip and input',
+-    :needs => :segments_per_trip, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline],
+-    # **Complies:** GHG Protocol Scope 3, ISO 14064-1, Climate Registry Protocol
+-    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+-      cohort = {}
+-      # Checks whether the flight is direct
+-      if characteristics[:segments_per_trip] == 1
+-        # - Takes the input values for `origin airport`, `destination airport`, `aircraft`, and `airline`
+-        # - Selects all the records in the T-100 database that match the available input values
+-        # - Drops the last input value (initially `airline`, then `aircraft`, etc.) if no records match all of the available input values
+-        # - Repeats steps 3 and 4 until some records match or no input values remain
+-        provided_characteristics = [:origin_airport, :destination_airport, :aircraft, :airline].
+-          inject(ActiveSupport::OrderedHash.new) do |memo, characteristic_name|
+-            memo[characteristic_name] = characteristics[characteristic_name]
+-            memo
+-          end
+-        cohort = FlightSegment.strict_cohort provided_characteristics
+-      end
+-      # If no records match any of the input values, or if the flight is indirect, then `cohort` is undefined.
+-      if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
+-        cohort
+-      else
+-        nil
+-      end
+-  end
++  quorum 'from segments per trip and input',
++    # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
++    :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
++      if characteristics[:segments_per_trip] == 1
++        provided_characteristics = []
++        date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
++        
++        # We'll want to restrict the cohort to flight segments that occurred the same year as the flight or the previous year.
++        # We need to include the previous year because our flight segment data lags by about 6 months.
++        relevant_years = [date.year - 1, date.year]
++        
++        # FIXME TODO could probably refactor this...
++        
++        # If we have both an origin and destination airport...
++        if characteristics[:origin_airport].present? and characteristics[:destination_airport].present?
++          # If either airport is in the US, use airport iata code to assemble a cohort of BTS flight segments
++          if characteristics[:origin_airport].country_iso_3166_code == "US" or characteristics[:destination_airport].country_iso_3166_code == "US"
++            # NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
++            # cohort based just on origin. If that happens, even if the origin is not in the US we still don't want to use
++            # origin airport city, because we know the flight was going to the US and ICAO segments never touch the US.
++            provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
++            provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
++          
++          # If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
++          # FIXME TODO: deal with cities in multiple countries that share a name
++          # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
++          # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
++          # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
++          # statements get changed to 'OR' so you end up with all flights to that country
++          # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
++          else
++            provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
++            provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
++          end
++          
++          # Also use aircraft description and airline name
++          if characteristics[:aircraft].present?
++            provided_characteristics.push [:aircraft_description, characteristics[:aircraft].flight_segments_foreign_keys]
++          end
++          
++          if characteristics[:airline].present?
++            provided_characteristics.push [:airline_name, characteristics[:airline].name]
++          end
++          
++          # To assemble a cohort, we start with all the flight segments that are the same year as the flight or the
++          # previous year. Then we find all the segments that match the input `origin_airport`, `destination_airport`,
++          # `aircraft`, and `airline`. If no segments match all the inputs, we drop the last input (initially `airline`)
++          # and try again. We continue until some segments match or no inputs remain.
++          cohort = FlightSegment.where(:year => relevant_years).where("passengers > 0").strict_cohort(*provided_characteristics)
++          
++          # Ignore the cohort if none of its flight segments have any passengers
++          # TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
++          if cohort.any? && cohort.any? { |fs| fs.passengers.nonzero? }
++            cohort
++          else
++            nil
++          end
++        # If we don't have both an origin and destination airport...
++        else
++          # First use airport iata code to assemble a cohort of BTS flight segments
++          if characteristics[:origin_airport].present?
++            provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
++          end
++          
++          if characteristics[:destination_airport].present?
++            provided_characteristics.push [:destination_airport_iata_code, characteristics[:destination_airport].iata_code]
++          end
++          
++          if characteristics[:aircraft].present?
++            provided_characteristics.push [:aircraft_description, characteristics[:aircraft].flight_segments_foreign_keys]
++          end
++          
++          if characteristics[:airline].present?
++            provided_characteristics.push [:airline_name, characteristics[:airline].name]
++          end
++          
++          # Note: can't use where conditions here e.g. where(:year => relevant_years) because when we combine the cohorts
++          # all AND become OR so we get WHERE year IN (*relevant_years*) OR *other conditions* which returns every
++          # flight segment in the relevant_years
++          bts_cohort = FlightSegment.strict_cohort(*provided_characteristics)
++          
++          # Then use airport city to assemble a cohort of ICAO flight segments
++          # FIXME TODO: deal with cities in multiple countries that share a name
++          # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
++          # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
++          # to London, Canada because there are no direct flights to London, Canada so country gets dropped and we
++          # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
++          # statements get changed to 'OR' so you end up with all flights to that country
++          # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
++          provided_characteristics = []
++          if characteristics[:origin_airport].present?
++            provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
++          end
++          
++          if characteristics[:destination_airport].present?
++            provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
++          end
++          
++          if characteristics[:aircraft].present?
++            provided_characteristics.push [:aircraft_description, characteristics[:aircraft].flight_segments_foreign_keys]
++          end
++          
++          if characteristics[:airline].present?
++            provided_characteristics.push [:airline_name, characteristics[:airline].name]
++          end
++          
++          icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
++          
++          # Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
++          # Note: cohort_scope 0.2.1 provides cohort + cohort => cohort; cohort.where() => relation; relation.to_cohort => cohort
++          cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).where("passengers > 0").to_cohort
++          
++          # Ignore the resulting cohort if it's empty
++          cohort.any? ? cohort : nil
++        end
++      end
++  end
