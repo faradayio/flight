@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>impact_model.rb</title>
+  <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1667526-20']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+  <style type="text/css">
+    td.docs h1 {
+      margin-top: 0;
+    }
+    @media print {
+      .code pre {
+        white-space: pre-wrap;
+      }
+      .code {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      .code .highlight {
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <table cellspacing=0 cellpadding=0>
+  <thead>
+    <tr>
+      <th class=docs><h1>impact_model.rb</h1></th>
+      <th class=code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr id='section-1'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-1">&#182;</a>
+        </div>
+        <p>Copyright © 2010 Brighter Planet.
+See LICENSE for details.
+Contact Brighter Planet for dual-license arrangements.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="nb">require</span> <span class="s1">&#39;leap&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;timeframe&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;date&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;weighted_average&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;builder&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;flight/impact_model/fuel_use_equation&#39;</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Flight_impact_model'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Flight_impact_model">&#182;</a>
+        </div>
+        <h1>Flight impact model</h1>
+
+<p>This model is used by <a href="http://brighterplanet.com">Brighter Planet</a>&rsquo;s <a href="http://carbon.brighterplanet.com">CM1 web service</a> to estimate the <strong>environmental impacts of passenger air travel</strong>.</p>
+
+<h4>Timeframe and date</h4>
+
+<p>The model estimates the environmental impacts that occur during a particular <code>timeframe</code>. To do this it needs to know the <code>date</code> on which the flight occurred. For example, if the <code>timeframe</code> is January 2010, a flight that occurred on January 5, 2010 will have environmental impacts but a flight that occurred on February 1, 2010 will not.</p>
+
+<h4>Calculations</h4>
+
+<p>Each environmental impact is the result of the <strong>calculations</strong> detailed below. These calculations are performed in reverse order, starting with the last calculation listed and finishing with the first. Each calculation is named according to the value it returns.</p>
+
+<h4>Methods</h4>
+
+<p>To accomodate varying client input, each calculation may have one or more <strong>methods</strong>. These are listed under each calculation in order from most to least preferred. Each method is named according to the values it requires. If any of these values is not available the method will be ignored. If all the methods for a calculation are ignored, the calculation will not return a value. &ldquo;Default&rdquo; methods do not require any values, and so a calculation with a default method will always return a value.</p>
+
+<h4>Standard compliance</h4>
+
+<p>Each method lists any established calculation standards with which it <strong>complies</strong>. When compliance with a standard is requested, all methods that do not comply with that standard are ignored. This means that any values a particular method requires will have been calculated using a compliant method, because those are the only methods available. If any value did not have a compliant method in its calculation then it would be undefined, and the current method would have been ignored.</p>
+
+<h4>Collaboration</h4>
+
+<p>Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see <a href="https://github.com/brighterplanet/sniff#readme">sniff</a>, our emitter testing framework, for more information.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="k">module</span> <span class="nn">BrighterPlanet</span>
+  <span class="k">module</span> <span class="nn">Flight</span>
+    <span class="k">module</span> <span class="nn">ImpactModel</span>
+      <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">included</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="n">base</span><span class="o">.</span><span class="n">decide</span> <span class="ss">:impact</span><span class="p">,</span> <span class="ss">:with</span> <span class="o">=&gt;</span> <span class="ss">:characteristics</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Greenhouse_gas_emission_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Greenhouse_gas_emission_calculation">&#182;</a>
+        </div>
+        <h2>Greenhouse gas emission calculation</h2>
+
+<p>Returns the <code>greenhouse gas emission</code> estimate in <em>kg CO<sub>2</sub>e</em>.
+This is the passenger&rsquo;s share of the total greenhouse emissions produced by the flight during the <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:carbon</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Greenhouse_gas_emission_from_fuel_use,_emission_factor,_freight_share,_passengers,_multipliers,_and_date'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Greenhouse_gas_emission_from_fuel_use,_emission_factor,_freight_share,_passengers,_multipliers,_and_date">&#182;</a>
+        </div>
+        <h3>Greenhouse gas emission from fuel use, emission factor, freight share, passengers, multipliers, and date</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel use, greenhouse gas emission factor, freight share, passengers, multipliers, and date&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_use</span><span class="p">,</span> <span class="ss">:ghg_emission_factor</span><span class="p">,</span> <span class="ss">:freight_share</span><span class="p">,</span> <span class="ss">:passengers</span><span class="p">,</span> <span class="ss">:seat_class_multiplier</span><span class="p">,</span> <span class="ss">:aviation_multiplier</span><span class="p">,</span> <span class="ss">:date</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-5'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-5">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Date</span><span class="p">)</span> <span class="p">?</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">]</span> <span class="p">:</span>
+                  <span class="no">Date</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">to_s</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-6'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-6">&#182;</a>
+        </div>
+        <p>Checks whether the flight occurred during the <code>timeframe</code></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">timeframe</span><span class="o">.</span><span class="n">include?</span> <span class="n">date</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-7'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-7">&#182;</a>
+        </div>
+        <p>Multiplies <code>fuel use</code> (<em>kg</em>) by a <code>greenhouse gas emission factor</code> (<em>kg CO<sub>2</sub>e / kg fuel</em>) and an <code>aviation multiplier</code> to give total flight greenhouse gas emissions in <em>kg CO<sub>2</sub>e</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:ghg_emission_factor</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aviation_multiplier</span><span class="o">]</span> <span class="o">*</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-8'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-8">&#182;</a>
+        </div>
+        <p>Multiplies by (1 &ndash; <code>freight share</code>) to take out greenhouse gas emissions attributed to freight cargo and mail, leaving greenhouse gas emissions attributed to passengers and their baggage</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:freight_share</span><span class="o">]</span><span class="p">)</span> <span class="o">/</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-9'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-9">&#182;</a>
+        </div>
+        <p>Divides by the number of <code>passengers</code> and multiplies by a <code>seat class multiplier</code> to give <code>greenhouse gas emission</code> for the passenger</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:passengers</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class_multiplier</span><span class="o">]</span>
+                <span class="k">else</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-10'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-10">&#182;</a>
+        </div>
+        <p>If the flight did not occur during the <code>timeframe</code>, <code>greenhouse gas emission</code> is zero</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="mi">0</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Greenhouse_gas_emission_factor_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Greenhouse_gas_emission_factor_calculation">&#182;</a>
+        </div>
+        <h2>Greenhouse gas emission factor calculation</h2>
+
+<p>Returns the <code>greenhouse gas emission factor</code> in <em>kg CO<sub>2</sub> / kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:ghg_emission_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Greenhouse_gas_emission_factor_from_fuel'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Greenhouse_gas_emission_factor_from_fuel">&#182;</a>
+        </div>
+        <h3>Greenhouse gas emission factor from fuel</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:fuel</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-13'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-13">&#182;</a>
+        </div>
+        <p>Complies: GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-14'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-14">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/fuels">fuel</a>&rsquo;s <code>carbon dioxide emission factor</code> (<em>kg CO<sub>2</sub> / l</em>) and divides by its <code>density</code> (<em>kg / l</em>) to give <em>kg CO<sub>2</sub> / kg fuel</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">co2_emission_factor</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">density</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Aviation_multiplier_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Aviation_multiplier_calculation">&#182;</a>
+        </div>
+        <h2>Aviation multiplier calculation</h2>
+
+<p>Returns the <code>aviation multiplier</code>. This approximates the extra climate impact of greenhouse gas emissions high in the atmosphere.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:aviation_multiplier</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_aviation_multiplier'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_aviation_multiplier">&#182;</a>
+        </div>
+        <h3>Default aviation multiplier</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-17'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-17">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-18'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-18">&#182;</a>
+        </div>
+        <p>Uses an <code>aviation multiplier</code> of <strong>2.0</strong> after <a href="http://sei-us.org/publications/id/13">Kollmuss and Crimmins (2009)</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="mi">2</span><span class="o">.</span><span class="mi">0</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Energy_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Energy_calculation">&#182;</a>
+        </div>
+        <h2>Energy calculation</h2>
+
+<p>Returns the <code>energy</code> in <em>MJ</em>.
+This is the passenger&rsquo;s share of the total energy consumed by the flight during the <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:energy</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Energy_from_fuel_use,_fuel,_and_date'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Energy_from_fuel_use,_fuel,_and_date">&#182;</a>
+        </div>
+        <h3>Energy from fuel use, fuel, and date</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel use, fuel, and date&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_use</span><span class="p">,</span> <span class="ss">:fuel</span><span class="p">,</span> <span class="ss">:date</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-21'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-21">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Date</span><span class="p">)</span> <span class="p">?</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">]</span> <span class="p">:</span> <span class="no">Date</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">to_s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">timeframe</span><span class="o">.</span><span class="n">include?</span> <span class="n">date</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-22'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-22">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/fuels">fuel</a>&rsquo;s <code>energy content</code> (<em>MJ / l</em>), divides by its <code>density</code> (<em>kg / l</em>), and multiplies by <code>fuel use</code> (<em>kg</em>) to give <em>MJ</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">energy_content</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">density</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use</span><span class="o">]</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_use_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_use_calculation">&#182;</a>
+        </div>
+        <h2>Fuel use calculation</h2>
+
+<p>Returns the flight&rsquo;s total <code>fuel use</code> in <em>kg</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_use</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_use_from_fuel_per_segment_and_segments_per_trip_and_trips'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_use_from_fuel_per_segment_and_segments_per_trip_and_trips">&#182;</a>
+        </div>
+        <h3>Fuel use from fuel per segment and segments per trip and trips</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel per segment and segments per trip and trips&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_per_segment</span><span class="p">,</span> <span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:trips</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-25'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-25">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-26'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-26">&#182;</a>
+        </div>
+        <p>Multiplies the <code>fuel per segment</code> (<em>kg</em>) by the <code>segments per trip</code> and the number of <code>trips</code> to give <em>kg</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_per_segment</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">].</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:trips</span><span class="o">].</span><span class="n">to_f</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_per_segment_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_per_segment_calculation">&#182;</a>
+        </div>
+        <h2>Fuel per segment calculation</h2>
+
+<p>Returns the <code>fuel per segment</code> in <em>kg</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_per_segment</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_per_segment_from_adjusted_distance_per_segment_and_fuel_use_coefficients'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_per_segment_from_adjusted_distance_per_segment_and_fuel_use_coefficients">&#182;</a>
+        </div>
+        <h3>Fuel per segment from adjusted distance per segment and fuel use coefficients</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance per segment and fuel use coefficients&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="p">,</span> <span class="ss">:fuel_use_coefficients</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-29'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-29">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-30'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-30">&#182;</a>
+        </div>
+        <p>Uses a third-order polynomial equation to calculate the fuel used per segment:</p>
+
+<p>(m<sub>3</sub> * d<sup>3</sup> ) + (m<sub>2</sub> * d<sup>2</sup> ) + (m<sub>1</sub> * d) + endpoint fuel</p>
+
+<p>Where d is the <code>adjusted distance per segment</code> and m<sub>3</sub>, m<sub>2</sub>, m<sub>2</sub>, and endpoint fuel are the <code>fuel use coefficients</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m3</span><span class="o">.</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">to_f</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">+</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m2</span><span class="o">.</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">to_f</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m1</span><span class="o">.</span><span class="n">to_f</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">to_f</span> <span class="o">+</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">b</span><span class="o">.</span><span class="n">to_f</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seat_class_multiplier_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seat_class_multiplier_calculation">&#182;</a>
+        </div>
+        <h2>Seat class multiplier calculation</h2>
+
+<p>Returns the <code>seat class multiplier</code>. This reflects the amount of cabin space occupied by the passenger&rsquo;s seat.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:seat_class_multiplier</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seat_class_multiplier_from_distance_class_seat_class'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seat_class_multiplier_from_distance_class_seat_class">&#182;</a>
+        </div>
+        <h3>Seat class multiplier from distance class seat class</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class seat class&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_class_seat_class</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-33'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-33">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-34'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-34">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class seat class</a> multiplier.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class_seat_class</span><span class="o">].</span><span class="n">multiplier</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seat_class_multiplier_from_seat_class'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seat_class_multiplier_from_seat_class">&#182;</a>
+        </div>
+        <h3>Seat class multiplier from seat class</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seat class&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:seat_class</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-36'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-36">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-37'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-37">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/flight_seat_classes">seat class</a> multiplier.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class</span><span class="o">].</span><span class="n">multiplier</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_seat_class_multiplier'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_seat_class_multiplier">&#182;</a>
+        </div>
+        <h3>Default seat class multiplier</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-39'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-39">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-40'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-40">&#182;</a>
+        </div>
+        <p>Looks up the default <a href="http://data.brighterplanet.com/flight_seat_classes">seat class</a> multiplier.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="no">FlightSeatClass</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">multiplier</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_class_seat_class_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_class_seat_class_calculation">&#182;</a>
+        </div>
+        <h2>Distance class seat class calculation</h2>
+
+<p>Calculates the <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class seat class</a>. This is the distance class-specific seat class.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance_class_seat_class</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_class_seat_class_from_distance_class_and_seat_class'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_class_seat_class_from_distance_class_and_seat_class">&#182;</a>
+        </div>
+        <h3>Distance class seat class from distance class and seat class</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class and seat class&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:distance_class</span><span class="p">,</span> <span class="ss">:seat_class</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-43'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-43">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-44'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-44">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class seat class</a> corresponding to the <code>distance class</code> and <code>seat class</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">FlightDistanceClassSeatClass</span><span class="o">.</span><span class="n">find_by_distance_class_name_and_seat_class_name</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class</span><span class="o">].</span><span class="n">name</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class</span><span class="o">].</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_class_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_class_calculation">&#182;</a>
+        </div>
+        <h2>Distance class calculation</h2>
+
+<p>Calculates the <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a> if it hasn&rsquo;t been provided by the client.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance_class</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_class_from_adjusted_distance_per_segment'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_class_from_adjusted_distance_per_segment">&#182;</a>
+        </div>
+        <h3>Distance class from adjusted distance per segment</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance per segment&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:adjusted_distance_per_segment</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-47'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-47">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-48'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-48">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a> corresponding to the <code>adjusted distance per segment</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">FlightDistanceClass</span><span class="o">.</span><span class="n">find_by_distance</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">]</span><span class="p">)</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seat_class_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seat_class_calculation">&#182;</a>
+        </div>
+        <h2>Seat class calculation</h2>
+
+<p>Returns the client-input <a href="http://data.brighterplanet.com/flight_seat_classes">seat class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Adjusted_distance_per_segment_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Adjusted_distance_per_segment_calculation">&#182;</a>
+        </div>
+        <h2>Adjusted distance per segment calculation</h2>
+
+<p>Returns the <code>adjusted distance per segment</code> in <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:adjusted_distance_per_segment</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Adjusted_distance_per_segment_from_adjusted_distance_and_segments_per_trip'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Adjusted_distance_per_segment_from_adjusted_distance_and_segments_per_trip">&#182;</a>
+        </div>
+        <h3>Adjusted distance per segment from adjusted distance and segments per trip</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance and segments per trip&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:adjusted_distance</span><span class="p">,</span> <span class="ss">:segments_per_trip</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-52'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-52">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-53'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-53">&#182;</a>
+        </div>
+        <p>Divides the <code>adjusted distance</code> (<em>nautical miles</em>) by <code>segments per trip</code> to give <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance</span><span class="o">]</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Adjusted_distance_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Adjusted_distance_calculation">&#182;</a>
+        </div>
+        <h2>Adjusted distance calculation</h2>
+
+<p>Returns the <code>adjusted distance</code> in <em>nautical miles</em>. The <code>adjusted distance</code> accounts for factors that increase the actual distance traveled by real world flights.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:adjusted_distance</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Adjusted_distance_from_distance,_route_inefficiency_factor,_and_dogleg_factor'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Adjusted_distance_from_distance,_route_inefficiency_factor,_and_dogleg_factor">&#182;</a>
+        </div>
+        <h3>Adjusted distance from distance, route inefficiency factor, and dogleg factor</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance, route inefficiency factor, and dogleg factor&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:distance</span><span class="p">,</span> <span class="ss">:route_inefficiency_factor</span><span class="p">,</span> <span class="ss">:dogleg_factor</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-56'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-56">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-57'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-57">&#182;</a>
+        </div>
+        <p>Multiplies <code>distance</code> (<em>nautical miles</em>) by a <code>route inefficiency factor</code> and a <code>dogleg factor</code> to give <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:route_inefficiency_factor</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:dogleg_factor</span><span class="o">]</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_calculation">&#182;</a>
+        </div>
+        <h2>Distance calculation</h2>
+
+<p>Returns the flight&rsquo;s base <code>distance</code> in <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_from_airports'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_from_airports">&#182;</a>
+        </div>
+        <h3>Distance from airports</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from airports&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-60'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-60">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-61'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-61">&#182;</a>
+        </div>
+        <p>Calculates the great circle distance between the <code>origin airport</code> and <code>destination airport</code> and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">latitude</span> <span class="ow">and</span>
+                    <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">longitude</span> <span class="ow">and</span>
+                    <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">latitude</span> <span class="ow">and</span>
+                    <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">longitude</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">distance_to</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span> <span class="ss">:units</span> <span class="o">=&gt;</span> <span class="ss">:kms</span><span class="p">)</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_from_distance_estimate'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_from_distance_estimate">&#182;</a>
+        </div>
+        <h3>Distance from distance estimate</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance estimate&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_estimate</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-63'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-63">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-64'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-64">&#182;</a>
+        </div>
+        <p>Converts the <code>distance_estimate</code> in <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_estimate</span><span class="o">].</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_from_distance_class'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_from_distance_class">&#182;</a>
+        </div>
+        <h3>Distance from distance class</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_class</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-66'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-66">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-67'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-67">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a>&lsquo; <code>distance</code> and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class</span><span class="o">].</span><span class="n">distance</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_from_cohort'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_from_cohort">&#182;</a>
+        </div>
+        <h3>Distance from cohort</h3>
+
+<p>This should NOT be prioritized over distance estimate or distance class because cohort here never has both airports</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-69'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-69">&#182;</a>
+        </div>
+        <p>Calculates the average <code>distance</code> of the <code>cohort</code> segments, weighted by their passengers, and converts from <em>km</em> to <em>nautical miles</em>.
+Ensure that <code>distance</code> > 0</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="n">distance</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:distance</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="ss">:nautical_miles</span><span class="p">)</span>
+              <span class="n">distance</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">distance</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_distance'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_distance">&#182;</a>
+        </div>
+        <h3>Default distance</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-71'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-71">&#182;</a>
+        </div>
+        <p>Calculates the average <code>distance</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers, and converts from <em>km</em> to <em>nautical miles</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Route_inefficiency_factor_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Route_inefficiency_factor_calculation">&#182;</a>
+        </div>
+        <h2>Route inefficiency factor calculation</h2>
+
+<p>Returns the <code>route inefficiency factor</code>. This is a measure of how much farther real world flights travel than the great circle distance between their origin and destination. It accounts for factors like flight path routing around controlled airspace and circling while waiting for clearance to land.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:route_inefficiency_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Route_inefficiency_factor_from_country'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Route_inefficiency_factor_from_country">&#182;</a>
+        </div>
+        <h3>Route inefficiency factor from country</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from country&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:country</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-74'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-74">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-75'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-75">&#182;</a>
+        </div>
+        <p>Looks up the <code>route inefficiency factor</code> for the <a href="http://data.brighterplanet.com/countries">country</a> in which the flight occurs.
+FIXME: why do we always end up in this quorum even when country is nil?</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:country</span><span class="o">].</span><span class="n">present?</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:country</span><span class="o">].</span><span class="n">flight_route_inefficiency_factor</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_route_inefficiency_factor'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_route_inefficiency_factor">&#182;</a>
+        </div>
+        <h3>Default route inefficiency factor</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-77'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-77">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-78'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-78">&#182;</a>
+        </div>
+        <p>Uses a <code>route inefficiency factor</code> of <strong>10%</strong> based on <a href="http://www.atmseminar.org/seminarContent/seminar6/papers/p_055_MPM.pdf">Kettunen et al. (2005)</a></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">Country</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">flight_route_inefficiency_factor</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Dogleg_factor_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Dogleg_factor_calculation">&#182;</a>
+        </div>
+        <h2>Dogleg factor calculation</h2>
+
+<p>Returns the <code>dogleg factor</code>. This is a measure of how far out of the way the average layover is compared to a direct flight.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:dogleg_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Dogleg_factor_from_segments_per_trip'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Dogleg_factor_from_segments_per_trip">&#182;</a>
+        </div>
+        <h3>Dogleg factor from segments per trip</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from segments per trip&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:segments_per_trip</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-81'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-81">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-82'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-82">&#182;</a>
+        </div>
+        <p>Assumes that each layover increases the total flight distance by <strong>25%</strong>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="mi">1</span><span class="o">.</span><span class="mi">25</span> <span class="o">**</span> <span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_estimate_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_estimate_calculation">&#182;</a>
+        </div>
+        <h2>Distance estimate calculation</h2>
+
+<p>Returns the client-input <code>distance estimate</code> in <em>km</em>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Distance_class_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Distance_class_calculation">&#182;</a>
+        </div>
+        <h2>Distance class calculation</h2>
+
+<p>Returns the client-input <a href="http://data.brighterplanet.com/distance_classes">distance class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_use_coefficients_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_use_coefficients_calculation">&#182;</a>
+        </div>
+        <h2>Fuel use coefficients calculation</h2>
+
+<p>Returns the <code>fuel use coefficients</code>. These are the coefficients of the third-order polynomial equation that describes aircraft fuel use.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_use_coefficients</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_use_coefficients_from_cohort'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_use_coefficients_from_cohort">&#182;</a>
+        </div>
+        <h3>Fuel use coefficients from cohort</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-87'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-87">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-88'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-88">&#182;</a>
+        </div>
+        <p>Calculates the passenger-weighted average fuel use equation for all the flight segments in the cohort</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">flight_segments</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">]</span>
+                </pre></div>
+      </td>
+    </tr>
+    <tr id='section-89'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-89">&#182;</a>
+        </div>
+        <p>Initialize a blank fuel use equation for this flight and set a passengers counter to zero</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">fue</span> <span class="o">=</span> <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">cumulative_passengers</span> <span class="o">=</span> <span class="mi">0</span>
+                
+                <span class="n">fs_aircraft_cache</span> <span class="o">=</span> <span class="p">{}</span>
+                </pre></div>
+      </td>
+    </tr>
+    <tr id='section-90'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-90">&#182;</a>
+        </div>
+        <p>For each flight segment in the cohort&hellip;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">flight_segments</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">fs</span><span class="o">|</span>
+                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-91'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-91">&#182;</a>
+        </div>
+        <p>Since we&rsquo;re pulling each member of a cohort in Ruby, rather than just running statistics on the database server level, we&rsquo;re going to cheat a little more</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">fs_aircraft</span> <span class="o">=</span> <span class="p">(</span><span class="n">fs_aircraft_cache</span><span class="o">[</span><span class="n">fs</span><span class="o">.</span><span class="n">aircraft_description</span><span class="o">]</span> <span class="o">||=</span> <span class="n">fs</span><span class="o">.</span><span class="n">aircraft</span><span class="o">.</span><span class="n">to_a</span><span class="p">)</span>
+                  
+                  <span class="n">fuel_use_equations</span> <span class="o">=</span> <span class="o">[]</span>
+                  <span class="n">aircraft_classes</span> <span class="o">=</span> <span class="o">[]</span>
+                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-92'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-92">&#182;</a>
+        </div>
+        <p>For each aircraft the flight segment refers to&hellip;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">fs_aircraft</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">a</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-93'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-93">&#182;</a>
+        </div>
+        <p>If the aircraft is associated with a valid fuel use equation, add that fuel use equation to an array</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">fuel_use_equation</span> <span class="o">&amp;&amp;</span> <span class="n">a</span><span class="o">.</span><span class="n">fuel_use_equation</span><span class="o">.</span><span class="n">valid_fuel_use_equation?</span>
+                      <span class="n">fuel_use_equations</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">fuel_use_equation</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-94'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-94">&#182;</a>
+        </div>
+        <p>Otherwise, if the aircraft&rsquo;s class contains a valid fuel use equation, add the aircraft class to an array</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">elsif</span> <span class="n">a</span><span class="o">.</span><span class="n">aircraft_class</span> <span class="o">&amp;&amp;</span> <span class="n">a</span><span class="o">.</span><span class="n">aircraft_class</span><span class="o">.</span><span class="n">valid_fuel_use_equation?</span>
+                      <span class="n">aircraft_classes</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">aircraft_class</span><span class="p">)</span>
+                    <span class="k">end</span>
+                  <span class="k">end</span>
+                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-95'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-95">&#182;</a>
+        </div>
+        <p>Combine the valid fuel use equations and aircraft classes to get an array of equation objects</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">equation_objects</span> <span class="o">=</span> <span class="n">fuel_use_equations</span> <span class="o">+</span> <span class="n">aircraft_classes</span>
+                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-96'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-96">&#182;</a>
+        </div>
+        <p>If we found at least one valid fuel use equation&hellip;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="k">unless</span> <span class="n">equation_objects</span><span class="o">.</span><span class="n">empty?</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-97'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-97">&#182;</a>
+        </div>
+        <p>Average each coefficient across all the valid fuel use equations, multiply that average by the
+flight segment&rsquo;s passengers, and add the resulting value to the overall flight fuel use equation</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">fue</span><span class="o">.</span><span class="n">m3</span> <span class="o">+=</span> <span class="p">(</span><span class="n">equation_objects</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:m3</span><span class="p">)</span> <span class="o">/</span> <span class="n">equation_objects</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="o">.</span><span class="n">passengers</span>
+                    <span class="n">fue</span><span class="o">.</span><span class="n">m2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">equation_objects</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:m2</span><span class="p">)</span> <span class="o">/</span> <span class="n">equation_objects</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="o">.</span><span class="n">passengers</span>
+                    <span class="n">fue</span><span class="o">.</span><span class="n">m1</span> <span class="o">+=</span> <span class="p">(</span><span class="n">equation_objects</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:m1</span><span class="p">)</span> <span class="o">/</span> <span class="n">equation_objects</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="o">.</span><span class="n">passengers</span>
+                    <span class="n">fue</span><span class="o">.</span><span class="n">b</span>  <span class="o">+=</span> <span class="p">(</span><span class="n">equation_objects</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:b</span><span class="p">)</span> <span class="o">/</span> <span class="n">equation_objects</span><span class="o">.</span><span class="n">length</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="o">.</span><span class="n">passengers</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-98'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-98">&#182;</a>
+        </div>
+        <p>Add the flight segment&rsquo;s passengers to our passengers counter</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">cumulative_passengers</span> <span class="o">+=</span> <span class="n">fs</span><span class="o">.</span><span class="n">passengers</span>
+                  <span class="k">end</span>
+                <span class="k">end</span>
+                </pre></div>
+      </td>
+    </tr>
+    <tr id='section-99'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-99">&#182;</a>
+        </div>
+        <p>We don&rsquo;t need this cache any more, so we&rsquo;ll help the GC by clearing it</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">fs_aircraft_cache</span><span class="o">.</span><span class="n">clear</span>
+                </pre></div>
+      </td>
+    </tr>
+    <tr id='section-100'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-100">&#182;</a>
+        </div>
+        <p>Check to make sure at least one of the segments had passengers and a valid fuel use equation</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">cumulative_passengers</span> <span class="o">&gt;</span> <span class="mi">0</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-101'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-101">&#182;</a>
+        </div>
+        <p>Divide each coefficient in our overall fuel use equation by the passengers counter and return the result</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">fue</span><span class="o">.</span><span class="n">m3</span> <span class="o">/=</span> <span class="n">cumulative_passengers</span>
+                  <span class="n">fue</span><span class="o">.</span><span class="n">m2</span> <span class="o">/=</span> <span class="n">cumulative_passengers</span>
+                  <span class="n">fue</span><span class="o">.</span><span class="n">m1</span> <span class="o">/=</span> <span class="n">cumulative_passengers</span>
+                  <span class="n">fue</span><span class="o">.</span><span class="n">b</span> <span class="o">/=</span> <span class="n">cumulative_passengers</span>
+                  <span class="n">fue</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_use_coefficients_from_aircraft'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_use_coefficients_from_aircraft">&#182;</a>
+        </div>
+        <h3>Fuel use coefficients from aircraft</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-103'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-103">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-104'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-104">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft</a>&rsquo;s <code>fuel use coefficients</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">equation</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">fuel_use_equation</span>
+                  <span class="n">fuel_use</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">valid_fuel_use_equation?</span> <span class="p">?</span> <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">equation</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="n">equation</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="n">equation</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="n">equation</span><span class="o">.</span><span class="n">b</span><span class="p">)</span> <span class="p">:</span> <span class="kp">nil</span>
+                  <span class="n">fuel_use</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_use_coefficients_from_aircraft_class'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_use_coefficients_from_aircraft_class">&#182;</a>
+        </div>
+        <h3>Fuel use coefficients from aircraft class</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft class&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft_class</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-106'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-106">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-107'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-107">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft class</a>&rsquo;s <code>fuel use coefficients</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">ac</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft_class</span><span class="o">]</span>
+                <span class="n">fuel_use</span> <span class="o">=</span> <span class="n">ac</span><span class="o">.</span><span class="n">valid_fuel_use_equation?</span> <span class="p">?</span> <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">ac</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="n">ac</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="n">ac</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="n">ac</span><span class="o">.</span><span class="n">b</span><span class="p">)</span> <span class="p">:</span> <span class="kp">nil</span>
+                <span class="n">fuel_use</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_fuel_use_coefficients'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_fuel_use_coefficients">&#182;</a>
+        </div>
+        <h3>Default fuel use coefficients</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-109'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-109">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-110'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-110">&#182;</a>
+        </div>
+        <p>Calculates the average <code>fuel use coefficients</code> of the aircraft used by <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by the segment passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">new</span> <span class="no">AircraftFuelUseEquation</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="no">AircraftFuelUseEquation</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="no">AircraftFuelUseEquation</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="no">AircraftFuelUseEquation</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">b</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_calculation">&#182;</a>
+        </div>
+        <h2>Fuel calculation</h2>
+
+<p>Returns the <code>fuel</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Fuel_from_client_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Fuel_from_client_input">&#182;</a>
+        </div>
+        <h3>Fuel from client input</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the client-input <a href="http://data.brighterplanet.com/fuels">fuel</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_fuel'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_fuel">&#182;</a>
+        </div>
+        <h3>Default fuel</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-114'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-114">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-115'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-115">&#182;</a>
+        </div>
+        <p>Assumes the flight uses <strong>Jet Fuel</strong>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">Fuel</span><span class="o">.</span><span class="n">find_by_name</span> <span class="s1">&#39;Jet Fuel&#39;</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Passengers_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Passengers_calculation">&#182;</a>
+        </div>
+        <h2>Passengers calculation</h2>
+
+<p>Returns the number of <code>passengers</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:passengers</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Passengers_from_seats_and_load_factor'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Passengers_from_seats_and_load_factor">&#182;</a>
+        </div>
+        <h3>Passengers from seats and load factor</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seats and load factor&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:seats</span><span class="p">,</span> <span class="ss">:load_factor</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-118'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-118">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-119'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-119">&#182;</a>
+        </div>
+        <p>Multiplies the number of <code>seats</code> by the <code>load factor</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:seats</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:load_factor</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">round</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seats_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seats_calculation">&#182;</a>
+        </div>
+        <h2>Seats calculation</h2>
+
+<p>Returns the number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:seats</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seats_from_seats_estimate'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seats_from_seats_estimate">&#182;</a>
+        </div>
+        <h3>Seats from seats estimate</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seats estimate&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:seats_estimate</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-122'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-122">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-123'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-123">&#182;</a>
+        </div>
+        <p>Uses the client-input estimate of the number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seats_estimate</span><span class="o">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seats_estimate</span><span class="o">]</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seats_from_cohort'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seats_from_cohort">&#182;</a>
+        </div>
+        <h3>Seats from cohort</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-125'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-125">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-126'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-126">&#182;</a>
+        </div>
+        <p>Calculates the average number of <code>seats</code> of the <code>cohort</code> segments, weighted by their passengers.
+Ensure that <code>seats</code> > 0</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">seats</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:seats_per_flight</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
+                <span class="n">seats</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">seats</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seats_from_aircraft'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seats_from_aircraft">&#182;</a>
+        </div>
+        <h3>Seats from aircraft</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-128'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-128">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-129'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-129">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft</a>&rsquo;s average number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">seats</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">seats</span>
+                <span class="n">seats</span><span class="o">.</span><span class="n">present?</span> <span class="o">&amp;&amp;</span> <span class="n">seats</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">seats</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seats_from_aircraft_class'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seats_from_aircraft_class">&#182;</a>
+        </div>
+        <h3>Seats from aircraft class</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft class&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft_class</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-131'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-131">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-132'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-132">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft class</a>&rsquo;s average number of <code>seats</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">seats</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft_class</span><span class="o">].</span><span class="n">seats</span>
+                <span class="n">seats</span><span class="o">.</span><span class="n">present?</span> <span class="o">&amp;&amp;</span> <span class="n">seats</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">seats</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_seats'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_seats">&#182;</a>
+        </div>
+        <h3>Default seats</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-134'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-134">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-135'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-135">&#182;</a>
+        </div>
+        <p>Calculates the average number of <code>seats</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">seats_per_flight</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Aircraft_Class_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Aircraft_Class_calculation">&#182;</a>
+        </div>
+        <h2>Aircraft Class calculation</h2>
+
+<p>Returns the <a href="http://data.brighterplanet.com/aircraft_classes">aircraft class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:aircraft_class</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Aircraft_class_from_aircraft'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Aircraft_class_from_aircraft">&#182;</a>
+        </div>
+        <h3>Aircraft class from aircraft</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-138'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-138">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-139'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-139">&#182;</a>
+        </div>
+        <p>Looks up the <a href="http://data.brighterplanet.com/aircraft">aircraft</a>&rsquo;s <a href="http://data.brighterplanet.com/aircraft_classes">aircraft_class</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">aircraft_class</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Seats_estimate_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Seats_estimate_calculation">&#182;</a>
+        </div>
+        <h2>Seats estimate calculation</h2>
+
+<p>Returns the client-input <code>seats estimate</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Load_factor_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Load_factor_calculation">&#182;</a>
+        </div>
+        <h2>Load factor calculation</h2>
+
+<p>Returns the <code>load factor</code>. This is the portion of available seats that are occupied.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:load_factor</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Load_factor_from_client_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Load_factor_from_client_input">&#182;</a>
+        </div>
+        <h3>Load factor from client input</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the client-input <code>load factor</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Load_factor_from_cohort'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Load_factor_from_cohort">&#182;</a>
+        </div>
+        <h3>Load factor from cohort</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-144'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-144">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-145'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-145">&#182;</a>
+        </div>
+        <p>Calculates the average <code>load factor</code> of the <code>cohort</code> segments, weighted by their passengers.
+Ensure that <code>load_factor</code> > 0</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">load_factor</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:load_factor</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
+                <span class="n">load_factor</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">load_factor</span> <span class="p">:</span> <span class="kp">nil</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_load_factor'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_load_factor">&#182;</a>
+        </div>
+        <h3>Default load factor</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-147'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-147">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-148'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-148">&#182;</a>
+        </div>
+        <p>Calculates the average <code>load factor</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">load_factor</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Freight_share_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Freight_share_calculation">&#182;</a>
+        </div>
+        <h2>Freight share calculation</h2>
+
+<p>Returns the <code>freight share</code>. This is the percent of the total aircraft weight that is freight cargo and mail (as opposed to passengers and their baggage).</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:freight_share</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Freight_share_from_cohort'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Freight_share_from_cohort">&#182;</a>
+        </div>
+        <h3>Freight share from cohort</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-151'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-151">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-152'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-152">&#182;</a>
+        </div>
+        <p>Calculates the average <code>freight share</code> of the <code>cohort</code> segments, weighted by their passengers.
+Don&rsquo;t need checks because zero is a valid <code>freight share</code></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:freight_share</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_freight_share'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_freight_share">&#182;</a>
+        </div>
+        <h3>Default freight share</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-154'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-154">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-155'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-155">&#182;</a>
+        </div>
+        <p>Calculates the average <code>freight share</code> of <a href="http://data.brighterplanet.com/flight_segments">all segments in the T-100 database</a>, weighted by their passengers.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">freight_share</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Trips_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Trips_calculation">&#182;</a>
+        </div>
+        <h2>Trips calculation</h2>
+
+<p>Returns the number of <code>trips</code>. A one-way flight has one trip; a round-trip flight has two trips.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:trips</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Trips_from_client_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Trips_from_client_input">&#182;</a>
+        </div>
+        <h3>Trips from client input</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the client-input number of <code>trips</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_trips'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_trips">&#182;</a>
+        </div>
+        <h3>Default trips</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-159'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-159">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-160'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-160">&#182;</a>
+        </div>
+        <p>Uses an average number of <code>trips</code> of <strong>1.7</strong> calculated from the <a href="https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&amp;hl=en&amp;output=html">BTS Origin and Destination Survey</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="mi">1</span><span class="o">.</span><span class="mi">7</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Country_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Country_calculation">&#182;</a>
+        </div>
+        <h2>Country calculation</h2>
+
+<p>Returns the <a href="http://data.brighterplanet.com/countries">country</a> in which a flight occurs.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:country</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Country_from_origin_airport_and_destination_airport'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Country_from_origin_airport_and_destination_airport">&#182;</a>
+        </div>
+        <h3>Country from origin airport and destination airport</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from origin airport and destination airport&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-163'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-163">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-164'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-164">&#182;</a>
+        </div>
+        <p>Checks whether the flight&rsquo;s <code>origin airport</code> and <code>destination airport</code> are within the same country. If so, that country is the <code>country</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country</span> <span class="o">==</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country</span>
+                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Cohort_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Cohort_calculation">&#182;</a>
+        </div>
+        <h2>Cohort calculation</h2>
+
+<p>Returns the <code>cohort</code>. This is a set of flight segment records in the <a href="http://data.brighterplanet.com/flight_segments">T-100 database</a> that match certain client-input values.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:cohort</span> <span class="k">do</span>
+            <span class="n">quorum</span> <span class="s1">&#39;from row_hash&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:flight_segment_row_hash</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
+              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:row_hash</span> <span class="o">=&gt;</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:flight_segment_row_hash</span><span class="o">].</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to_cohort</span>
+            <span class="k">end</span>
+            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Cohort_from_segments_per_trip_and_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Cohort_from_segments_per_trip_and_input">&#182;</a>
+        </div>
+        <h3>Cohort from segments per trip and input</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from segments per trip and input&#39;</span><span class="p">,</span>
+              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:appreciates</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="p">,</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:airline</span><span class="p">,</span> <span class="ss">:date</span><span class="o">]</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-167'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-167">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-168'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-168">&#182;</a>
+        </div>
+        <p>Only assemble a cohort if the flight is direct</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span> <span class="o">==</span> <span class="mi">1</span>
+                  <span class="n">cohort</span> <span class="o">=</span> <span class="p">{}</span>
+                  <span class="n">provided_characteristics</span> <span class="o">=</span> <span class="o">[]</span>
+                  <span class="n">date</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Date</span><span class="p">)</span> <span class="p">?</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">]</span> <span class="p">:</span> <span class="no">Date</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">to_s</span><span class="p">)</span>
+                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-169'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-169">&#182;</a>
+        </div>
+        <p>We&rsquo;ll want to restrict the cohort to flight segments that occurred the same year as the flight or the previous year.
+We need to include the previous year because our flight segment data lags by about 6 months.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="n">relevant_years</span> <span class="o">=</span> <span class="o">[</span><span class="n">date</span><span class="o">.</span><span class="n">year</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="o">]</span>
+                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-170'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-170">&#182;</a>
+        </div>
+        <p>FIXME TODO could probably refactor this&hellip;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  </pre></div>
+      </td>
+    </tr>
+    <tr id='section-171'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-171">&#182;</a>
+        </div>
+        <p>If we have both an origin and destination airport&hellip;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span> <span class="ow">and</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-172'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-172">&#182;</a>
+        </div>
+        <p>If either airport is in the US, use airport iata code to assemble a cohort of BTS flight segments</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span> <span class="o">==</span> <span class="s2">&quot;US&quot;</span> <span class="ow">or</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span> <span class="o">==</span> <span class="s2">&quot;US&quot;</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-173'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-173">&#182;</a>
+        </div>
+        <p>NOTE: It&rsquo;s possible that the origin/destination pair won&rsquo;t appear in our database and we&rsquo;ll end up using a
+cohort based just on origin. If that happens, even if the origin is not in the US we still don&rsquo;t want to use
+origin airport city, because we know the flight was going to the US and ICAO segments never touch the US.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-174'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-174">&#182;</a>
+        </div>
+        <p>If neither airport is in the US, use airport city to assemble a cohort of ICAO flight segments
+FIXME TODO: deal with cities in multiple countries that share a name
+Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+not include flights to Barcelona, Venezuela BUT it doesn&rsquo;t work if we&rsquo;re trying to go from Montreal
+end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts &ndash; all &lsquo;AND&rsquo;
+statements get changed to &lsquo;OR&rsquo; so you end up with all flights to that country
+e.g. WHERE origin_airport_iata_code = &lsquo;JFK&rsquo; OR origin_country_iso_3166_code = &lsquo;US&rsquo;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">else</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-175'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-175">&#182;</a>
+        </div>
+        <p>Also use aircraft description and airline name</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:aircraft_description</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">flight_segments_foreign_keys</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:airline</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:airline_name</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:airline</span><span class="o">].</span><span class="n">name</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-176'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-176">&#182;</a>
+        </div>
+        <p>To assemble a cohort, we start with all the flight segments that are the same year as the flight or the
+previous year. Then we find all the segments that match the input <code>origin_airport</code>, <code>destination_airport</code>,
+<code>aircraft</code>, and <code>airline</code>. If no segments match all the inputs, we drop the last input (initially <code>airline</code>)
+and try again. We continue until some segments match or no inputs remain.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">cohort</span> <span class="o">=</span> <span class="no">FlightSegment</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:year</span> <span class="o">=&gt;</span> <span class="n">relevant_years</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;passengers &gt; 0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strict_cohort</span><span class="p">(</span><span class="o">*</span><span class="n">provided_characteristics</span><span class="p">)</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-177'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-177">&#182;</a>
+        </div>
+        <p>Ignore the cohort if none of its flight segments have any passengers
+TODO: make &lsquo;passengers > 0&rsquo; a constraint once cohort_scope supports non-hash constraints</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">if</span> <span class="n">cohort</span><span class="o">.</span><span class="n">any?</span> <span class="o">&amp;&amp;</span> <span class="n">cohort</span><span class="o">.</span><span class="n">any?</span> <span class="p">{</span> <span class="o">|</span><span class="n">fs</span><span class="o">|</span> <span class="n">fs</span><span class="o">.</span><span class="n">passengers</span><span class="o">.</span><span class="n">nonzero?</span> <span class="p">}</span>
+                      <span class="n">cohort</span>
+                    <span class="k">else</span>
+                      <span class="kp">nil</span>
+                    <span class="k">end</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-178'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-178">&#182;</a>
+        </div>
+        <p>If we don&rsquo;t have both an origin and destination airport&hellip;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                  <span class="k">else</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-179'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-179">&#182;</a>
+        </div>
+        <p>First use airport iata code to assemble a cohort of BTS flight segments</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_iata_code</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">iata_code</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:aircraft_description</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">flight_segments_foreign_keys</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:airline</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:airline_name</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:airline</span><span class="o">].</span><span class="n">name</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-180'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-180">&#182;</a>
+        </div>
+        <p>Note: can&rsquo;t use where conditions here e.g. where(:year => relevant_years) because when we combine the cohorts
+all AND become OR so we get WHERE year IN (<em>relevant_years</em>) OR <em>other conditions</em> which returns every
+flight segment in the relevant_years</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">bts_cohort</span> <span class="o">=</span> <span class="no">FlightSegment</span><span class="o">.</span><span class="n">strict_cohort</span><span class="p">(</span><span class="o">*</span><span class="n">provided_characteristics</span><span class="p">)</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-181'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-181">&#182;</a>
+        </div>
+        <p>Then use airport city to assemble a cohort of ICAO flight segments
+FIXME TODO: deal with cities in multiple countries that share a name
+Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+not include flights to Barcelona, Venezuela BUT it doesn&rsquo;t work if we&rsquo;re trying to go from Montreal
+to London, Canada because there are no direct flights to London, Canada so country gets dropped and we
+end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts &ndash; all &lsquo;AND&rsquo;
+statements get changed to &lsquo;OR&rsquo; so you end up with all flights to that country
+e.g. WHERE origin_airport_iata_code = &lsquo;JFK&rsquo; OR origin_country_iso_3166_code = &lsquo;US&rsquo;</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">provided_characteristics</span> <span class="o">=</span> <span class="o">[]</span>
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:origin_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:destination_airport_city</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">city</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:aircraft_description</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">flight_segments_foreign_keys</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:airline</span><span class="o">].</span><span class="n">present?</span>
+                      <span class="n">provided_characteristics</span><span class="o">.</span><span class="n">push</span> <span class="o">[</span><span class="ss">:airline_name</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:airline</span><span class="o">].</span><span class="n">name</span><span class="o">]</span>
+                    <span class="k">end</span>
+                    
+                    <span class="n">icao_cohort</span> <span class="o">=</span> <span class="no">FlightSegment</span><span class="o">.</span><span class="n">strict_cohort</span><span class="p">(</span><span class="o">*</span><span class="n">provided_characteristics</span><span class="p">)</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-182'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-182">&#182;</a>
+        </div>
+        <p>Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
+Note: cohort_scope 0.2.1 provides cohort + cohort => cohort; cohort.where() => relation; relation.to_cohort => cohort</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">cohort</span> <span class="o">=</span> <span class="p">(</span><span class="n">bts_cohort</span> <span class="o">+</span> <span class="n">icao_cohort</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:year</span> <span class="o">=&gt;</span> <span class="n">relevant_years</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;passengers &gt; 0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_cohort</span>
+                    </pre></div>
+      </td>
+    </tr>
+    <tr id='section-183'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-183">&#182;</a>
+        </div>
+        <p>Ignore the resulting cohort if it&rsquo;s empty</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                    <span class="n">cohort</span><span class="o">.</span><span class="n">any?</span> <span class="p">?</span> <span class="n">cohort</span> <span class="p">:</span> <span class="kp">nil</span>
+                  <span class="k">end</span>
+                <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Origin_airport_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Origin_airport_calculation">&#182;</a>
+        </div>
+        <h2>Origin airport calculation</h2>
+
+<p>Returns the client-input <a href="http://data.brighterplanet.com/airports">origin airport</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Destination_airport_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Destination_airport_calculation">&#182;</a>
+        </div>
+        <h2>Destination airport calculation</h2>
+
+<p>Returns the client-input <a href="http://data.brighterplanet.com/airports">destination airport</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Aircraft_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Aircraft_calculation">&#182;</a>
+        </div>
+        <h2>Aircraft calculation</h2>
+
+<p>Returns the client-input of <a href="http://data.brighterplanet.com/aircraft">aircraft</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Airline_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Airline_calculation">&#182;</a>
+        </div>
+        <h2>Airline calculation</h2>
+
+<p>Returns the client-input <a href="http://data.brighterplanet.com/airlines">airline</a> operating the flight.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Segments_per_trip_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Segments_per_trip_calculation">&#182;</a>
+        </div>
+        <h2>Segments per trip calculation</h2>
+
+<p>Returns the <code>segments per trip</code>. Direct flights have a single segment per trip. Indirect flights with one or more layovers have two or more segments per trip.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:segments_per_trip</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Segments_per_trip_from_client_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Segments_per_trip_from_client_input">&#182;</a>
+        </div>
+        <h3>Segments per trip from client input</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the client-input <code>segments per trip</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_segments_per_trip'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_segments_per_trip">&#182;</a>
+        </div>
+        <h3>Default segments per trip</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-191'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-191">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-192'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-192">&#182;</a>
+        </div>
+        <p>Uses an average <code>segments per trip</code> of <strong>1.68</strong>, calculated from the <a href="https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&amp;hl=en&amp;output=html">BTS Origin and Destination Survey</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="mi">1</span><span class="o">.</span><span class="mi">68</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Date_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Date_calculation">&#182;</a>
+        </div>
+        <h2>Date calculation</h2>
+
+<p>Returns the <code>date</code> on which the flight occurred.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:date</span> <span class="k">do</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Date_from_client_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Date_from_client_input">&#182;</a>
+        </div>
+        <h3>Date from client input</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the client-input <code>date</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Date_from_timeframe'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Date_from_timeframe">&#182;</a>
+        </div>
+        <h3>Date from timeframe</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from timeframe&#39;</span><span class="p">,</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-196'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-196">&#182;</a>
+        </div>
+        <p><strong>Complies:</strong> GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-197'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-197">&#182;</a>
+        </div>
+        <p>Assumes the flight occurred on the first day of the <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>                <span class="n">timeframe</span><span class="o">.</span><span class="n">from</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+          </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Timeframe_calculation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Timeframe_calculation">&#182;</a>
+        </div>
+        <h2>Timeframe calculation</h2>
+
+<p>Returns the <code>timeframe</code>. This is the period during which to calculate impacts.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Timeframe_from_client_input'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Timeframe_from_client_input">&#182;</a>
+        </div>
+        <h3>Timeframe from client input</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the client-input <code>timeframe</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>            </pre></div>
+      </td>
+    </tr>
+    <tr id='section-Default_timeframe'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Default_timeframe">&#182;</a>
+        </div>
+        <h3>Default timeframe</h3>
+
+<p><strong>Complies:</strong> All</p>
+
+<p>Uses the current calendar year.</p>
+
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span></pre></div>
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
