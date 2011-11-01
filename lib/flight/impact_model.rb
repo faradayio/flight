@@ -320,6 +320,50 @@ module BrighterPlanet
               :needs => :cohort,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                aircraft_descriptions = FlightSegment.connection.select_values %{
+                  SELECT DISTINCT aircraft_description
+                  FROM flight_segments
+                  WHERE #{characteristics[:cohort].wheres.map(&:to_sql).join(' AND ')}
+                }
+                
+                c = ActiveRecord::Base.connection
+                
+                c.execute "DROP TABLE IF EXISTS tmp_foo"
+                
+                c.execute %{
+                  CREATE TEMPORARY TABLE tmp_foo (
+                    b VARCHAR(255), seats FLOAT, passengers INT
+                  )
+                }
+                
+                c.execute %{
+                  INSERT INTO tmp_foo (b, seats)
+                  SELECT b, AVG(aircraft.seats)
+                  FROM aircraft
+                    INNER JOIN `loose_tight_dictionary_cached_results`
+                    ON `loose_tight_dictionary_cached_results`.a = aircraft.description
+                  WHERE b IN ('#{aircraft_descriptions.join("', '")}')
+                  GROUP BY b
+                }
+                
+                c.execute %{ 
+                  UPDATE tmp_foo
+                  SET passengers = (
+                    SELECT sum(passengers)
+                    FROM flight_segments
+                    WHERE aircraft_description = b
+                  )
+                }
+                
+                value = c.select_value %{
+                  SELECT sum(seats * passengers)/sum(passengers) FROM tmp_foo AS weighted_seats
+                }
+                
+                a = 1 
+                debugger
+                a = 1
+                
+                
                 # Calculates the passenger-weighted average fuel use equation for all the flight segments in the cohort
                 flight_segments = characteristics[:cohort]
                 
