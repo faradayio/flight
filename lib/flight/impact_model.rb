@@ -384,21 +384,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
-                if equation = characteristics[:aircraft].fuel_use_equation
-                  fuel_use = equation.valid_fuel_use_equation? ? FuelUseEquation.new(equation.m3, equation.m2, equation.m1, equation.b) : nil
-                  fuel_use
-                end
-            end
-            
-            #### Fuel use coefficients from aircraft class
-            quorum 'from aircraft class',
-              :needs => :aircraft_class,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
-                ac = characteristics[:aircraft_class]
-                fuel_use = ac.valid_fuel_use_equation? ? FuelUseEquation.new(ac.m3, ac.m2, ac.m1, ac.b) : nil
-                fuel_use
+                characteristics[:aircraft].valid_fuel_use_equation? ? FuelUseEquation.new(characteristics[:aircraft].m3, characteristics[:aircraft].m2, characteristics[:aircraft].m1, characteristics[:aircraft].b) : nil
             end
             
             #### Default fuel use coefficients
@@ -406,7 +392,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by the segment passengers.
-                FuelUseEquation.new AircraftFuelUseEquation.fallback.m3, AircraftFuelUseEquation.fallback.m2, AircraftFuelUseEquation.fallback.m1, AircraftFuelUseEquation.fallback.b
+                FuelUseEquation.new Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.b
             end
           end
           
@@ -469,18 +455,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
-                seats = characteristics[:aircraft].seats
-                seats.present? && seats > 0 ? seats : nil
-            end
-            
-            #### Seats from aircraft class
-            quorum 'from aircraft class',
-              :needs => :aircraft_class,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [aircraft class](http://data.brighterplanet.com/aircraft)'s average number of `seats`.
-                seats = characteristics[:aircraft_class].seats
-                seats.present? && seats > 0 ? seats : nil
+                characteristics[:aircraft].seats
             end
             
             #### Default seats
@@ -489,19 +464,6 @@ module BrighterPlanet
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average number of `seats` of [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by their passengers.
                 FlightSegment.fallback.seats_per_flight
-            end
-          end
-          
-          ### Aircraft Class calculation
-          # Returns the [aircraft class](http://data.brighterplanet.com/aircraft_classes).
-          committee :aircraft_class do
-            #### Aircraft class from aircraft
-            quorum 'from aircraft',
-              :needs => :aircraft,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s [aircraft_class](http://data.brighterplanet.com/aircraft_classes).
-                characteristics[:aircraft].aircraft_class
             end
           end
           
