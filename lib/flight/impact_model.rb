@@ -179,6 +179,8 @@ module BrighterPlanet
           ### Distance class calculation
           # Calculates the [distance class](http://data.brighterplanet.com/flight_distance_classes) if it hasn't been provided by the client.
           committee :distance_class do
+            #### From client input
+            
             #### Distance class from adjusted distance per segment
             quorum 'from adjusted distance per segment',
               :needs => :adjusted_distance_per_segment,
@@ -435,7 +437,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Uses the client-input estimate of the number of `seats`.
-                characteristics[:seats_estimate] > 0 ? characteristics[:seats_estimate] : nil
+                characteristics[:seats_estimate]
             end
             
             #### Seats from cohort
@@ -445,8 +447,7 @@ module BrighterPlanet
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Calculates the average number of `seats` of the `cohort` segments, weighted by their passengers.
                 # Ensure that `seats` > 0
-                seats = characteristics[:cohort].weighted_average(:seats_per_flight, :weighted_by => :passengers)
-                seats > 0 ? seats : nil
+                characteristics[:cohort].weighted_average(:seats_per_flight, :weighted_by => :passengers)
             end
             
             #### Seats from aircraft
