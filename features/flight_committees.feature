@@ -19,7 +19,7 @@ Feature: Flight Committee Calculations
     Given a characteristic "date" of "2009-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "JFK"
-    And a characteristic "destination_airport.iata_code" of "LHF"
+    And a characteristic "destination_airport.iata_code" of "LHR"
     When the "cohort" committee reports
     Then the conclusion of the committee should have a record with "count" equal to "1"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
@@ -32,6 +32,7 @@ Feature: Flight Committee Calculations
     And a characteristic "aircraft.description" of "<aircraft>"
     And a characteristic "airline.name" of "<airline>"
     When the "cohort" committee reports
+    Then the committee should have used quorum "from segments per trip and input"
     Then the conclusion of the committee should have a record with "count" equal to "<records>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
@@ -51,14 +52,6 @@ Feature: Flight Committee Calculations
       | JFK    | ATL  |                | Delta     | 2       | origin/destination + airline but destination not in flight segments |
       | JFK    | FRA  |                |           | 2       | origin + dest no match; origin or dest in US, origin has BTS segments only |
       | FRA    | FRA  |                |           | 1       | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
-
-  Scenario: Cohort committee from origin and date
-    Given a characteristic "date" of "2011-05-01"
-    And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "JFK"
-    When the "cohort" committee reports
-    Then the conclusion of the committee should have a record with "count" equal to "2"
-    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Cohort committe from various unusable characteristics
     Given a characteristic "date" of "2011-05-01"
@@ -128,7 +121,7 @@ Feature: Flight Committee Calculations
       |        | FRA  |                |           | 0.05          | dest with just ICAO segments |
       |        | LHR  |                |           | 0.03957       | dest with BTS and ICAO segments |
       |        |      | boeing 737-400 |           | 0.045         | aircraft with simple description |
-      |        |      | boeing 737-200 |           | 0.03500       | aircraft with simple and complex descriptions |
+      |        |      | boeing 737-200 |           | 0.035         | aircraft with simple and complex descriptions |
       |        |      |                | Lufthansa | 0.05          | airline |
       | JFK    | LHR  |                |           | 0.03286       | origin US destination foreign (BTS) |
       | LHR    | JFK  |                |           | 0.04          | origin foreign destination US (BTS) |
@@ -228,13 +221,13 @@ Feature: Flight Committee Calculations
       | boeing 737-200 | 250.0     |
       | boeing 737-300 | 276.47059 |
       | boeing 737-400 | 250.0     |
+      | boeing 737-500 | 249.48805 |
 
   Scenario: Seats committee from aircraft missing seats
-    Given a characteristic "aircraft.description" of "boeing 737-500"
-    When the "aircraft_class" committee reports
-    And the "seats" committee reports
-    Then the committee should have used quorum "from aircraft class"
-    And the conclusion of the committee should be "249.48805"
+    Given a characteristic "aircraft.description" of "airbus a320"
+    When the "seats" committee reports
+    Then the committee should have used quorum "default"
+    And the conclusion of the committee should be "257.47508"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Seats committee from default
@@ -305,15 +298,16 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "b" equal to "<b>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | aircraft       | m3  | m2  | m1  | b   |
-      | boeing 737-100 | 0.0 | 0.0 | 1.0 | 0.0 |
-      | boeing 737-400 | 0.0 | 0.0 | 2.0 | 0.0 |
+      | aircraft       | m3  | m2  | m1      | b   |
+      | boeing 737-100 | 0.0 | 0.0 | 1.0     | 0.0 |
+      | boeing 737-300 | 0.0 | 0.0 | 1.69231 | 0.0 |
+      | boeing 737-400 | 0.0 | 0.0 | 2.0     | 0.0 |
+      | boeing 737-500 | 0.0 | 0.0 | 2.0     | 0.0 |
 
   Scenario Outline: Fuel use coefficients committee from aircraft missing fuel use coefficients
     Given a characteristic "aircraft.description" of "<aircraft>"
-    When the "aircraft_class" committee reports
-    And the "fuel_use_coefficients" committee reports
-    Then the committee should have used quorum "from aircraft class"
+    When the "fuel_use_coefficients" committee reports
+    Then the committee should have used quorum "default"
     And the conclusion of the committee should have a record with "m3" equal to "0.0"
     And the conclusion of the committee should have a record with "m2" equal to "0.0"
     And the conclusion of the committee should have a record with "m1" equal to "1.69231"
@@ -321,7 +315,8 @@ Feature: Flight Committee Calculations
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | aircraft       |
-      | boeing 737-300 |
+      | boeing 737-200 |
+      | airbus a320    |
 
   Scenario: Fuel use coefficients committee from default
     When the "fuel_use_coefficients" committee reports

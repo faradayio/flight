@@ -1,6 +1,6 @@
 origin_airport_iata_code,origin_airport_city,origin_country_iso_3166_code,destination_airport_iata_code,destination_airport_city,destination_country_iso_3166_code,airline_name,aircraft_description,passengers,seats_per_flight,load_factor,freight_share,distance,year
 JFK,,US,LHR,,GB,Delta,boeing 737-100/200/300,200,250,0.8,0.02,1852,2011
-JFK,,US,LHR,,GB,Delta,boeing 737-400,360,100,0.9,0.04,1852,2011
+JFK,,US,LHR,,GB,British Airways,boeing 737-400,360,100,0.9,0.04,1852,2011
 LHR,,GB,JFK,,US,Delta,boeing 737-300,225,300,0.75,0.04,1852,2011
 ,London,GB,,Frankfurt,DE,Lufthansa,boeing 737-100/200,120,150,0.8,0.05,185.2,2011
 ,Frankfurt,DE,,London,GB,Lufthansa,boeing 737-400,360,400,0.9,0.05,185.2,2011
