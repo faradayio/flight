@@ -320,107 +320,62 @@ module BrighterPlanet
               :needs => :cohort,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                where_values = characteristics[:cohort].where_values.map { |x| x.is_a?(String) ? x : x.to_sql }
+                
                 aircraft_descriptions = FlightSegment.connection.select_values %{
                   SELECT DISTINCT aircraft_description
                   FROM flight_segments
-                  WHERE #{characteristics[:cohort].wheres.map(&:to_sql).join(' AND ')}
+                  WHERE #{where_values.join(' AND ')}
                 }
                 
+                # Create a temporary table to hold the values we need to calculate the weighted average fuel use coefficients
                 c = ActiveRecord::Base.connection
-                
                 c.execute "DROP TABLE IF EXISTS tmp_foo"
-                
                 c.execute %{
                   CREATE TEMPORARY TABLE tmp_foo (
-                    b VARCHAR(255), seats FLOAT, passengers INT
+                    description VARCHAR(255), m3 FLOAT, m2 FLOAT, m1 FLOAT, b FLOAT, passengers INT
                   )
                 }
                 
+                # For each unique aircraft_description:
+                # - look up all the aircraft it refers to
+                # - take the simple average of those aircraft's fuel use coefficients
+                # - store the resulting values in the temporary table along with the unique aircraft_description
+                # NOTE: this requires that missing data in aircraft be "NULL" rather than 0
                 c.execute %{
-                  INSERT INTO tmp_foo (b, seats)
-                  SELECT b, AVG(aircraft.seats)
-                  FROM aircraft
-                    INNER JOIN `loose_tight_dictionary_cached_results`
-                    ON `loose_tight_dictionary_cached_results`.a = aircraft.description
-                  WHERE b IN ('#{aircraft_descriptions.join("', '")}')
-                  GROUP BY b
+                  INSERT INTO tmp_foo (description, m3, m2, m1, b)
+                  SELECT t1.b, AVG(aircraft.m3), AVG(aircraft.m2), AVG(aircraft.m1), AVG(aircraft.b)
+                  FROM loose_tight_dictionary_cached_results AS t1
+                    INNER JOIN aircraft
+                    ON t1.a = aircraft.description
+                  WHERE t1.b IN ('#{aircraft_descriptions.join("', '")}')
+                  GROUP BY t1.b
                 }
                 
-                c.execute %{ 
+                # For each unique aircraft_description:
+                # - look up all the flight segments in the cohort that match that aircraft_description
+                # - sum passengers across those flight segments
+                # - store the resulting value in the temporary table
+                c.execute %{
                   UPDATE tmp_foo
                   SET passengers = (
                     SELECT sum(passengers)
                     FROM flight_segments
-                    WHERE aircraft_description = b
+                    WHERE #{where_values.join(' AND ')}
+                    AND flight_segments.aircraft_description = tmp_foo.description
                   )
                 }
                 
-                value = c.select_value %{
-                  SELECT sum(seats * passengers)/sum(passengers) FROM tmp_foo AS weighted_seats
-                }
+                # Take the weighted average of the coefficients in the temporary table
+                # Effectively what this does is average the fuel use coefficients of all the different aircraft models
+                # used by the cohort, weighted by the number of passengers carried on each aircraft model
+                m3 = c.select_value "SELECT sum(m3 * passengers)/sum(passengers) FROM tmp_foo"
+                m2 = c.select_value "SELECT sum(m2 * passengers)/sum(passengers) FROM tmp_foo"
+                m1 = c.select_value "SELECT sum(m1 * passengers)/sum(passengers) FROM tmp_foo"
+                b  = c.select_value "SELECT sum(b  * passengers)/sum(passengers) FROM tmp_foo"
                 
-                a = 1 
-                debugger
-                a = 1
-                
-                
-                # Calculates the passenger-weighted average fuel use equation for all the flight segments in the cohort
-                flight_segments = characteristics[:cohort]
-                
-                # Initialize a blank fuel use equation for this flight and set a passengers counter to zero
-                fue = FuelUseEquation.new(0, 0, 0, 0)
-                cumulative_passengers = 0
-                
-                fs_aircraft_cache = {}
-                
-                # For each flight segment in the cohort...
-                flight_segments.each do |fs|
-                  
-                  # Since we're pulling each member of a cohort in Ruby, rather than just running statistics on the database server level, we're going to cheat a little more
-                  fs_aircraft = (fs_aircraft_cache[fs.aircraft_description] ||= fs.aircraft.to_a)
-                  
-                  fuel_use_equations = []
-                  aircraft_classes = []
-                  
-                  # For each aircraft the flight segment refers to...
-                  fs_aircraft.each do |a|
-                    # If the aircraft is associated with a valid fuel use equation, add that fuel use equation to an array
-                    if a.fuel_use_equation && a.fuel_use_equation.valid_fuel_use_equation?
-                      fuel_use_equations.push(a.fuel_use_equation)
-                    # Otherwise, if the aircraft's class contains a valid fuel use equation, add the aircraft class to an array
-                    elsif a.aircraft_class && a.aircraft_class.valid_fuel_use_equation?
-                      aircraft_classes.push(a.aircraft_class)
-                    end
-                  end
-                  
-                  # Combine the valid fuel use equations and aircraft classes to get an array of equation objects
-                  equation_objects = fuel_use_equations + aircraft_classes
-                  
-                  # If we found at least one valid fuel use equation...
-                  unless equation_objects.empty?
-                    # Average each coefficient across all the valid fuel use equations, multiply that average by the 
-                    # flight segment's passengers, and add the resulting value to the overall flight fuel use equation
-                    fue.m3 += (equation_objects.sum(&:m3) / equation_objects.length) * fs.passengers
-                    fue.m2 += (equation_objects.sum(&:m2) / equation_objects.length) * fs.passengers
-                    fue.m1 += (equation_objects.sum(&:m1) / equation_objects.length) * fs.passengers
-                    fue.b  += (equation_objects.sum(&:b) / equation_objects.length) * fs.passengers
-                    # Add the flight segment's passengers to our passengers counter
-                    cumulative_passengers += fs.passengers
-                  end
-                end
-                
-                # We don't need this cache any more, so we'll help the GC by clearing it
-                fs_aircraft_cache.clear
-                
-                # Check to make sure at least one of the segments had passengers and a valid fuel use equation
-                if cumulative_passengers > 0
-                  # Divide each coefficient in our overall fuel use equation by the passengers counter and return the result
-                  fue.m3 /= cumulative_passengers
-                  fue.m2 /= cumulative_passengers
-                  fue.m1 /= cumulative_passengers
-                  fue.b /= cumulative_passengers
-                  fue
-                end
+                fue = FuelUseEquation.new(m3, m2, m1, b)
+                fue.valid? ? fue : nil
             end
             
             #### Fuel use coefficients from aircraft
