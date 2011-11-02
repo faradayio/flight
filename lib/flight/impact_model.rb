@@ -322,21 +322,22 @@ module BrighterPlanet
               :needs => :cohort,
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                where_values = characteristics[:cohort].where_values.map { |x| x.is_a?(String) ? x : x.to_sql }
+                cohort_conditions = characteristics[:cohort].where_values.map { |x| x.respond_to?(:to_sql) ? x.to_sql : x }.join(' AND ')
                 
-                aircraft_descriptions = FlightSegment.connection.select_values %{
+                c = ActiveRecord::Base.connection
+                
+                aircraft_descriptions = c.select_values %{
                   SELECT DISTINCT aircraft_description
                   FROM flight_segments
-                  WHERE #{where_values.join(' AND ')}
+                  WHERE (#{cohort_conditions})
                 }
                 
                 # Create a temporary table to hold the values we need to calculate the weighted average fuel use coefficients
-                c = ActiveRecord::Base.connection
-                c.execute "DROP TABLE IF EXISTS tmp_foo"
                 c.execute %{
-                  CREATE TEMPORARY TABLE tmp_foo (
-                    description VARCHAR(255), m3 FLOAT, m2 FLOAT, m1 FLOAT, b FLOAT, passengers INT
-                  )
+                  DROP TABLE IF EXISTS tmp_fuel_use_coefficients
+                }
+                c.execute %{
+                  CREATE TEMPORARY TABLE tmp_fuel_use_coefficients (description VARCHAR(255), m3 FLOAT, m2 FLOAT, m1 FLOAT, b FLOAT, passengers INT)
                 }
                 
                 # For each unique aircraft_description:
@@ -345,13 +346,13 @@ module BrighterPlanet
                 # - store the resulting values in the temporary table along with the unique aircraft_description
                 # NOTE: this requires that missing data in aircraft be "NULL" rather than 0
                 c.execute %{
-                  INSERT INTO tmp_foo (description, m3, m2, m1, b)
-                  SELECT t1.b, AVG(aircraft.m3), AVG(aircraft.m2), AVG(aircraft.m1), AVG(aircraft.b)
-                  FROM loose_tight_dictionary_cached_results AS t1
-                    INNER JOIN aircraft
-                    ON t1.a = aircraft.description
-                  WHERE t1.b IN ('#{aircraft_descriptions.join("', '")}')
-                  GROUP BY t1.b
+                  INSERT INTO tmp_fuel_use_coefficients (description, m3, m2, m1, b)
+                    SELECT t1.b, AVG(aircraft.m3), AVG(aircraft.m2), AVG(aircraft.m1), AVG(aircraft.b)
+                    FROM loose_tight_dictionary_cached_results AS t1
+                      INNER JOIN aircraft
+                      ON t1.a = aircraft.description
+                    WHERE t1.b IN ('#{aircraft_descriptions.join("', '")}')
+                    GROUP BY t1.b
                 }
                 
                 # For each unique aircraft_description:
@@ -359,25 +360,28 @@ module BrighterPlanet
                 # - sum passengers across those flight segments
                 # - store the resulting value in the temporary table
                 c.execute %{
-                  UPDATE tmp_foo
+                  UPDATE tmp_fuel_use_coefficients
                   SET passengers = (
-                    SELECT sum(passengers)
+                    SELECT SUM(passengers)
                     FROM flight_segments
-                    WHERE #{where_values.join(' AND ')}
-                    AND flight_segments.aircraft_description = tmp_foo.description
+                    WHERE (#{cohort_conditions})
+                    AND flight_segments.aircraft_description = tmp_fuel_use_coefficients.description
                   )
                 }
                 
                 # Take the weighted average of the coefficients in the temporary table
                 # Effectively what this does is average the fuel use coefficients of all the different aircraft models
                 # used by the cohort, weighted by the number of passengers carried on each aircraft model
-                m3 = c.select_value "SELECT sum(m3 * passengers)/sum(passengers) FROM tmp_foo"
-                m2 = c.select_value "SELECT sum(m2 * passengers)/sum(passengers) FROM tmp_foo"
-                m1 = c.select_value "SELECT sum(m1 * passengers)/sum(passengers) FROM tmp_foo"
-                b  = c.select_value "SELECT sum(b  * passengers)/sum(passengers) FROM tmp_foo"
+                m3, m2, m1, b = c.select_values %{
+                  SELECT
+                    SUM(1.0 * m3 * passengers)/SUM(passengers),
+                    SUM(1.0 * m2 * passengers)/SUM(passengers),
+                    SUM(1.0 * m1 * passengers)/SUM(passengers),
+                    SUM(1.0 * b * passengers)/SUM(passengers),
+                  FROM tmp_fuel_use_coefficients
+                }
                 
-                fue = FuelUseEquation.new(m3, m2, m1, b)
-                fue.valid? ? fue : nil
+                FuelUseEquation.new_if_valid m3, m2, m1, b
             end
             
             #### Fuel use coefficients from aircraft
@@ -386,7 +390,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [aircraft](http://data.brighterplanet.com/aircraft)'s `fuel use coefficients`.
-                characteristics[:aircraft].valid_fuel_use_equation? ? FuelUseEquation.new(characteristics[:aircraft].m3, characteristics[:aircraft].m2, characteristics[:aircraft].m1, characteristics[:aircraft].b) : nil
+                FuelUseEquation.new_if_valid characteristics[:aircraft].m3, characteristics[:aircraft].m2, characteristics[:aircraft].m1, characteristics[:aircraft].b
             end
             
             #### Default fuel use coefficients
@@ -394,7 +398,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
                 # Calculates the average `fuel use coefficients` of the aircraft used by [all segments in the T-100 database](http://data.brighterplanet.com/flight_segments), weighted by the segment passengers.
-                FuelUseEquation.new Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.b
+                FuelUseEquation.new_if_valid Aircraft.fallback.m3, Aircraft.fallback.m2, Aircraft.fallback.m1, Aircraft.fallback.b
             end
           end
           
