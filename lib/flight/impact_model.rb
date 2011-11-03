@@ -377,7 +377,7 @@ module BrighterPlanet
                     SUM(1.0 * m3 * passengers)/SUM(passengers),
                     SUM(1.0 * m2 * passengers)/SUM(passengers),
                     SUM(1.0 * m1 * passengers)/SUM(passengers),
-                    SUM(1.0 * b * passengers)/SUM(passengers),
+                    SUM(1.0 * b * passengers)/SUM(passengers)
                   FROM tmp_fuel_use_coefficients
                 }
                 
