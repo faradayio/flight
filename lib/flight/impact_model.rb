@@ -36,25 +36,16 @@ module BrighterPlanet
           # This is the passenger's share of the total greenhouse emissions produced by the flight during the `timeframe`.
           committee :carbon do
             #### Greenhouse gas emission from fuel use, emission factor, freight share, passengers, multipliers, and date
-            quorum 'from fuel use, greenhouse gas emission factor, freight share, passengers, multipliers, and date',
-              :needs => [:fuel_use, :ghg_emission_factor, :freight_share, :passengers, :seat_class_multiplier, :aviation_multiplier, :date],
+            quorum 'from fuel use, greenhouse gas emission factor, freight share, and multipliers',
+              :needs => [:fuel_use, :ghg_emission_factor, :freight_share, :seat_class_multiplier, :aviation_multiplier],
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
-                date = characteristics[:date].is_a?(Date) ?
-                  characteristics[:date] :
-                  Date.parse(characteristics[:date].to_s)
-                  # Checks whether the flight occurred during the `timeframe`
-                if timeframe.include? date
-                  # Multiplies `fuel use` (*kg*) by a `greenhouse gas emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight greenhouse gas emissions in *kg CO<sub>2</sub>e*.
-                  characteristics[:fuel_use] * characteristics[:ghg_emission_factor] * characteristics[:aviation_multiplier] *
-                  # Multiplies by (1 - `freight share`) to take out greenhouse gas emissions attributed to freight cargo and mail, leaving greenhouse gas emissions attributed to passengers and their baggage
-                  (1 - characteristics[:freight_share]) /
-                  # Divides by the number of `passengers` and multiplies by a `seat class multiplier` to give `greenhouse gas emission` for the passenger
-                  characteristics[:passengers] * characteristics[:seat_class_multiplier]
-                else
-                  # If the flight did not occur during the `timeframe`, `greenhouse gas emission` is zero
-                  0
-                end
+                # Multiplies `fuel use` (*kg*) by a `greenhouse gas emission factor` (*kg CO<sub>2</sub>e / kg fuel*) and an `aviation multiplier` to give total flight greenhouse gas emissions in *kg CO<sub>2</sub>e*.
+                characteristics[:fuel_use] * characteristics[:ghg_emission_factor] * characteristics[:aviation_multiplier] *
+                # Multiplies by (1 - `freight share`) to take out greenhouse gas emissions attributed to freight cargo and mail, leaving greenhouse gas emissions attributed to passengers and their baggage
+                (1 - characteristics[:freight_share]) *
+                # Multiplies by a `seat class multiplier` to give `greenhouse gas emission` for the passenger
+                characteristics[:seat_class_multiplier]
             end
           end
           
@@ -84,32 +75,29 @@ module BrighterPlanet
           end
           
           ### Energy calculation
-          # Returns the `energy` in *MJ*.
+          # Returns the `energy` per passenger in *MJ*.
           # This is the passenger's share of the total energy consumed by the flight during the `timeframe`.
           committee :energy do
-            #### Energy from fuel use, fuel, and date
-            quorum 'from fuel use, fuel, and date',
-              :needs => [:fuel_use, :fuel, :date],
-              # **Complies:**
-              :complies => [] do |characteristics, timeframe|
-                date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
-                if timeframe.include? date
-                  # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `energy content` (*MJ / l*), divides by its `density` (*kg / l*), and multiplies by `fuel use` (*kg*) to give *MJ*.
-                  characteristics[:fuel].energy_content / characteristics[:fuel].density * characteristics[:fuel_use]
-                end
+            #### Energy from fuel use and fuel
+            quorum 'from fuel use and fuel', :needs => [:fuel_use, :fuel] do |characteristics|
+              # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `energy content` (*MJ / l*), divides by its `density` (*kg / l*), and multiplies by `fuel use` (*kg*) to give *MJ*.
+              characteristics[:fuel].energy_content / characteristics[:fuel].density * characteristics[:fuel_use]
             end
           end
           
           ### Fuel use calculation
-          # Returns the flight's total `fuel use` in *kg*.
+          # Returns the flight's `fuel use` per passenger in *kg*.
           committee :fuel_use do
-            #### Fuel use from fuel per segment and segments per trip and trips
-            quorum 'from fuel per segment and segments per trip and trips',
-              :needs => [:fuel_per_segment, :segments_per_trip, :trips],
+            #### Fuel use from fuel per segment, segments per trip, trips, date, and timeframe
+            quorum 'from fuel per segment, segments per trip, trips, passengers, date, and timeframe',
+              :needs => [:fuel_per_segment, :segments_per_trip, :trips, :passengers, :date],
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Multiplies the `fuel per segment` (*kg*) by the `segments per trip` and the number of `trips` to give *kg*.
-                characteristics[:fuel_per_segment] * characteristics[:segments_per_trip].to_f * characteristics[:trips].to_f
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
+                date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
+                if timeframe.include? date
+                  # Multiplies the `fuel per segment` (*kg*) by the `segments per trip` and the number of `trips` to give *kg*.
+                  characteristics[:fuel_per_segment] * characteristics[:segments_per_trip] * characteristics[:trips] / characteristics[:passengers]
+                end
             end
           end
           
