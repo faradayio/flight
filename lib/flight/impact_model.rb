@@ -187,7 +187,7 @@ module BrighterPlanet
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
                 # Looks up the [distance class](http://data.brighterplanet.com/flight_distance_classes) corresponding to the `adjusted distance per segment`.
-                FlightDistanceClass.find_by_distance(characteristics[:adjusted_distance_per_segment])
+                FlightDistanceClass.find_by_distance(characteristics[:adjusted_distance_per_segment].nautical_miles.to(:kilometres))
             end
           end
           
