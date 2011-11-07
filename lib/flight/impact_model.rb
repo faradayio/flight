@@ -74,16 +74,16 @@ module BrighterPlanet
             end
           end
           
-          ### Energy calculation
-          # Returns the `energy` per passenger in *MJ*.
-          # This is the passenger's share of the total energy consumed by the flight during the `timeframe`.
-          committee :energy do
-            #### Energy from fuel use and fuel
-            quorum 'from fuel use and fuel', :needs => [:fuel_use, :fuel] do |characteristics|
-              # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `energy content` (*MJ / l*), divides by its `density` (*kg / l*), and multiplies by `fuel use` (*kg*) to give *MJ*.
-              characteristics[:fuel].energy_content / characteristics[:fuel].density * characteristics[:fuel_use]
-            end
-          end
+          # ### Energy calculation
+          # # Returns the `energy` per passenger in *MJ*.
+          # # This is the passenger's share of the total energy consumed by the flight during the `timeframe`.
+          # committee :energy do
+          #   #### Energy from fuel use and fuel
+          #   quorum 'from fuel use and fuel', :needs => [:fuel_use, :fuel] do |characteristics|
+          #     # Looks up the [fuel](http://data.brighterplanet.com/fuels)'s `energy content` (*MJ / l*), divides by its `density` (*kg / l*), and multiplies by `fuel use` (*kg*) to give *MJ*.
+          #     characteristics[:fuel].energy_content / characteristics[:fuel].density * characteristics[:fuel_use]
+          #   end
+          # end
           
           ### Fuel use calculation
           # Returns the flight's `fuel use` per passenger in *kg*.

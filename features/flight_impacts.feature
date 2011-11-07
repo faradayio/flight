@@ -46,15 +46,15 @@ Feature: Flight Impacts Calculations
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | impact | comment |
-      | JFK    |      |                |           | 178.41 | origin with just BTS segments |
-      | FRA    |      |                |           | 7.00   | origin with just ICAO segments |
-      | LHR    |      |                |           | 68.05  | origin with BTS and ICAO segments |
-      |        | JFK  |                |           | 119.73 | dest with just BTS segments |
-      |        | FRA  |                |           | 10.50  | dest with just ICAO segments |
-      |        | LHR  |                |           | 71.58  | dest with BTS and ICAO segments |
-      |        |      | boeing 737-400 |           | 71.58  | aircraft with simple description |
-      |        |      | boeing 737-200 |           | 89.07  | aircraft with simple and complex descriptions |
-      |        |      |                | Lufthansa | 7.47   | airline |
+      | JFK    |      |                |           | 170.33 | origin with just BTS segments |
+      | FRA    |      |                |           |   7.00 | origin with just ICAO segments |
+      | LHR    |      |                |           |  66.56 | origin with BTS and ICAO segments |
+      |        | JFK  |                |           | 116.32 | dest with just BTS segments |
+      |        | FRA  |                |           |  10.50 | dest with just ICAO segments |
+      |        | LHR  |                |           |  69.67 | dest with BTS and ICAO segments |
+      |        |      | boeing 737-400 |           |  61.91 | aircraft with simple description |
+      |        |      | boeing 737-200 |           |  79.49 | aircraft with simple and complex descriptions |
+      |        |      |                | Lufthansa |   7.47 | airline |
 
   Scenario Outline: Calculations from cohorts that comply with standards
     Given it has "segments_per_trip" of "1"
@@ -68,64 +68,64 @@ Feature: Flight Impacts Calculations
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | origin | dest | aircraft       | airline   | impact | comment |
-      | JFK    | LHR  |                |           | 178.41 | origin US destination foreign (BTS) |
-      | LHR    | JFK  |                |           | 98.55  | origin foreign destination US (BTS) |
-      | FRA    | LHR  |                |           | 7.00   | origin/destination foreign (ICAO) |
-      | JFK    | ATL  | boeing 737-400 |           | 16.35  | origin/destination + airline but destination not in flight segments |
-      | JFK    | FRA  |                |           | 196.25 | origin + dest don't match; origin or dest in US, origin has BTS segments only |
-      | FRA    | FRA  |                |           | 0.0    | origin + dest don't match; origin + dest not in US, origin has ICAO segments only |
+      | JFK    | LHR  |                |           | 170.33 | origin US destination foreign (BTS) |
+      | LHR    | JFK  |                |           |  95.74 | origin foreign destination US (BTS) |
+      | FRA    | LHR  |                |           |   7.00 | origin/destination foreign (ICAO) |
+      | JFK    | ATL  | boeing 737-400 |           |  15.61 | origin/destination + airline but destination not in flight segments |
+      | JFK    | FRA  |                |           | 187.36 | origin + dest no match; origin or dest in US, origin has BTS segments only |
+      | FRA    | FRA  |                |           |   0.00 | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario: Calculations from segments per trip
     Given it has "segments_per_trip" of "2"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "101.66"
+    Then the amount of "carbon" should be within "0.01" of "98.77"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class
     Given it has "seat_class_name" of "economy"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "91.87"
+    Then the amount of "carbon" should be within "0.01" of "82.76"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seat class and distance estimate
     Given it has "seat_class_name" of "economy"
-    And it has "distance_estimate" of "2000"
+    And it has "distance_estimate" of "5000"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "94.06"
+    Then the amount of "carbon" should be within "0.01" of "219.24"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from trips
     Given it has "trips" of "2"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "111.36"
+    Then the amount of "carbon" should be within "0.01" of "108.19"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from load factor
     Given it has "load_factor" of "1"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "79.56"
+    Then the amount of "carbon" should be within "0.01" of "77.29"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from seats estimate
     Given it has "seats_estimate" of "100"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "243.41"
+    Then the amount of "carbon" should be within "0.01" of "236.47"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance estimate
     Given it has "distance_estimate" of "185.2"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "11.94"
+    Then the amount of "carbon" should be within "0.01" of "11.60"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from distance class
     Given it has "distance_class.name" of "short haul"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "11.94"
+    Then the amount of "carbon" should be within "0.01" of "68.90"
     And the calculation should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Calculations from fuel
     Given it has "fuel.name" of "Aviation Gasoline"
     When impacts are calculated
-    Then the amount of "carbon" should be within "0.01" of "91.54"
+    Then the amount of "carbon" should be within "0.01" of "88.93"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"

@@ -194,20 +194,20 @@ Feature: Flight Committee Calculations
     Examples:
     | origin | dest | aircraft       | airline   | seats     | comment |
     | JFK    |      |                |           | 153.57143 | origin with just BTS segments |
-    | FRA    |      |                |           | 400       | origin with just ICAO segments |
+    | FRA    |      |                |           | 400.0     | origin with just ICAO segments |
     | LHR    |      |                |           | 247.82609 | origin with BTS and ICAO segments |
-    |        | JFK  |                |           | 300       | dest with just BTS segments |
-    |        | FRA  |                |           | 150       | dest with just ICAO segments |
-    |        | LHR  |                |           | 250       | dest with BTS and ICAO segments |
-    |        |      | boeing 737-400 |           | 250       | aircraft with simple description |
+    |        | JFK  |                |           | 300.0     | dest with just BTS segments |
+    |        | FRA  |                |           | 150.0     | dest with just ICAO segments |
+    |        | LHR  |                |           | 250.0     | dest with BTS and ICAO segments |
+    |        |      | boeing 737-400 |           | 250.0     | aircraft with simple description |
     |        |      | boeing 737-200 |           | 250.0     | aircraft with simple and complex descriptions |
     |        |      |                | Lufthansa | 337.5     | airline |
     | JFK    | LHR  |                |           | 153.57143 | origin US destination foreign (BTS) |
-    | LHR    | JFK  |                |           | 300       | origin foreign destination US (BTS) |
-    | FRA    | LHR  |                |           | 400       | origin/destination foreign (ICAO) |
+    | LHR    | JFK  |                |           | 300.0     | origin foreign destination US (BTS) |
+    | FRA    | LHR  |                |           | 400.0     | origin/destination foreign (ICAO) |
     | JFK    | ATL  |                | Delta     | 153.57143 | origin/destination + airline but destination not in flight segments |
     | JFK    | FRA  |                |           | 153.57143 | origin + dest no match; origin or dest in US, origin has BTS segments only |
-    | FRA    | FRA  |                |           | 400       | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
+    | FRA    | FRA  |                |           | 400.0     | origin + dest no match; origin + dest not in US, origin has ICAO segments only |
 
   Scenario Outline: Seats committee from aircraft with seats
     Given a characteristic "aircraft.description" of "<aircraft>"
@@ -257,6 +257,7 @@ Feature: Flight Committee Calculations
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "<origin>"
     And a characteristic "destination_airport.iata_code" of "<dest>"
+    And a characteristic "aircraft.description" of "<aircraft>"
     When the "cohort" committee reports
     And the "fuel_use_coefficients" committee reports
     Then the committee should have used quorum "from cohort"
@@ -266,15 +267,18 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "b" equal to "<b>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | dest | m3  | m2  | m1      | b   | comment |
-      | FRA    |      | 0.0 | 0.0 | 2.0     | 0.0 | all aircraft have fuel use equation |
-      | LHR    |      | 0.0 | 0.0 | 1.45151 | 0.0 | some aircraft missing fuel use equation |
-      |        | FRA  | 0.0 | 0.0 | 1.0     | 0.0 | all aircraft have fuel use equation |
-      |        | LHR  | 0.0 | 0.0 | 1.85786 | 0.0 | some aircraft missing fuel use equation |
-      | JFK    | LHR  | 0.0 | 0.0 | 1.76648 | 0.0 | some aircraft missing fuel use equation |
-      | LHR    | JFK  | 0.0 | 0.0 | 1.69231 | 0.0 | all aircraft missing fuel use equation but have aircraft class fuel use equation |
+      | origin | dest | aircraft       | m3  | m2  | m1      | b   | comment |
+      | FRA    |      |                | 0.0 | 0.0 | 2.0     | 0.0 | all aircraft have fuel use equation |
+      | LHR    |      |                | 0.0 | 0.0 | 1.45151 | 0.0 | some aircraft missing fuel use equation |
+      | JFK    |      |                | 0.0 | 0.0 | 1.76648 | 0.0 | some aircraft missing fuel use equation |
+      |        | FRA  |                | 0.0 | 0.0 | 1.0     | 0.0 | all aircraft have fuel use equation |
+      |        | LHR  |                | 0.0 | 0.0 | 1.85786 | 0.0 | some aircraft missing fuel use equation |
+      |        | JFK  |                | 0.0 | 0.0 | 1.69231 | 0.0 | some aircraft missing fuel use equation |
+      | JFK    | LHR  |                | 0.0 | 0.0 | 1.76648 | 0.0 | some aircraft missing fuel use equation |
+      | LHR    | JFK  |                | 0.0 | 0.0 | 1.69231 | 0.0 | all aircraft have aircraft class-based fuel use equation |
+      |        |      | boeing 737-200 | 0.0 | 0.0 | 1.21635 | 0.0 | aircraft missing fuel use equation |
 
-  Scenario: Fuel use coefficients from cohorts where no aircraft have fuel use equation
+  Scenario: Fuel use coefficients from cohort where no aircraft have fuel use equation
     Given a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "MEX"
@@ -298,11 +302,11 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should have a record with "b" equal to "<b>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | aircraft       | m3  | m2  | m1      | b   |
-      | boeing 737-100 | 0.0 | 0.0 | 1.0     | 0.0 |
-      | boeing 737-300 | 0.0 | 0.0 | 1.69231 | 0.0 |
-      | boeing 737-400 | 0.0 | 0.0 | 2.0     | 0.0 |
-      | boeing 737-500 | 0.0 | 0.0 | 2.0     | 0.0 |
+      | aircraft       | m3  | m2  | m1      | b   | comments |
+      | boeing 737-100 | 0.0 | 0.0 | 1.0     | 0.0 | aircraft-based equation |
+      | boeing 737-300 | 0.0 | 0.0 | 1.69231 | 0.0 | aircraft class-based equation |
+      | boeing 737-400 | 0.0 | 0.0 | 2.0     | 0.0 | aircraft-based equation |
+      | boeing 737-500 | 0.0 | 0.0 | 2.0     | 0.0 | aircraft-based equation |
 
   Scenario Outline: Fuel use coefficients committee from aircraft missing fuel use coefficients
     Given a characteristic "aircraft.description" of "<aircraft>"
@@ -354,7 +358,10 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "1.2"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
+  # We used to have a problem where the route inefficiency factor from country quorum would be used even when country was nil
   Scenario: Route inefficiency factor after country committee has returned nil
+    Given a characteristic "origin_airport.iata_code" of "JFK"
+    And a characteristic "destination_airport.iata_code" of "LHR"
     When the "country" committee reports
     And the "route_inefficiency_factor" committee reports
     Then the committee should have used quorum "default"
@@ -387,25 +394,35 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "598.27214"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Distance committee from cohort based on origin only
+  Scenario Outline: Distance committee from cohort with origin only
     Given a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "origin_airport.iata_code" of "JFK"
+    And a characteristic "origin_airport.iata_code" of "<origin>"
     When the "cohort" committee reports
     And the "distance" committee reports
     Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "1000.0"
+    And the conclusion of the committee should be "<distance>"
     And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
+    Examples:
+      | origin | distance |
+      | JFK    | 1000.0   |
+      | FRA    |  100.0   |
+      | LHR    |  687.0   |
 
-  Scenario: Distance committee from cohort based on destination only
+  Scenario Outline: Distance committee from cohort with destination only
     Given a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
-    And a characteristic "destination_airport.iata_code" of "FRA"
+    And a characteristic "destination_airport.iata_code" of "<dest>"
     When the "cohort" committee reports
     And the "distance" committee reports
     Then the committee should have used quorum "from cohort"
-    And the conclusion of the committee should be "100.0"
+    And the conclusion of the committee should be "<distance>"
     And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
+    Examples:
+      | dest | distance   |
+      | JFK  | 1258.06452 |
+      | FRA  |  100.0     |
+      | LHR  |  647.82609 |
 
   Scenario Outline: Distance committee from cohort based on airline / aircraft
     Given a characteristic "date" of "2011-05-01"
@@ -418,9 +435,10 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<distance>"
     And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | aircraft       | airline   | distance |
-      | boeing 737-100 |           | 662.5    |
-      |                | Lufthansa | 100.0    |
+      | aircraft       | airline   | distance   |
+      | boeing 737-400 |           |  550.0     |
+      | boeing 737-200 |           | 1021.42857 |
+      |                | Lufthansa | 100.0      |
 
   Scenario: Distance committee from default
     When the "distance" committee reports
@@ -428,28 +446,20 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "792.69103"
     And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario Outline: Adjusted distance committee from distance, route inefficiency factor, and dogleg factor
-    Given a characteristic "distance" of "<distance>"
-    And a characteristic "route_inefficiency_factor" of "<route_factor>"
-    And a characteristic "dogleg_factor" of "<dogleg>"
+  Scenario: Adjusted distance committee from distance, route inefficiency factor, and dogleg factor
+    Given a characteristic "distance" of "100"
+    And a characteristic "route_inefficiency_factor" of "1.1"
+    And a characteristic "dogleg_factor" of "1.1"
     When the "adjusted_distance" committee reports
-    Then the conclusion of the committee should be "<adj_dist>"
+    Then the conclusion of the committee should be "121.0"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
-    Examples:
-      | distance | route_factor | dogleg  | adj_dist  |
-      | 100      | 1.1          | 1.25    | 137.5     |
-      | 640      | 1.1          | 1.16126 | 817.52704 |
 
   Scenario Outline: Adjusted distance per segment committee
-    Given a characteristic "adjusted_distance" of "<adj_dist>"
-    And a characteristic "segments_per_trip" of "<segments>"
+    Given a characteristic "adjusted_distance" of "100.25"
+    And a characteristic "segments_per_trip" of "2"
     When the "adjusted_distance_per_segment" committee reports
-    Then the conclusion of the committee should be "<adj_d_per_s>"
+    Then the conclusion of the committee should be "50.125"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
-    Examples:
-      | adj_dist  | segments | adj_d_per_s |
-      | 100       | 2        | 50          |
-      | 817.52749 | 1.67     | 489.53742   |
 
   Scenario Outline: distance class committee from adjusted distance per segment
     Given a characteristic "adjusted_distance_per_segment" of "<distance>"
@@ -458,10 +468,20 @@ Feature: Flight Committee Calculations
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | distance | class      |
-      | 0        | short haul |
-      | 100      | short haul |
-      | 3700     | long haul  |
-      | 9999     | long haul  |
+      | 1        | short haul |
+      | 1997     | short haul |
+      | 1998     | long haul  |
+      | 10819    | long haul  |
+
+  Scenario Outline: distance class committee from invalid distance per segment
+    Given a characteristic "adjusted_distance_per_segment" of "<distance>"
+    When the "distance_class" committee reports
+    Then the conclusion of the committee should be nil
+    Examples:
+      | distance |
+      | -1       |
+      | 0        |
+      | 10820    |
 
   Scenario Outline: distance class seat class committee from distance class and seat class
     Given a characteristic "distance_class.name" of "<distance_class>"
@@ -473,12 +493,7 @@ Feature: Flight Committee Calculations
     Examples:
       | distance_class | seat_class | distance_seat_class |
       | short haul     | economy    | short haul economy  |
-      | short haul     | business   | short haul business |
-      | short haul     | first      | short haul first    |
-      | long haul      | economy    | long haul economy   |
-      | long haul      | economy+   | long haul economy+  |
       | long haul      | business   | long haul business  |
-      | long haul      | first      | long haul first     |
 
   Scenario Outline: Seat class multiplier committee from distance class seat class
     Given a characteristic "distance_class.name" of "<distance_class>"
@@ -490,28 +505,13 @@ Feature: Flight Committee Calculations
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
       | distance_class | seat_class | multiplier |
-      | short haul     | economy    | 0.9532     |
-      | short haul     | business   | 1.4293     |
-      | short haul     | first      | 1.4293     |
-      | long haul      | economy    | 0.7297     |
-      | long haul      | economy+   | 1.1673     |
-      | long haul      | business   | 2.1157     |
-      | long haul      | first      | 2.9186     |
-
-  Scenario Outline: Seat class multiplier committee from seat class
-    Given a characteristic "distance_class.name" of "<distance_class>"
-    And a characteristic "seat_class.name" of "<seat_class>"
-    When the "seat_class_multiplier" committee reports
-    Then the committee should have used quorum "from seat class"
-    And the conclusion of the committee should be "<multiplier>"
-    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
-    Examples:
-      | distance_class | seat_class     | multiplier |
-      |                | economy        | 0.92297    |
-      | short haul     | economy+       | 1.1673     |
-      |                | economy+       | 1.1673     |
-      |                | business       | 1.52214    |
-      |                | first          | 1.63074    |
+      | short haul     | economy    | 0.9        |
+      | short haul     | business   | 1.4        |
+      | short haul     | first      | 1.4        |
+      | long haul      | economy    | 0.7        |
+      | long haul      | economy+   | 1.2        |
+      | long haul      | business   | 2.1        |
+      | long haul      | first      | 2.9        |
 
   Scenario: Seat class multiplier from default
     When the "seat_class_multiplier" committee reports
@@ -534,17 +534,33 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be "1692.30769"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario Outline: Fuel use committee
-    Given a characteristic "fuel_per_segment" of "<fuel_per_s>"
-    And a characteristic "segments_per_trip" of "<segments>"
-    And a characteristic "trips" of "<trips>"
+  Scenario: Fuel use committee from date not in timeframe
+    Given a characteristic "date" of "2009-06-25"
+    And a characteristic "timeframe" of "2009-01-01/2009-01-31"
+    And a characteristic "fuel_per_segment" of "12"
+    And a characteristic "segments_per_trip" of "2"
+    And a characteristic "trips" of "2"
+    And a characteristic "passengers" of "10"
     When the "fuel_use" committee reports
-    Then the conclusion of the committee should be "<fuel_use>"
+    Then the conclusion of the committee should be nil
+
+  Scenario: Fuel use committee
+    Given a characteristic "date" of "2009-06-25"
+    And a characteristic "timeframe" of "2009-01-01/2010-01-01"
+    And a characteristic "fuel_per_segment" of "12"
+    And a characteristic "segments_per_trip" of "2"
+    And a characteristic "trips" of "2"
+    And a characteristic "passengers" of "10"
+    When the "fuel_use" committee reports
+    Then the conclusion of the committee should be "4.8"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
-    Examples:
-      | fuel_per_s | segments | trips   | fuel_use   |
-      | 100        | 2        | 2       | 400        |
-      | 685.35239  | 1.67     | 1.94100 | 2221.54921 |
+
+  Scenario: Energy committee from fuel use and fuel
+    Given a characteristic "fuel_use" of "100"
+    When the "fuel" committee reports
+    And the "energy" committee reports
+    Then the conclusion of the committee should be "4750.0"
+    And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Aviation multiplier committee from default
     When the "aviation_multiplier" committee reports
