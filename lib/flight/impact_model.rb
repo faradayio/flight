@@ -145,21 +145,12 @@ module BrighterPlanet
                 characteristics[:distance_class_seat_class].multiplier
             end
             
-            #### Seat class multiplier from seat class
-            quorum 'from seat class',
-              :needs => :seat_class,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Looks up the [seat class](http://data.brighterplanet.com/flight_seat_classes) multiplier.
-                characteristics[:seat_class].multiplier
-            end
-            
             #### Default seat class multiplier
             quorum 'default',
               # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
               # Looks up the default [seat class](http://data.brighterplanet.com/flight_seat_classes) multiplier.
-              FlightSeatClass.fallback.multiplier
+              FlightDistanceClassSeatClass.fallback.multiplier
             end
           end
           
