@@ -380,6 +380,12 @@ module BrighterPlanet
                     SUM(1.0 * m1 * passengers)/SUM(passengers),
                     SUM(1.0 * b * passengers)/SUM(passengers)
                   FROM tmp_fuel_use_coefficients
+                  WHERE
+                    m3 IS NOT NULL
+                    AND m2 IS NOT NULL
+                    AND m1 IS NOT NULL
+                    AND b IS NOT NULL
+                    AND passengers > 0
                 }).flatten
                 
                 FuelUseEquation.new_if_valid m3, m2, m1, b
