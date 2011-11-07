@@ -479,8 +479,7 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be nil
     Examples:
       | distance |
-      | -1       |
-      | 0        |
+      | 0.0      |
       | 10820    |
 
   Scenario Outline: distance class seat class committee from distance class and seat class
@@ -537,22 +536,28 @@ Feature: Flight Committee Calculations
   Scenario: Fuel use committee from date not in timeframe
     Given a characteristic "date" of "2009-06-25"
     And a characteristic "timeframe" of "2009-01-01/2009-01-31"
-    And a characteristic "fuel_per_segment" of "12"
+    And a characteristic "fuel_per_segment" of "10"
     And a characteristic "segments_per_trip" of "2"
     And a characteristic "trips" of "2"
+    And a characteristic "freight_share" of "0.1"
     And a characteristic "passengers" of "10"
-    When the "fuel_use" committee reports
+    And a characteristic "seat_class_multiplier" of "2"
+    When the "fuel" committee reports
+    And the "fuel_use" committee reports
     Then the conclusion of the committee should be nil
 
   Scenario: Fuel use committee
     Given a characteristic "date" of "2009-06-25"
     And a characteristic "timeframe" of "2009-01-01/2010-01-01"
-    And a characteristic "fuel_per_segment" of "12"
+    And a characteristic "fuel_per_segment" of "10"
     And a characteristic "segments_per_trip" of "2"
     And a characteristic "trips" of "2"
+    And a characteristic "freight_share" of "0.1"
     And a characteristic "passengers" of "10"
-    When the "fuel_use" committee reports
-    Then the conclusion of the committee should be "4.8"
+    And a characteristic "seat_class_multiplier" of "2"
+    When the "fuel" committee reports
+    And the "fuel_use" committee reports
+    Then the conclusion of the committee should be "7.2"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Energy committee from fuel use and fuel
@@ -569,12 +574,14 @@ Feature: Flight Committee Calculations
 
   Scenario: Greenhouse gas emission factor from fuel
     Given a characteristic "fuel.name" of "Aviation Gasoline"
-    When the "ghg_emission_factor" committee reports
-    Then the conclusion of the committee should be "3.14286"
+    When the "aviation_multiplier" committee reports
+    And the "ghg_emission_factor" committee reports
+    Then the conclusion of the committee should be "4.4"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Greenhouse gas emission factor committee from default fuel
     When the "fuel" committee reports
+    And the "aviation_multiplier" committee reports
     And the "ghg_emission_factor" committee reports
-    Then the conclusion of the committee should be "3.25"
+    Then the conclusion of the committee should be "5.2"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
