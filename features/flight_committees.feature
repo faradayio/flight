@@ -555,12 +555,12 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be "4.8"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Energy committee from fuel use and fuel
-    Given a characteristic "fuel_use" of "100"
-    When the "fuel" committee reports
-    And the "energy" committee reports
-    Then the conclusion of the committee should be "4750.0"
-    And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
+  # Scenario: Energy committee from fuel use and fuel
+  #   Given a characteristic "fuel_use" of "100"
+  #   When the "fuel" committee reports
+  #   And the "energy" committee reports
+  #   Then the conclusion of the committee should be "4750.0"
+  #   And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Aviation multiplier committee from default
     When the "aviation_multiplier" committee reports
