@@ -11,7 +11,7 @@ module BrighterPlanet
           has :airline
           has :trips
           has :load_factor
-          has :seats_estimate
+          has :seats
           has :fuel
           has :distance_estimate, :measures => Measurement::BigLength
           has :distance_class

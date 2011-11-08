@@ -116,8 +116,8 @@ Feature: Flight Impacts Calculations
     Then the amount of "energy" should be within "0.01" of "564.81"
     And the calculation should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Calculations from seats estimate
-    Given it has "seats_estimate" of "100"
+  Scenario: Calculations from seats
+    Given it has "seats" of "100"
     When impacts are calculated
     Then the amount of "carbon" should be within "0.01" of "236.47"
     Then the amount of "energy" should be within "0.01" of "1728.05"

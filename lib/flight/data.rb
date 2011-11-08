@@ -10,7 +10,7 @@ module BrighterPlanet
         base.col :airline_name
         base.col :trips, :type => :integer
         base.col :load_factor, :type => :float
-        base.col :seats_estimate, :type => :integer
+        base.col :seats, :type => :integer
         base.col :fuel_name
         base.col :distance_estimate, :type => :float
         base.col :distance_class_name

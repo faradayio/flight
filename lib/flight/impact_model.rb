@@ -417,14 +417,6 @@ module BrighterPlanet
           ### Seats calculation
           # Returns the number of `seats`.
           committee :seats do
-            #### Seats from seats estimate
-            quorum 'from seats estimate',
-              :needs => :seats_estimate,
-              # **Complies:** GHG Protocol Scope 3, ISO-14064-1, Climate Registry Protocol
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                # Uses the client-input estimate of the number of `seats`.
-                characteristics[:seats_estimate]
-            end
             
             #### Seats from cohort
             quorum 'from cohort',
@@ -453,9 +445,6 @@ module BrighterPlanet
                 FlightSegment.fallback.seats_per_flight
             end
           end
-          
-          ### Seats estimate calculation
-          # Returns the client-input `seats estimate`.
           
           ### Load factor calculation
           # Returns the `load factor`. This is the portion of available seats that are occupied.

@@ -172,13 +172,6 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "0.84037"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Seats committee from seats estimate
-    Given a characteristic "seats_estimate" of "100.75"
-    When the "seats" committee reports
-    Then the committee should have used quorum "from seats estimate"
-    And the conclusion of the committee should be "100"
-    And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
-
   Scenario Outline: Seats committee from cohort
     Given a characteristic "date" of "2011-05-01"
     And a characteristic "segments_per_trip" of "1"
