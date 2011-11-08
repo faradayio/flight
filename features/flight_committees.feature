@@ -64,7 +64,7 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be nil
     Examples:
       | segments | origin | dest | aircraft       | airline | comment |
-      | 2        | JFK    | LHR  |                |         | indirect flight |
+      | 2        | JFK    | LHR  |                |         | connecting flight |
       | 1        | FRA    | JFK  |                |         | origin and dest no match, origin or dest in US, origin has no BTS segments |
       | 1        | MEX    | FRA  |                |         | origin and dest no match, neither in US, origin has no ICAO segments |
       | 1        | ATL    |      |                |         | origin exists but not in flight segments |
