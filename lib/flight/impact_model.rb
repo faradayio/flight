@@ -320,15 +320,12 @@ module BrighterPlanet
                 }
                 
                 # - Calculate the average of the coefficients in the temporary table, weighted by passengers
-=begin
-  `select_values` "Returns an array of the values of the first column in a select" so it doesn't work here
-=end
-                m3, m2, m1, b = (c.select_rows %{
+                row = c.select_one %{
                   SELECT
-                    SUM(1.0 * m3 * passengers)/SUM(passengers),
-                    SUM(1.0 * m2 * passengers)/SUM(passengers),
-                    SUM(1.0 * m1 * passengers)/SUM(passengers),
-                    SUM(1.0 * b * passengers)/SUM(passengers)
+                    SUM(1.0 * m3 * passengers)/SUM(passengers) AS a_m3,
+                    SUM(1.0 * m2 * passengers)/SUM(passengers) AS a_m2,
+                    SUM(1.0 * m1 * passengers)/SUM(passengers) AS a_m1,
+                    SUM(1.0 * b * passengers)/SUM(passengers)  AS a_b
                   FROM tmp_fuel_use_coefficients
                   WHERE
                     m3 IS NOT NULL
@@ -336,9 +333,9 @@ module BrighterPlanet
                     AND m1 IS NOT NULL
                     AND b IS NOT NULL
                     AND passengers > 0
-                }).flatten
+                }
                 
-                FuelUseEquation.new_if_valid m3, m2, m1, b
+                FuelUseEquation.new_if_valid row['a_m3'], row['a_m2'], row['a_m1'], row['a_b']
             end
             
             # Otherwise use the `aircraft` fuel use coefficients.
