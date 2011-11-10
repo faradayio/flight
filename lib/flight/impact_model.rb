@@ -189,12 +189,7 @@ module BrighterPlanet
             # Calculate the great circle distance between the `origin airport` and `destination airport` (*km*) and convert to *nautical miles*.
             quorum 'from airports', :needs => [:origin_airport, :destination_airport],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                if characteristics[:origin_airport].latitude and
-                    characteristics[:origin_airport].longitude and
-                    characteristics[:destination_airport].latitude and
-                    characteristics[:destination_airport].longitude
-                  characteristics[:origin_airport].distance_to(characteristics[:destination_airport], :units => :kms).kilometres.to :nautical_miles
-                end
+                characteristics[:origin_airport].distance_to(characteristics[:destination_airport], :units => :kms).kilometres.to :nautical_miles
             end
             
             # Otherwise convert `distance estimate`(*km*) to *nautical miles*.
