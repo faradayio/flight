@@ -275,7 +275,7 @@ module BrighterPlanet
                 # - Create a temporary table to hold the values we need
                 c = ActiveRecord::Base.connection
                 c.execute %{
-                  DROP TABLE IF EXISTS tmp_fuel_use_coefficients
+                  DROP TEMPORARY TABLE IF EXISTS tmp_fuel_use_coefficients
                 }
                 c.execute %{
                   CREATE TEMPORARY TABLE tmp_fuel_use_coefficients (description VARCHAR(255), m3 FLOAT, m2 FLOAT, m1 FLOAT, b FLOAT, passengers INT)
