@@ -83,11 +83,13 @@ module BrighterPlanet
                 AND passengers > 0
             }
 
-            new_if_valid row['a_m3'], row['a_m2'], row['a_m1'], row['a_b']
+            fuel_use_equation = new_if_valid row['a_m3'], row['a_m2'], row['a_m1'], row['a_b']
             
             c.execute %{
               DROP TABLE tmp_fuel_use_coefficients
             }
+            
+            fuel_use_equation
           end
         end
         
