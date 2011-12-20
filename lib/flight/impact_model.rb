@@ -407,12 +407,12 @@ module BrighterPlanet
 =end
                   date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
                   
-                  # Restrict the cohort to flight segments that occurred the same year as the flight or the previous year.
-                  # (We need to include the previous year because BTS flight segment data releases lag by 6 months.)
+                  # Restrict the cohort to flight segments that occurred the same year as the flight or the previous two years.
+                  # (We need to include the previous two years because BTS flight segment data releases lag by 6 months and ICAO data lags by over a year.)
 =begin
   FIXME TODO check how far back we should look on account of ICAO data
 =end
-                  relevant_years = [date.year - 1, date.year]
+                  relevant_years = ((date.year - 2)..date.year).to_a
                   
 =begin
   FIXME TODO refactor this
