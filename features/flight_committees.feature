@@ -16,7 +16,7 @@ Feature: Flight Committee Calculations
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Make sure we have at least one segment not in 2011
-    Given a characteristic "date" of "2009-05-01"
+    Given a characteristic "date" of "2008-05-01"
     And a characteristic "segments_per_trip" of "1"
     And a characteristic "origin_airport.iata_code" of "JFK"
     And a characteristic "destination_airport.iata_code" of "LHR"

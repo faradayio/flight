@@ -407,13 +407,6 @@ module BrighterPlanet
 =end
                   date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
                   
-                  # Restrict the cohort to flight segments that occurred the same year as the flight or the previous two years.
-                  # (We need to include the previous two years because BTS flight segment data releases lag by 6 months and ICAO data lags by over a year.)
-=begin
-  FIXME TODO check how far back we should look on account of ICAO data
-=end
-                  relevant_years = ((date.year - 2)..date.year).to_a
-                  
 =begin
   FIXME TODO refactor this
 =end
@@ -422,6 +415,10 @@ module BrighterPlanet
                   if characteristics[:origin_airport].present? and characteristics[:destination_airport].present?
                     # - If either airport is in the US, use airport iata codes to assemble a cohort of BTS flight segments
                     if characteristics[:origin_airport].country_iso_3166_code == "US" or characteristics[:destination_airport].country_iso_3166_code == "US"
+                      # Restrict the cohort to flight segments that occurred the same year as the flight or the previous year.
+                      # (We need to include the previous year because BTS flight segment data lags by 6 months.)
+                      relevant_years = [date.year - 1, date.year]
+                      
 =begin
   NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
   cohort based just on origin. If that happens, even if the origin is not in the US we still don't want to use
@@ -440,6 +437,10 @@ module BrighterPlanet
   e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
 =end
                     else
+                      # Restrict the cohort to flight segments that occurred the same year as the flight or the previous three years.
+                      # (We need to include the previous three years because 2009 is the most recent year for which we have complete ICAO data.)
+                      relevant_years = ((date.year - 3)..date.year).to_a
+                      
                       provided_characteristics.push [:origin_airport_city, characteristics[:origin_airport].city]
                       provided_characteristics.push [:destination_airport_city, characteristics[:destination_airport].city]
                     end
@@ -467,6 +468,10 @@ module BrighterPlanet
                   
                   # If we don't have both `origin airport` and `destination airport`:
                   else
+                    # Restrict the cohort to flight segments that occurred the same year as the flight or the previous three years.
+                    # (We need to include the previous three years because 2009 is the most recent year for which we have complete ICAO data.)
+                    relevant_years = ((date.year - 3)..date.year).to_a
+                    
                     # - Use airport iata codes to assemble a cohort of BTS flight segments
                     if characteristics[:origin_airport].present?
                       provided_characteristics.push [:origin_airport_iata_code, characteristics[:origin_airport].iata_code]
