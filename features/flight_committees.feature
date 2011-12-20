@@ -384,7 +384,7 @@ Feature: Flight Committee Calculations
     Given a characteristic "distance_class.name" of "short haul"
     When the "distance" committee reports
     Then the committee should have used quorum "from distance class"
-    And the conclusion of the committee should be "598.27214"
+    And the conclusion of the committee should be "593.95248"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario Outline: Distance committee from cohort with origin only
@@ -397,10 +397,10 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<distance>"
     And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | origin | distance |
-      | JFK    | 1000.0   |
-      | FRA    |  100.0   |
-      | LHR    |  687.0   |
+      | origin | distance   |
+      | JFK    | 1000.0     |
+      | FRA    |  100.0     |
+      | LHR    |  686.95652 |
 
   Scenario Outline: Distance committee from cohort with destination only
     Given a characteristic "date" of "2011-05-01"
@@ -550,14 +550,14 @@ Feature: Flight Committee Calculations
     And a characteristic "seat_class_multiplier" of "2"
     When the "fuel" committee reports
     And the "fuel_use" committee reports
-    Then the conclusion of the committee should be "7.2"
+    Then the conclusion of the committee should be "9.0"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Energy committee from fuel use and fuel
     Given a characteristic "fuel_use" of "100"
     When the "fuel" committee reports
     And the "energy" committee reports
-    Then the conclusion of the committee should be "4750.0"
+    Then the conclusion of the committee should be "3800.0"
     And the conclusion should not comply with standards "ghg_protocol_scope_3, iso, tcr"
 
   Scenario: Aviation multiplier committee from default
