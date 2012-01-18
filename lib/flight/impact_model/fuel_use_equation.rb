@@ -46,7 +46,7 @@ module BrighterPlanet
             c.execute %{
               INSERT INTO tmp_fuel_use_coefficients (description, m3, m2, m1, b)
                 SELECT t1.b, AVG(t2.m3), AVG(t2.m2), AVG(t2.m1), AVG(t2.b)
-                FROM #{::LooseTightDictionary::CachedResult.quoted_table_name} AS t1
+                FROM #{::FuzzyMatch::CachedResult.quoted_table_name} AS t1
                   INNER JOIN #{::Aircraft.quoted_table_name} AS t2
                   ON t1.a = t2.description
                 WHERE t1.b IN ('#{aircraft_descriptions.join("', '")}')

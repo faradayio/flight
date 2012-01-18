@@ -9,7 +9,7 @@ Sniff.init File.join(File.dirname(__FILE__), '..', '..'), :earth => [:air, :loca
 
 # Set up fuzzy matching between Aircraft and FlightSegment for testing
 # Also, derive characteristics of Aircraft from flight_segments and deriving missing values from other aircraft in same aircraft class
-require 'loose_tight_dictionary'
+require 'fuzzy_match'
 require 'earth/air/flight_segment/data_miner'
 require 'earth/air/aircraft/data_miner'
 FlightSegment.data_miner_config.steps.clear
