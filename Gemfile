@@ -7,3 +7,5 @@ end
 source :rubygems
 
 gemspec :path => '.'
+
+gem 'sqlite3-ruby'
