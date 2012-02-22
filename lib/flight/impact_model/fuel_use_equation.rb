@@ -93,10 +93,6 @@ module BrighterPlanet
           end
         end
         
-        def values
-          [m3, m2, m1, b]
-        end
-        
         def valid?
           values.all?(&:present?) and values.any?(&:nonzero?)
         end
