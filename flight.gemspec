@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   
   s.add_runtime_dependency 'earth',     '~>0.11.0'
   s.add_runtime_dependency 'emitter',   '~>0.11.0'
+  s.add_runtime_dependency 'charisma',  '>=0.3.4'
   s.add_runtime_dependency 'fuzzy_match'
   s.add_development_dependency 'sniff', '~>0.11.3'
 end
