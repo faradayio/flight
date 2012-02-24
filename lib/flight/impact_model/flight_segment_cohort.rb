@@ -21,8 +21,13 @@ module BrighterPlanet
         
         attr_reader :characteristics
         
+        # We pull values out of charisma curations here
+        # TODO: don't make up for charisma's probs
         def initialize(characteristics)
-          @characteristics = characteristics.to_hash
+          @characteristics = characteristics.inject({}) do |memo, (k, v)|
+            memo[k] = v.respond_to?(:value) ? v.value : value
+            memo
+          end
         end
         
         def valid?
