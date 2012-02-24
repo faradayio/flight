@@ -57,16 +57,6 @@ module BrighterPlanet
         def coefficients
           [ m3, m2, m1, b ]
         end
-
-        # In case you want to `cache_method :m3` this
-        # TODO: break this up into 2 classes
-        def method_cache_hash
-          if where_sql
-            where_sql.hash
-          else
-            [ @m3, @m2, @m1, @b ].hash
-          end
-        end
         
         private
 

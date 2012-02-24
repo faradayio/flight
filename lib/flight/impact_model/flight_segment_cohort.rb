@@ -50,11 +50,6 @@ module BrighterPlanet
           cohort.count
         end
         
-        # In case you want to `cache_method :weighted_average` on this
-        def method_cache_hash
-          @characteristics.hash
-        end
-                                
         private
         
         def cohort
