@@ -108,10 +108,10 @@ e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'U
             # segments that match the characteristics we've decided to use. If no segments match all the
             # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
             # we have some segments or we've dropped all the characteristics.
-            @cohort = FlightSegment.where(:year => relevant_years).where("passengers > 0").strict_cohort(*provided_characteristics)
-=begin
-TODO: make 'passengers > 0' a constraint once cohort_scope supports non-hash constraints
-=end
+            cohort = FlightSegment.strict_cohort(*provided_characteristics)
+            
+            fs = FlightSegment.arel_table
+            @cohort = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(cohort))
           # If we don't have both `origin airport` and `destination airport`:
           else
             # Restrict the cohort to flight segments that occurred the same year as the flight or the previous three years.
@@ -180,12 +180,10 @@ e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'U
             # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
             # we have some segments or we've dropped all the characteristics.
             icao_cohort = FlightSegment.strict_cohort(*provided_characteristics)
-
+            
             # - Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
-=begin
-Note: cohort_scope 0.2.1 provides cohort + cohort => cohort; cohort.where() => relation; relation.to_cohort => cohort
-=end
-            @cohort = (bts_cohort + icao_cohort).where(:year => relevant_years).where("passengers > 0").to_cohort
+            fs = FlightSegment.arel_table
+            @cohort = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(icao_cohort.or(bts_cohort)))
           end
         end
       end
