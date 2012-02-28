@@ -265,7 +265,7 @@ module BrighterPlanet
             quorum 'from cohort', :needs => :cohort,
               # Calculate the average fuel use coefficients of the `cohort` aircraft, weighted by the passengers carried by each of those aircraft:
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                FuelUseEquation.from_flight_segments characteristics[:cohort]
+                FuelUseEquation.from_flight_segment_cohort characteristics[:cohort]
             end
             
             # Otherwise use the `aircraft` fuel use coefficients.
@@ -390,7 +390,7 @@ module BrighterPlanet
           committee :cohort do
             # If the client specified the id of a single flight segment in our database, use that flight segment.
             quorum 'from row_hash', :needs => [:flight_segment_row_hash] do |characteristics|
-              FlightSegment.where(:row_hash => characteristics[:flight_segment_row_hash].value).to_cohort
+              FlightSegment.where(:row_hash => characteristics[:flight_segment_row_hash].value)
             end
             
             # Otherwise assemble a cohort based on whatever client inputs are available:

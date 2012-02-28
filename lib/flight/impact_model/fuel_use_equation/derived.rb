@@ -3,8 +3,8 @@ module BrighterPlanet
     module ImpactModel
       class FuelUseEquation
         class Derived < FuelUseEquation
-          def initialize(flight_segments)
-            @where_sql = flight_segments.where_sql
+          def initialize(flight_segment_cohort)
+            @where_sql = flight_segment_cohort.where_sql
           end
           
           def m3

@@ -15,8 +15,8 @@ module BrighterPlanet
             end
           end
 
-          def from_flight_segments(flight_segments)
-            equation = Derived.new flight_segments
+          def from_flight_segment_cohort(flight_segment_cohort)
+            equation = Derived.new flight_segment_cohort
             if equation.valid?
               equation
             else

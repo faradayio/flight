@@ -1,12 +1,11 @@
 module BrighterPlanet
   module Flight
     module ImpactModel
-      # Acts like an cohort/relation for these methods:
+      # Does cohort analysis and provides:
       # * where_sql
       # * weighted_average
       # * to_sql
       # * count
-      # Does not attempt to delegate/forward to maintain simplicity.
       class FlightSegmentCohort
         class << self
           def from_characteristics(characteristics)
@@ -31,29 +30,29 @@ module BrighterPlanet
         end
         
         def valid?
-          characteristics[:segments_per_trip] == 1 and cohort.any?
+          characteristics[:segments_per_trip] == 1 and relation.any?
         end
         
         def where_sql
-          cohort.where_sql
+          relation.where_sql
         end
         
         def weighted_average(*args)
-          cohort.weighted_average(*args)
+          relation.weighted_average(*args)
         end
         
         def to_sql
-          cohort.to_sql
+          relation.to_sql
         end
         
         def count
-          cohort.count
+          relation.count
         end
         
         private
         
-        def cohort
-          return @cohort if @cohort
+        def relation
+          return @relation if @relation
           
           provided_characteristics = []
 =begin
@@ -111,7 +110,7 @@ e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'U
             cohort = FlightSegment.strict_cohort(*provided_characteristics)
             
             fs = FlightSegment.arel_table
-            @cohort = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(cohort))
+            @relation = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(cohort))
           # If we don't have both `origin airport` and `destination airport`:
           else
             # Restrict the cohort to flight segments that occurred the same year as the flight or the previous three years.
@@ -183,7 +182,7 @@ e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'U
             
             # - Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
             fs = FlightSegment.arel_table
-            @cohort = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(icao_cohort.or(bts_cohort)))
+            @relation = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(icao_cohort.or(bts_cohort)))
           end
         end
       end
