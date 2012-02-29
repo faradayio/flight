@@ -24,7 +24,7 @@ module BrighterPlanet
         # TODO: don't make up for charisma's probs
         def initialize(characteristics)
           @characteristics = characteristics.inject({}) do |memo, (k, v)|
-            memo[k] = v.respond_to?(:value) ? v.value : value
+            memo[k] = v.respond_to?(:value) ? v.value : v
             memo
           end
         end
