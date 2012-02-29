@@ -30,7 +30,9 @@ module BrighterPlanet
         end
         
         def valid?
-          characteristics[:segments_per_trip] == 1 and relation.any?
+          characteristics[:segments_per_trip] == 1 and
+          characteristics[:date].present? and
+          relation.any?
         end
         
         def where_sql

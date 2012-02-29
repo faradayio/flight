@@ -397,7 +397,7 @@ module BrighterPlanet
             
             # Otherwise assemble a cohort based on whatever client inputs are available:
             quorum 'from segments per trip and input',
-              :needs => :segments_per_trip, :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline, :date],
+              :needs => [:segments_per_trip, :date], :appreciates => [:origin_airport, :destination_airport, :aircraft, :airline],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
               FlightSegmentCohort.from_characteristics characteristics
             end
