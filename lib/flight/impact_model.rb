@@ -32,6 +32,8 @@
 
 ##### Collaboration
 # Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](https://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
+
+require 'cohort_analysis'
 require 'flight/impact_model/fuel_use_equation'
 require 'flight/impact_model/flight_segment_cohort'
 
