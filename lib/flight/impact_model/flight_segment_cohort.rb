@@ -111,11 +111,11 @@ e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'U
             # segments that match the characteristics we've decided to use. If no segments match all the
             # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
             # we have some segments or we've dropped all the characteristics.
-            
-            fs = FlightSegment.arel_table
             priority = [:origin_airport_iata_code, :destination_airport_iata_code, :origin_airport_city, :destination_airport_city, :aircraft_description, :airline_name]
-            candidates = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)))
-            @relation = candidates.cohort(provided_characteristics, :strategy => :strict, :priority => priority)
+            cohort_constraint = FlightSegment.cohort_constraint(provided_characteristics, :strategy => :strict, :priority => priority)
+
+            fs = FlightSegment.arel_table
+            @relation = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(cohort_constraint))
           # If we don't have both `origin airport` and `destination airport`:
           else
             # Restrict the cohort to flight segments that occurred the same year as the flight or the previous three years.
@@ -191,8 +191,7 @@ e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'U
             
             # - Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
             fs = FlightSegment.arel_table
-            candidates = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)))
-            @relation = candidates.where(icao_cohort_constraint.or(bts_cohort_constraint))
+            @relation = FlightSegment.where(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)).and(icao_cohort_constraint.or(bts_cohort_constraint)))
           end
         end
       end
