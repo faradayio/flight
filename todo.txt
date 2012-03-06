@@ -1,0 +1,6 @@
+impact_model.rb
+  :fuel_use committee
+    date should already be coerced
+  
+  :fuel committee
+    use avgas if it's a piston aircraft

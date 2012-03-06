@@ -94,9 +94,6 @@ module BrighterPlanet
             quorum 'from fuel per segment, segments per trip, trips, freight_share, passengers, seat class multiplier, fuel, date, and timeframe',
               :needs => [:fuel_per_segment, :segments_per_trip, :trips, :freight_share, :passengers, :seat_class_multiplier, :fuel, :date],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
-=begin
-  FIXME TODO date should already be coerced
-=end
                 date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
                 if timeframe.include? date
                   characteristics[:fuel_per_segment] * characteristics[:segments_per_trip] * characteristics[:trips] *
