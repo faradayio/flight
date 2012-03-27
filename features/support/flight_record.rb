@@ -6,5 +6,5 @@ require 'sniff'
 class FlightRecord < ActiveRecord::Base
   include BrighterPlanet::Emitter
   include BrighterPlanet::Flight
-  set_table_name 'flight_records'
+  self.table_name = 'flight_records'
 end
