@@ -526,9 +526,9 @@ Feature: Flight Committee Calculations
     Then the conclusion of the committee should be "1692.30769"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
 
-  Scenario: Fuel use committee from date not in timeframe
-    Given a characteristic "date" of "2009-06-25"
-    And a characteristic "timeframe" of "2009-01-01/2009-01-31"
+  Scenario Outline: Fuel use committee
+    Given a characteristic "date" of "<date>"
+    And a characteristic "timeframe" of "<timeframe>"
     And a characteristic "fuel_per_segment" of "10"
     And a characteristic "segments_per_trip" of "2"
     And a characteristic "trips" of "2"
@@ -537,21 +537,12 @@ Feature: Flight Committee Calculations
     And a characteristic "seat_class_multiplier" of "2"
     When the "fuel" committee reports
     And the "fuel_use" committee reports
-    Then the conclusion of the committee should be nil
-
-  Scenario: Fuel use committee
-    Given a characteristic "date" of "2009-06-25"
-    And a characteristic "timeframe" of "2009-01-01/2010-01-01"
-    And a characteristic "fuel_per_segment" of "10"
-    And a characteristic "segments_per_trip" of "2"
-    And a characteristic "trips" of "2"
-    And a characteristic "freight_share" of "0.1"
-    And a characteristic "passengers" of "10"
-    And a characteristic "seat_class_multiplier" of "2"
-    When the "fuel" committee reports
-    And the "fuel_use" committee reports
-    Then the conclusion of the committee should be "9.0"
+    Then the conclusion of the committee should be "<fuel_use>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
+    Examples:
+      | date       | timeframe             | fuel_use |
+      | 2009-06-25 | 2009-01-01/2010-01-01 | 9.0      |
+      | 2009-06-25 | 2009-01-01/2009-02-01 | 0.0      |
 
   Scenario: Energy committee from fuel use and fuel
     Given a characteristic "fuel_use" of "100"
