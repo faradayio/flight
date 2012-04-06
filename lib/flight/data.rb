@@ -15,6 +15,7 @@ module BrighterPlanet
         base.col :distance_estimate, :type => :float
         base.col :distance_class_name
         base.col :seat_class_name
+        base.col :flight_segment_row_hash
         
         base.data_miner do
           process "pull orphans" do
