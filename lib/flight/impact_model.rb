@@ -378,7 +378,7 @@ module BrighterPlanet
             # If the flight's `origin airport` and `destination airport` are within the same country, use that country.
             quorum 'from origin airport and destination airport', :needs => [:origin_airport, :destination_airport],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                if characteristics[:origin_airport].country == characteristics[:destination_airport].country
+                if characteristics[:origin_airport].country_iso_3166_code == characteristics[:destination_airport].country_iso_3166_code
                   characteristics[:origin_airport].country
                 end
             end
