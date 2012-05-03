@@ -16,6 +16,7 @@ module BrighterPlanet
           has :distance_estimate, :measures => Measurement::BigLength
           has :distance_class
           has :seat_class
+          has :flight_segment_row_hash
         end
       end
     end
