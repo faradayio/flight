@@ -334,7 +334,7 @@ module BrighterPlanet
             # Otherwise calculate the average load factor of the `cohort` segments, weighted by passengers.
             quorum 'from cohort', :needs => :cohort,
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                load_factor = characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
+                characteristics[:cohort].weighted_average(:load_factor, :weighted_by => :passengers)
             end
             
             # Otherwise calculate the average load factor of [all flight segments in our database](http://data.brighterplanet.com/flight_segments), weighted by passengers.
