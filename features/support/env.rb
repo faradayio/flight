@@ -12,5 +12,5 @@ Sniff.init File.join(File.dirname(__FILE__), '..', '..'), :earth => [:air, :loca
 require 'fuzzy_match'
 require 'earth/air/flight_segment/data_miner'
 require 'earth/air/aircraft/data_miner'
-FlightSegment.data_miner_config.steps.clear
+FlightSegment.data_miner_script.steps.clear
 Aircraft.update_averages!
