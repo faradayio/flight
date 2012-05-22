@@ -28,5 +28,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'charisma',     '>=0.3.4'
   s.add_runtime_dependency 'cohort_analysis'
   s.add_runtime_dependency 'fuzzy_match'
+  s.add_runtime_dependency 'weighted_average', '>=1.1.0'
   s.add_development_dependency 'sniff', '~>0.11.3'
 end

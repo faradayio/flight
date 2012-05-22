@@ -182,6 +182,13 @@ module BrighterPlanet
                 characteristics[:distance] * characteristics[:route_inefficiency_factor] * characteristics[:dogleg_factor]
             end
           end
+
+          # TODO there should be another way to do this
+          committee :cleanup_cohort do
+            quorum "if a cohort was created", :needs => [:cohort], :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+              characteristics[:cohort].value.cleanup
+            end
+          end
           
           #### Distance (*nautical miles*)
           # *The flight's base distance.*
@@ -264,7 +271,7 @@ module BrighterPlanet
             quorum 'from cohort', :needs => :cohort,
               # Calculate the average fuel use coefficients of the `cohort` aircraft, weighted by the passengers carried by each of those aircraft:
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                FuelUseEquation.from_flight_segment_cohort characteristics[:cohort]
+                FuelUseEquation.from_flight_segment_cohort characteristics[:cohort].value
             end
             
             # Otherwise use the `aircraft` fuel use coefficients.
