@@ -183,13 +183,6 @@ module BrighterPlanet
             end
           end
 
-          # TODO there should be another way to do this
-          committee :cleanup_cohort do
-            quorum "if a cohort was created", :needs => [:cohort], :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-              characteristics[:cohort].value.cleanup
-            end
-          end
-          
           #### Distance (*nautical miles*)
           # *The flight's base distance.*
           committee :distance do
