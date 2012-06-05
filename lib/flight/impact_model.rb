@@ -48,8 +48,11 @@ module BrighterPlanet
           # *The passenger's share of the flight's anthropogenic greenhouse emissions during `timeframe`.*
           committee :carbon do
             # Multiply `fuel use` (*l*) by `greenhouse gas emission factor` (*kg CO<sub>2</sub>e / l*) to give *kg CO<sub>2</sub>e*.
-            quorum 'from fuel use and greenhouse gas emission factor', :needs => [:fuel_use, :ghg_emission_factor],
+            quorum 'from fuel use and greenhouse gas emission factor', :needs => [:fuel_use, :ghg_emission_factor], :appreciates => [:cohort],
               :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
+                if (cohort = characteristics[:cohort]) and cohort.respond_to?(:cleanup)
+                  cohort.cleanup
+                end
                 characteristics[:fuel_use] * characteristics[:ghg_emission_factor]
             end
           end
