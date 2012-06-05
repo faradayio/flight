@@ -48,12 +48,14 @@ module BrighterPlanet
           # *The passenger's share of the flight's anthropogenic greenhouse emissions during `timeframe`.*
           committee :carbon do
             # Multiply `fuel use` (*l*) by `greenhouse gas emission factor` (*kg CO<sub>2</sub>e / l*) to give *kg CO<sub>2</sub>e*.
-            quorum 'from fuel use and greenhouse gas emission factor', :needs => [:fuel_use, :ghg_emission_factor], :appreciates => [:cohort],
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                if (cohort = characteristics[:cohort]) and cohort.respond_to?(:cleanup)
-                  cohort.cleanup
-                end
-                characteristics[:fuel_use] * characteristics[:ghg_emission_factor]
+            quorum 'from fuel use and greenhouse gas emission factor',
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr],
+              :appreciates => [:cohort],
+              :needs => [:fuel_use, :ghg_emission_factor] do |characteristics|
+              if (cohort = characteristics[:cohort]) and cohort.respond_to?(:cleanup)
+                cohort.cleanup
+              end
+              characteristics[:fuel_use] * characteristics[:ghg_emission_factor]
             end
           end
           
@@ -61,9 +63,10 @@ module BrighterPlanet
           # *An emission factor that includes the extra forcing effects of high-altitude emissions.*
           committee :ghg_emission_factor do
             # Multiply the [fuel](http://data.brighterplanet.com/fuels)'s co2 emission factor (*kg CO<sub>2</sub> / l*) by `aviation multiplier` to give *kg CO<sub>2</sub> / l*.
-            quorum 'from fuel and aviation multiplier', :needs => [:fuel, :aviation_multiplier],
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                characteristics[:fuel].co2_emission_factor * characteristics[:aviation_multiplier]
+            quorum 'from fuel and aviation multiplier',
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr],
+              :needs => [:fuel, :aviation_multiplier] do |characteristics|
+              characteristics[:fuel].co2_emission_factor * characteristics[:aviation_multiplier]
             end
           end
           
@@ -71,10 +74,7 @@ module BrighterPlanet
           # *A multiplier to account for the extra climate impact of greenhouse gas emissions high in the atmosphere.*
           committee :aviation_multiplier do
             # Use **2.0** after [Kollmuss and Crimmins (2009)](http://sei-us.org/publications/id/13).
-            quorum 'default',
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do
-                2.0
-            end
+            quorum('default', :complies => [:ghg_protocol_scope_3, :iso, :tcr]) { 2.0 }
           end
           
           #### Energy (*MJ*)
@@ -95,16 +95,20 @@ module BrighterPlanet
             # Divide by `passengers` and multiply by `seat class multiplier` to account for the portion of the cabin occupied by the passenger's seat.
             # Divide by the [fuel](http://data.brighterplanet.com/fuels)'s density (*kg / l*) to give *l*.
             quorum 'from fuel per segment, segments per trip, trips, freight_share, passengers, seat class multiplier, fuel, date, and timeframe',
-              :needs => [:fuel_per_segment, :segments_per_trip, :trips, :freight_share, :passengers, :seat_class_multiplier, :fuel, :date],
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics, timeframe|
-                date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
-                if timeframe.include? date
-                  characteristics[:fuel_per_segment] * characteristics[:segments_per_trip] * characteristics[:trips] *
-                    (1 - characteristics[:freight_share]) / characteristics[:passengers] * characteristics[:seat_class_multiplier] /
-                    characteristics[:fuel].density
-                else
-                  0
-                end
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr],
+              :needs => [:fuel_per_segment, :segments_per_trip, :trips, :freight_share, :passengers, :seat_class_multiplier, :fuel, :date] do |characteristics, timeframe|
+              date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
+              if timeframe.include? date
+                characteristics[:fuel_per_segment] *
+                characteristics[:segments_per_trip] *
+                characteristics[:trips] *
+                characteristics[:seat_class_multiplier] *
+                (1 - characteristics[:freight_share]) /
+                characteristics[:passengers] /
+                characteristics[:fuel].density
+              else
+                0
+              end
             end
           end
           
@@ -113,14 +117,17 @@ module BrighterPlanet
           committee :fuel_per_segment do
             # Fuel per segment = *m<sub>3</sub>d<sup>3</sup> + m<sub>2</sub>d<sup>2</sup> + m<sub>1</sub>d + b*
             # where *d* is `adjusted distance per segment` and *m<sub>3</sub>, m<sub>2</sub>, m<sub>1</sub>*, and *b* are the `fuel use coefficients`.
-            quorum 'from adjusted distance per segment and fuel use coefficients', :needs => [:adjusted_distance_per_segment, :fuel_use_coefficients],
-              :complies => [:ghg_protocol_scope_3, :iso, :tcr] do |characteristics|
-                characteristics[:fuel_use_coefficients].m3 * characteristics[:adjusted_distance_per_segment] ** 3 +
-                  characteristics[:fuel_use_coefficients].m2 * characteristics[:adjusted_distance_per_segment] ** 2 +
-                  characteristics[:fuel_use_coefficients].m1 * characteristics[:adjusted_distance_per_segment] +
-                  characteristics[:fuel_use_coefficients].b
+            quorum 'from adjusted distance per segment and fuel use coefficients',
+              :complies => [:ghg_protocol_scope_3, :iso, :tcr],
+              :needs => [:adjusted_distance_per_segment, :fuel_use_coefficients] do |characteristics|
+              characteristics[:fuel_use_coefficients].m3 * characteristics[:adjusted_distance_per_segment] ** 3 +
+              characteristics[:fuel_use_coefficients].m2 * characteristics[:adjusted_distance_per_segment] ** 2 +
+              characteristics[:fuel_use_coefficients].m1 * characteristics[:adjusted_distance_per_segment] +
+              characteristics[:fuel_use_coefficients].b
             end
           end
+
+          # sabshere 6/5/12 stopped reformatting here
           
           #### Seat class multiplier
           # *A multiplier to account for the portion of cabin space occupied by the passenger's seat.*
