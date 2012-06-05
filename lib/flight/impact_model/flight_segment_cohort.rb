@@ -26,7 +26,7 @@ module BrighterPlanet
 
           @table_name = "flight_segment_cohort_#{Kernel.rand(1e11)}"
           @characteristics = characteristics.inject({}) do |memo, (k, v)|
-            if vv = v.respond_to?(:value) ? v.value : v
+            if (vv = v.respond_to?(:value) ? v.value : v) and not vv.nil?
               memo[k] = vv
             end
             memo
