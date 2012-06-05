@@ -32,6 +32,7 @@ module BrighterPlanet
         def valid?
           characteristics[:segments_per_trip] == 1 and
           characteristics[:date].present? and
+          provided.any? and
           count > 0
         end
         
@@ -123,7 +124,7 @@ module BrighterPlanet
 
             subselect = if origin_airport.present? and destination_airport.present?
               
-              if origin_airport.country_iso_3166_code == "US" and destination_airport.country_iso_3166_code == "US"
+              if origin_airport.country_iso_3166_code == "US" or destination_airport.country_iso_3166_code == "US"
                 bts_cohort
                 # - Assemble a cohort by starting with all flight segments in the relevant years. Select only the
                 # segments that match the characteristics we've decided to use. If no segments match all the
