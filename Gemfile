@@ -9,3 +9,4 @@ source :rubygems
 gemspec :path => '.'
 
 gem 'sqlite3-ruby'
+gem 'mysql2', '~>0.2'
