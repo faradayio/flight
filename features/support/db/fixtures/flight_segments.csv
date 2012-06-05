@@ -1,9 +1,9 @@
-row_hash,origin_airport_iata_code,origin_airport_city,origin_country_iso_3166_code,destination_airport_iata_code,destination_airport_city,destination_country_iso_3166_code,airline_name,aircraft_description,passengers,seats_per_flight,load_factor,freight_share,distance,year
-aaaaaa,JFK,,US,LHR,,GB,Delta,boeing 737-100/200/300,200,250,0.8,0.02,1852,2011
-bbbbb,JFK,,US,LHR,,GB,British Airways,boeing 737-400,360,100,0.9,0.04,1852,2011
-ccccccc,LHR,,GB,JFK,,US,Delta,boeing 737-300,225,300,0.75,0.04,1852,2011
-ddddddd,,London,GB,,Frankfurt,DE,Lufthansa,boeing 737-100/200,120,150,0.8,0.05,185.2,2011
-eeeeeee,,Frankfurt,DE,,London,GB,Lufthansa,boeing 737-400,360,400,0.9,0.05,185.2,2011
-fffff,MEX,,MX,JFK,,US,Delta,boeing 737-200,240,300,0.8,0.04,2778,2011
-ggggg,LGA,,US,SFO,,US,Delta,boeing 737-300,0,300,0,0.01,2778,2011
-hhhhh,JFK,,US,LHR,,GB,Delta,,1,257.47508,0.84037,0.04053,1468.06379,2007
+row_hash,origin_airport_iata_code,origin_airport_city,origin_country_iso_3166_code,destination_airport_iata_code,destination_airport_city,destination_country_iso_3166_code,airline_name,aircraft_description,passengers,seats_per_flight,load_factor,freight_share,distance,year,source
+aaaaaa,JFK,,US,LHR,,GB,Delta,boeing 737-100/200/300,200,250,0.8,0.02,1852,2011,BTS T100
+bbbbb,JFK,,US,LHR,,GB,British Airways,boeing 737-400,360,100,0.9,0.04,1852,2011,BTS T100
+ccccccc,LHR,,GB,JFK,,US,Delta,boeing 737-300,225,300,0.75,0.04,1852,2011,BTS T100
+ddddddd,,London,GB,,Frankfurt,DE,Lufthansa,boeing 737-100/200,120,150,0.8,0.05,185.2,2011,ICAO TFS
+eeeeeee,,Frankfurt,DE,,London,GB,Lufthansa,boeing 737-400,360,400,0.9,0.05,185.2,2011,ICAO TFS
+fffff,MEX,,MX,JFK,,US,Delta,boeing 737-200,240,300,0.8,0.04,2778,2011,BTS T100
+ggggg,LGA,,US,SFO,,US,Delta,boeing 737-300,0,300,0,0.01,2778,2011,BTS T100
+hhhhh,JFK,,US,LHR,,GB,Delta,,1,257.47508,0.84037,0.04053,1468.06379,2007,BTS T100
