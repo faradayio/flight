@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
-require "flight/version"
+require File.expand_path("../lib/flight/version", __FILE__)
 
 Gem::Specification.new do |s|
   s.name = %q{flight}
@@ -26,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'earth',        '~>0.11.15'
   s.add_runtime_dependency 'emitter',      '~>0.11.1'
   s.add_runtime_dependency 'charisma',     '>=0.3.4'
-  s.add_runtime_dependency 'cohort_analysis'
+  s.add_runtime_dependency 'cohort_analysis', '>=1'
   s.add_runtime_dependency 'fuzzy_match'
   s.add_runtime_dependency 'weighted_average', '>=2'
   s.add_development_dependency 'sniff', '~>0.11.3'
