@@ -16,7 +16,7 @@ module BrighterPlanet
         attr_reader :characteristics
         attr_reader :subselect_sql
         attr_reader :table_name
-
+        
         # We pull values out of charisma curations here
         # TODO: don't make up for charisma's probs
         def initialize(characteristics)
@@ -77,7 +77,7 @@ module BrighterPlanet
 
         def relevant_years
           date = characteristics[:date].is_a?(Date) ? characteristics[:date] : Date.parse(characteristics[:date].to_s)
-          if united_states_domestic_flight?
+          if covered_by_bts?
             # Restrict the cohort to flight segments that occurred the same year as the flight or the previous year.
             # (We need to include the previous year because BTS flight segment data lags by 6 months.)
             [date.year - 1, date.year]
@@ -88,7 +88,7 @@ module BrighterPlanet
           end
         end
 
-        def united_states_domestic_flight?
+        def covered_by_bts?
           origin_airport.try(:country_iso_3166_code) == "US" or destination_airport.try(:country_iso_3166_code) == "US"
         end
 
@@ -98,10 +98,20 @@ module BrighterPlanet
           relation.cohort(provided.slice(*priority), :strategy => :strict, :priority => priority).project(Arel.star)
         end
 
+        # Assemble a cohort by starting with all flight segments in the relevant years. Select only the
+        # segments that match the characteristics we've decided to use. If no segments match all the
+        # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
+        # we have some segments or we've dropped all the characteristics.
         def bts_cohort
           cohort_from_source 'BTS T100', [:origin_airport_iata_code, :destination_airport_iata_code, :aircraft_description, :airline_name]
         end
 
+        # FIXME TODO deal with cities in multiple countries that share a name
+        # Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
+        # not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
+        # end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
+        # statements get changed to 'OR' so you end up with all flights to that country
+        # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
         def icao_cohort
           cohort_from_source 'ICAO TFS', [:origin_airport_city, :destination_airport_city, :aircraft_description, :airline_name]
         end
@@ -121,63 +131,19 @@ module BrighterPlanet
             @calculated = true
 
             subselect = if origin_airport.present? and destination_airport.present?
-              
-              if origin_airport.country_iso_3166_code == "US" or destination_airport.country_iso_3166_code == "US"
+              if covered_by_bts?
+                # NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
+                # cohort based just on origin. If that happens, even if the origin is not in the US we still don't want to use
+                # origin airport city, because we know the flight was going to the US and ICAO segments never touch the US.
+                # For example if there are direct flights from Rivendell to DC or London, but you enter a flight from Timbuktu to NYC.
                 bts_cohort
-                # - Assemble a cohort by starting with all flight segments in the relevant years. Select only the
-                # segments that match the characteristics we've decided to use. If no segments match all the
-                # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
-                # we have some segments or we've dropped all the characteristics.
-=begin
-NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
-cohort based just on origin. If that happens, even if the origin is not in the US we still don't want to use
-origin airport city, because we know the flight was going to the US and ICAO segments never touch the US.
-=end
-
               else
                 icao_cohort
-                # - If neither airport is in the US, use airport cities to assemble a cohort of ICAO flight segments
-=begin
-FIXME TODO deal with cities in multiple countries that share a name
-Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
-not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
-end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
-statements get changed to 'OR' so you end up with all flights to that country
-e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
-=end
               end
             else
-              # - Use airport iata codes to assemble a cohort of BTS flight segments
-
-=begin
-Note: can't use where conditions here e.g. where(:year => relevant_years) because when we combine the cohorts
-all AND become OR so we get WHERE year IN (*relevant_years*) OR *other conditions* which returns every
-flight segment in the relevant_years
-=end
-              # - Assemble a cohort by starting with all flight segments in the relevant years. Select only the
-              # segments that match the characteristics we've decided to use. If no segments match all the
-              # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
-              # we have some segments or we've dropped all the characteristics.
-              
-              # - Then use airport city to assemble a cohort of ICAO flight segments
-=begin
-FIXME TODO: deal with cities in multiple countries that share a name
-Tried pushing country, which works on a flight from Mexico City to Barcelona, Spain because it does
-not include flights to Barcelona, Venezuela BUT it doesn't work if we're trying to go from Montreal
-to London, Canada because there are no nonstop flights to London, Canada so country gets dropped and we
-end up with flights to London, United Kingdom. Also pushing country breaks addition of cohorts - all 'AND'
-statements get changed to 'OR' so you end up with all flights to that country
-e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
-=end
-              # - Assemble a cohort by starting with all flight segments in the relevant years. Select only the
-              # segments that match the characteristics we've decided to use. If no segments match all the
-              # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
-              # we have some segments or we've dropped all the characteristics.
-              
-              
-              # - Combine the two cohorts, making sure to restrict to relevant years and segments with passengers
-              bts_cohort.union(icao_cohort)
+              bts_cohort.union icao_cohort
             end
+            
             @subselect_sql = '(' + subselect.to_sql + ')'
             c = FlightSegment.connection
             @table_name = "flight_segment_cohort_#{::Kernel.rand(1e11)}"
