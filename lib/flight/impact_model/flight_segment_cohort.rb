@@ -12,6 +12,11 @@ module BrighterPlanet
             end
           end
         end
+
+        BTS_COHORT_PRIORITIES = [:origin_airport_iata_code, :destination_airport_iata_code, :aircraft_description, :airline_name]
+        BTS_SOURCE_CODE = 'BTS T100'
+        ICAO_COHORT_PRIORITIES = [:origin_airport_city, :destination_airport_city, :aircraft_description, :airline_name]
+        ICAO_SOURCE_CODE = 'ICAO TFS'
         
         attr_reader :characteristics
         attr_reader :table_name
@@ -115,8 +120,8 @@ module BrighterPlanet
 
         def cohort_from_source(source, priority)
           fs = FlightSegment.arel_table
-          relation = FlightSegment.where fs[:source].eq(source).and(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)))
-          relation.cohort(provided.slice(*priority), :strategy => :strict, :priority => priority).project(Arel.star)
+          other_conditions = fs[:source].eq(source).and(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)))
+          FlightSegment.where(other_conditions).project(Arel.star).cohort(provided.slice(*priority), :strategy => :strict, :priority => priority)
         end
 
         # Assemble a cohort by starting with all flight segments in the relevant years. Select only the
@@ -124,7 +129,7 @@ module BrighterPlanet
         # characteristics, drop the last characteristic (initially `airline`) and try again. Continue until
         # we have some segments or we've dropped all the characteristics.
         def bts_cohort
-          cohort_from_source 'BTS T100', [:origin_airport_iata_code, :destination_airport_iata_code, :aircraft_description, :airline_name]
+          cohort_from_source BTS_SOURCE_CODE, BTS_COHORT_PRIORITIES
         end
 
         # FIXME TODO deal with cities in multiple countries that share a name
@@ -134,7 +139,7 @@ module BrighterPlanet
         # statements get changed to 'OR' so you end up with all flights to that country
         # e.g. WHERE origin_airport_iata_code = 'JFK' OR origin_country_iso_3166_code = 'US'
         def icao_cohort
-          cohort_from_source 'ICAO TFS', [:origin_airport_city, :destination_airport_city, :aircraft_description, :airline_name]
+          cohort_from_source ICAO_SOURCE_CODE, ICAO_COHORT_PRIORITIES
         end
 
         def subquery_sql
