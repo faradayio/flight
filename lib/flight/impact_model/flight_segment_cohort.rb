@@ -67,7 +67,7 @@ module BrighterPlanet
         end
 
         def cleanup
-          execute %{ DROP TABLE #{table_name} }
+          execute %{ DROP TABLE IF EXISTS #{table_name} }
         end
         
         private
