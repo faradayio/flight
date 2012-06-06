@@ -27,8 +27,7 @@ module BrighterPlanet
         # TODO: don't make up for charisma's probs
         def initialize(characteristics)
           @select_manager_mutex = Mutex.new
-          @subquery_sql_mutex = Mutex.new
-
+          @cohort_mutex = Mutex.new
           @table_name = "flight_segment_cohort_#{Kernel.rand(1e11)}"
           @characteristics = characteristics.inject({}) do |memo, (k, v)|
             if (vv = v.respond_to?(:value) ? v.value : v) and not vv.nil?
@@ -52,9 +51,16 @@ module BrighterPlanet
           select_manager.weighted_average(*args)
         end
         
-        def to_sql
-          subquery_sql
+        def cohort_sql
+          @cohort_sql ||= case cohort
+          when Arel::Nodes::Union
+            "SELECT * FROM #{cohort.to_sql} AS t1"
+          else
+            cohort.to_sql
+          end
         end
+
+        alias :to_sql :cohort_sql
         
         def count
           counter = select_manager.dup
@@ -142,9 +148,9 @@ module BrighterPlanet
           cohort_from_source ICAO_SOURCE_CODE, ICAO_COHORT_PRIORITIES
         end
 
-        def subquery_sql
-          @subquery_sql || @subquery_sql_mutex.synchronize do
-            @subquery_sql ||= if origin_airport.present? and destination_airport.present?
+        def cohort
+          @cohort || @cohort_mutex.synchronize do
+            @cohort ||= if origin_airport.present? and destination_airport.present?
               if covered_by_bts?
                 # NOTE: It's possible that the origin/destination pair won't appear in our database and we'll end up using a
                 # cohort based just on origin. If that happens, even if the origin is not in the US we still don't want to use
@@ -156,7 +162,7 @@ module BrighterPlanet
               end
             else
               bts_cohort.union icao_cohort
-            end.to_sql
+            end
           end
         end
 
@@ -167,7 +173,7 @@ module BrighterPlanet
 
               if sqlite?
                 populated = true
-                execute %{ CREATE TEMPORARY TABLE #{table_name} AS SELECT * FROM (#{subquery_sql}) }
+                execute %{ CREATE TEMPORARY TABLE #{table_name} AS #{cohort_sql} }
               else
                 execute %{ CREATE TEMPORARY TABLE #{table_name} LIKE #{FlightSegment.quoted_table_name} }
               end
@@ -177,7 +183,7 @@ module BrighterPlanet
               end
 
               unless populated
-                execute %{ INSERT INTO #{table_name} SELECT * FROM (#{subquery_sql}) }
+                execute %{ INSERT INTO #{table_name} #{cohort_sql} }
               end
 
               if mysql?
