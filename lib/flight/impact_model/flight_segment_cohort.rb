@@ -28,6 +28,7 @@ module BrighterPlanet
         def initialize(characteristics)
           @select_manager_mutex = Mutex.new
           @cohort_mutex = Mutex.new
+          @count_mutex = Mutex.new
           @table_name = "flight_segment_cohort_#{Kernel.rand(1e11)}"
           @characteristics = characteristics.inject({}) do |memo, (k, v)|
             if (vv = v.respond_to?(:value) ? v.value : v) and not vv.nil?
@@ -44,7 +45,7 @@ module BrighterPlanet
           characteristics[:segments_per_trip] == 1 and
           characteristics[:date].present? and
           provided.any? and
-          count > 0
+          possible?
         end
         
         def weighted_average(*args)
@@ -53,27 +54,42 @@ module BrighterPlanet
         
         def cohort_sql
           @cohort_sql ||= case cohort
-          when Arel::Nodes::Union
-            "SELECT * FROM #{cohort.to_sql} AS t1"
+          when Array
+            union = cohort.inject :union
+            "SELECT * FROM #{union.to_sql} AS t1"
           else
             cohort.to_sql
           end
         end
 
         alias :to_sql :cohort_sql
-        
-        def count
-          counter = select_manager.dup
-          counter.projections = [Arel.sql('COUNT(*)')]
-          FlightSegment.connection.select_value counter.to_sql
-        end
 
+        def count
+          @count || @count_mutex.synchronize do
+            @count ||= begin
+              counter = select_manager.clone
+              counter.projections = [Arel.sql('COUNT(*)')]
+              FlightSegment.connection.select_value counter.to_sql
+            end
+          end
+        end
+        
         def as_json(*)
           { :members => count, :sql => to_sql }
         end
 
         def cleanup
           execute %{ DROP TABLE IF EXISTS #{table_name} }
+        end
+
+        def resolve_cohort!
+          cohort_sql
+          true
+        end
+
+        def generate_tmp_table!
+          select_manager
+          true
         end
         
         private
@@ -161,8 +177,15 @@ module BrighterPlanet
                 icao_cohort
               end
             else
-              bts_cohort.union icao_cohort
+              [bts_cohort, icao_cohort]
             end
+          end
+        end
+
+        def possible?
+          resolve_cohort!
+          Array.wrap(cohort).any? do |cohort|
+            cohort.cohort_possible?
           end
         end
 
@@ -190,7 +213,14 @@ module BrighterPlanet
                 execute %{ ANALYZE TABLE #{table_name} }
               end
 
-              Arel::SelectManager.new FlightSegment, Arel::Table.new(table_name)
+              select_manager = Arel::SelectManager.new FlightSegment, Arel::Table.new(table_name)
+              
+              # eagerly perform a count
+              counter = select_manager.clone
+              counter.projections = [Arel.sql('COUNT(*)')]
+              @count = FlightSegment.connection.select_value counter.to_sql
+
+              select_manager
             end
           end
         end
