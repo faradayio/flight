@@ -7,6 +7,3 @@ end
 source :rubygems
 
 gemspec
-
-gem 'sqlite3-ruby'
-gem 'mysql2', '~>0.2'
