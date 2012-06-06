@@ -127,7 +127,7 @@ module BrighterPlanet
         def cohort_from_source(source, priority)
           fs = FlightSegment.arel_table
           other_conditions = fs[:source].eq(source).and(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)))
-          FlightSegment.where(other_conditions).project(Arel.star).cohort(provided.slice(*priority), :strategy => :strict, :priority => priority)
+          FlightSegment.where(other_conditions).cohort(provided.slice(*priority), :strategy => :strict, :priority => priority).project(Arel.star)
         end
 
         # Assemble a cohort by starting with all flight segments in the relevant years. Select only the
