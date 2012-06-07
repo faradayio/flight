@@ -73,7 +73,9 @@ module BrighterPlanet
               end
 
               # make sure that [lazy-loading] flight segment cohort tmp table has been created, because it's about to be used
-              flight_segment_cohort.generate_tmp_table!
+              if flight_segment_cohort.is_a? FlightSegmentCohort
+                flight_segment_cohort.generate_tmp_table!
+              end
 
               # - For each unique aircraft description:
               # - 1. look up all the aircraft it refers to
