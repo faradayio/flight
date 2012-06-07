@@ -75,6 +75,12 @@ module BrighterPlanet
               # make sure that [lazy-loading] flight segment cohort tmp table has been created, because it's about to be used
               if flight_segment_cohort.is_a? FlightSegmentCohort
                 flight_segment_cohort.generate_tmp_table!
+                aircraft_descriptions_sql = %{ SELECT DISTINCT #{flight_segment_cohort.table_name}.aircraft_description FROM #{flight_segment_cohort.table_name} }
+                passengers_sql = %{ ( SELECT SUM(passengers) FROM #{flight_segment_cohort.table_name} WHERE #{flight_segment_cohort.table_name}.aircraft_description = #{table_name}.aircraft_description ) }
+              else
+                flight_segment = flight_segment_cohort.first
+                aircraft_descriptions_sql = connection.quote flight_segment.aircraft_description
+                passengers_sql = connection.quote flight_segment.passengers
               end
 
               # - For each unique aircraft description:
@@ -87,9 +93,7 @@ module BrighterPlanet
                   FROM #{FuzzyMatch::CachedResult.quoted_table_name} AS fz
                     INNER JOIN #{Aircraft.quoted_table_name} AS ac
                     ON fz.a = ac.description AND fz.a_class = 'Aircraft' AND fz.b_class = 'FlightSegment'
-                  WHERE fz.b IN (
-                    SELECT DISTINCT #{flight_segment_cohort.table_name}.aircraft_description FROM #{flight_segment_cohort.table_name}
-                  )
+                  WHERE fz.b IN (#{aircraft_descriptions_sql})
                   GROUP BY fz.b
               }
 
@@ -99,11 +103,7 @@ module BrighterPlanet
               # - 3. store the resulting value in the temporary table
               execute %{
                 UPDATE #{table_name}
-                SET passengers = (
-                  SELECT SUM(passengers)
-                  FROM #{flight_segment_cohort.table_name}
-                  WHERE #{flight_segment_cohort.table_name}.aircraft_description = #{table_name}.aircraft_description
-                )
+                SET passengers = #{passengers_sql}
               }
 
               # - Calculate the average of the coefficients in the temporary table, weighted by passengers
