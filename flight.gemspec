@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
   
-  s.add_runtime_dependency 'earth',        '~>0.11.15'
+  s.add_runtime_dependency 'earth',        '~>0.12.0'
   s.add_runtime_dependency 'emitter',      '~>0.11.1'
   s.add_runtime_dependency 'charisma',     '>=0.3.4'
   s.add_runtime_dependency 'cohort_analysis', '>=1'
