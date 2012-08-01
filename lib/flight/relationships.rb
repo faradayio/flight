@@ -1,3 +1,10 @@
+require 'earth/air/aircraft'
+require 'earth/air/airline'
+require 'earth/air/airport'
+require 'earth/air/flight_distance_class'
+require 'earth/air/flight_seat_class'
+require 'earth/fuel/fuel'
+
 module BrighterPlanet
   module Flight
     module Relationships

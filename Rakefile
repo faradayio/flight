@@ -1,8 +1,7 @@
-require 'bundler'
-Bundler.setup
+require 'bundler/setup'
+require 'flight'
 
+ENV['EARTH_ENV'] = 'test'
 require 'sniff'
 require 'sniff/rake_tasks'
-Sniff::RakeTasks.define_tasks do |t|
-  t.earth_domains = [:air, :locality, :fuel]
-end
+Sniff::RakeTasks.define_tasks
