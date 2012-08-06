@@ -1,5 +1,11 @@
 require 'emitter'
 
+require 'flight/impact_model'
+require 'flight/characterization'
+require 'flight/data'
+require 'flight/relationships'
+require 'flight/summarization'
+
 module BrighterPlanet
   module Flight
     extend BrighterPlanet::Emitter
