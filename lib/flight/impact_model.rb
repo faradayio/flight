@@ -47,10 +47,7 @@ require 'leap'
 module BrighterPlanet
   module Flight
     module ImpactModel
-      include Emitter::ImpactModel
-
       def self.included(base)
-        base.extend Leap::Subject
         base.decide :impact, :with => :characteristics do
           # * * *
           
