@@ -2,6 +2,12 @@
 # See LICENSE for details.
 # Contact Brighter Planet for dual-license arrangements.
 
+require 'earth/air/aircraft'
+require 'earth/air/flight_distance_class'
+require 'earth/air/flight_distance_class_seat_class'
+require 'earth/air/flight_segment'
+require 'earth/locality/country'
+
 ## Flight impact model
 # This model is used by the [Brighter Planet](http://brighterplanet.com) [CM1 web service](http://impact.brighterplanet.com) to calculate the per-passenger impacts of a flight, such as energy use and greenhouse gas emissions.
 
@@ -33,20 +39,18 @@
 ##### Collaboration
 # Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see [sniff](https://github.com/brighterplanet/sniff#readme), our emitter testing framework, for more information.
 
-require 'earth/air/aircraft'
-require 'earth/air/flight_distance_class'
-require 'earth/air/flight_distance_class_seat_class'
-require 'earth/air/flight_segment'
-require 'earth/locality/country'
-
 require 'cohort_analysis'
 require 'flight/impact_model/fuel_use_equation'
 require 'flight/impact_model/flight_segment_cohort'
+require 'leap'
 
 module BrighterPlanet
   module Flight
     module ImpactModel
+      include Emitter::ImpactModel
+
       def self.included(base)
+        base.extend Leap::Subject
         base.decide :impact, :with => :characteristics do
           # * * *
           

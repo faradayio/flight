@@ -7,3 +7,7 @@ end
 source :rubygems
 
 gemspec
+
+gem 'earth', :path => '~/earth'
+gem 'sniff', :path => '~/sniff'
+gem 'emitter', :path => '~/emitter'
