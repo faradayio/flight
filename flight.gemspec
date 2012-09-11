@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   
   s.add_runtime_dependency 'earth',        '~>1.0.0'
-  s.add_dependency 'emitter', '~> 1.0.0'
+  s.add_runtime_dependency 'emitter',      '~> 1.1.0'
   s.add_runtime_dependency 'charisma',     '>=0.3.4'
   s.add_runtime_dependency 'cohort_analysis', '>=1'
   s.add_runtime_dependency 'fuzzy_match'
