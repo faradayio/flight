@@ -209,12 +209,12 @@ Feature: Flight Committee Calculations
     And the conclusion of the committee should be "<seats>"
     And the conclusion should comply with standards "ghg_protocol_scope_3, iso, tcr"
     Examples:
-      | aircraft       | seats     |
-      | boeing 737-100 | 212.5     |
-      | boeing 737-200 | 250.0     |
-      | boeing 737-300 | 276.47059 |
-      | boeing 737-400 | 250.0     |
-      | boeing 737-500 | 249.48805 |
+      | aircraft       | seats   |
+      | boeing 737-100 | 212.5   |
+      | boeing 737-200 | 250.0   |
+      | boeing 737-300 | 276.471 |
+      | boeing 737-400 | 250.0   |
+      | boeing 737-500 | 249.488 |
 
   Scenario: Seats committee from aircraft missing seats
     Given a characteristic "aircraft.description" of "airbus a320"
