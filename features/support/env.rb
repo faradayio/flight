@@ -10,3 +10,11 @@ Sniff.init File.join(File.dirname(__FILE__), '..', '..'),
 require 'fuzzy_match'
 FlightSegment.data_miner_script.steps.clear
 Aircraft.update_averages!
+
+require 'geocoder'
+class GeocoderWrapper
+  def distance_between(origin, destination)
+    Geocoder::Calculations.distance_between origin.values_at(:latitude, :longitude).join(','), destination.values_at(:latitude, :longitude).join(','), :units => :km
+  end
+end
+BrighterPlanet::Flight.geocoder = GeocoderWrapper.new
