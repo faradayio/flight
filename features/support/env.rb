@@ -14,7 +14,7 @@ Aircraft.update_averages!
 require 'geocoder'
 class GeocoderWrapper
   def distance_between(origin, destination)
-    Geocoder::Calculations.distance_between origin.values_at(:latitude, :longitude).join(','), destination.values_at(:latitude, :longitude).join(','), :units => :km
+    Geocoder::Calculations.distance_between origin.values_at(:latitude, :longitude), destination.values_at(:latitude, :longitude), :units => :km
   end
 end
 BrighterPlanet::Flight.geocoder = GeocoderWrapper.new
