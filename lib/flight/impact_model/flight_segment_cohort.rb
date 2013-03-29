@@ -197,11 +197,11 @@ module BrighterPlanet
               if sqlite?
                 populated = true
                 execute %{ CREATE TEMPORARY TABLE #{table_name} AS #{cohort_sql} }
+              elsif mysql?
+                # you can't specify engine if you use like, so do a limit trick
+                execute %{ CREATE TEMPORARY TABLE #{table_name} ENGINE=MEMORY AS (SELECT * FROM #{FlightSegment.quoted_table_name} LIMIT 0) }
               else
-                execute %{
-                  CREATE TEMPORARY TABLE #{table_name} LIKE #{FlightSegment.quoted_table_name}
-                  #{'ENGINE=MEMORY' if mysql?}
-                }
+                execute %{ CREATE TEMPORARY TABLE #{table_name} LIKE #{FlightSegment.quoted_table_name} }
               end
 
               unless populated
