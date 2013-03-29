@@ -65,12 +65,8 @@ module BrighterPlanet
                   b FLOAT,
                   passengers INT
                 )
+                #{'ENGINE=MEMORY' if mysql?}
               }
-
-              # make this run faster if you're on mysql
-              if mysql?
-                execute %{ ALTER TABLE #{table_name} ENGINE=MEMORY }
-              end
 
               # make sure that [lazy-loading] flight segment cohort tmp table has been created, because it's about to be used
               if flight_segment_cohort.is_a? FlightSegmentCohort

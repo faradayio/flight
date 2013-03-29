@@ -198,19 +198,14 @@ module BrighterPlanet
                 populated = true
                 execute %{ CREATE TEMPORARY TABLE #{table_name} AS #{cohort_sql} }
               else
-                execute %{ CREATE TEMPORARY TABLE #{table_name} LIKE #{FlightSegment.quoted_table_name} }
-              end
-
-              if mysql?
-                execute %{ ALTER TABLE #{table_name} ENGINE=MEMORY }
+                execute %{
+                  CREATE TEMPORARY TABLE #{table_name} LIKE #{FlightSegment.quoted_table_name}
+                  #{'ENGINE=MEMORY' if mysql?}
+                }
               end
 
               unless populated
                 execute %{ INSERT INTO #{table_name} #{cohort_sql} }
-              end
-
-              if mysql?
-                execute %{ ANALYZE TABLE #{table_name} }
               end
 
               select_manager = Arel::SelectManager.new FlightSegment, Arel::Table.new(table_name)
