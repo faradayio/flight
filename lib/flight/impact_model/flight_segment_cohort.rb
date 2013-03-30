@@ -55,7 +55,7 @@ module BrighterPlanet
         def cohort_sql
           @cohort_sql ||= case cohort
           when Array
-            union = cohort.inject :union
+            union = cohort.inject { |memo, v| memo.union(:all, v) }
             "SELECT * FROM #{union.to_sql} AS t1"
           else
             cohort.to_sql
