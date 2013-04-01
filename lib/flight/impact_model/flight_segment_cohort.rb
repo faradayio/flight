@@ -17,6 +17,14 @@ module BrighterPlanet
         BTS_SOURCE_CODE = 'BTS T100'
         ICAO_COHORT_PRIORITIES = [:origin_airport_city, :destination_airport_city, :aircraft_description, :airline_name]
         ICAO_SOURCE_CODE = 'ICAO TFS'
+        COLUMNS = {
+          aircraft_description: 'CHARACTER VARYING(255)',
+          seats_per_flight: 'FLOAT',
+          distance: 'FLOAT',
+          load_factor: 'FLOAT',
+          freight_share: 'FLOAT',
+          passengers: 'INTEGER',
+        }
         
         attr_reader :characteristics
         attr_reader :table_name
@@ -139,11 +147,11 @@ module BrighterPlanet
         def covered_by_bts?
           @covered_by_bts_query
         end
-
+        
         def cohort_from_source(source, priority)
           fs = FlightSegment.arel_table
           other_conditions = fs[:source].eq(source).and(fs[:year].in(relevant_years).and(fs[:passengers].gt(0)))
-          FlightSegment.where(other_conditions).cohort(provided.slice(*priority), :strategy => :strict, :priority => priority).project(Arel.star)
+          FlightSegment.where(other_conditions).cohort(provided.slice(*priority), :strategy => :strict, :priority => priority).project(COLUMNS.keys.join(','))
         end
 
         # Assemble a cohort by starting with all flight segments in the relevant years. Select only the
@@ -193,15 +201,15 @@ module BrighterPlanet
           @select_manager || @select_manager_mutex.synchronize do
             @select_manager ||= begin
               populated = false
+              structure = "CREATE TEMPORARY TABLE #{table_name} (#{COLUMNS.map { |k, v| "#{k} #{v}" }.join(',')})"
 
               if sqlite?
                 populated = true
-                execute %{ CREATE TEMPORARY TABLE #{table_name} AS #{cohort_sql} }
+                execute %{ #{structure} AS #{cohort_sql} }
               elsif mysql?
-                # you can't specify engine if you use like, so do a limit trick
-                execute %{ CREATE TEMPORARY TABLE #{table_name} ENGINE=MEMORY AS (SELECT * FROM #{FlightSegment.quoted_table_name} LIMIT 0) }
+                execute %{ #{structure} ENGINE=MEMORY }
               else
-                execute %{ CREATE TEMPORARY TABLE #{table_name} LIKE #{FlightSegment.quoted_table_name} }
+                execute structure
               end
 
               unless populated
