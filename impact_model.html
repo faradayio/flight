@@ -1,1299 +1,1495 @@
 <!DOCTYPE html>
+
 <html>
 <head>
-  <meta http-equiv="content-type" content="text/html;charset=utf-8">
   <title>impact_model.rb</title>
-  <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-1667526-20']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
-  <style type="text/css">
-    td.docs h1 {
-      margin-top: 0;
-    }
-    @media print {
-      .code pre {
-        white-space: pre-wrap;
-      }
-      .code {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      .code .highlight {
-        margin-left: 15px;
-        margin-right: 15px;
-      }
-    }
-  </style>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
 </head>
-
 <body>
-<div id='container'>
-  <div id="background"></div>
-  <table cellspacing=0 cellpadding=0>
-  <thead>
-    <tr>
-      <th class=docs><h1>impact_model.rb</h1></th>
-      <th class=code></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr id='section-1'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-1">&#182;</a>
-        </div>
-        <p>Copyright © 2010 Brighter Planet.
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>impact_model.rb</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>Copyright © 2010 Brighter Planet.
 See LICENSE for details.
 Contact Brighter Planet for dual-license arrangements.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre></pre></div>
-      </td>
-    </tr>
-    <tr id='section-Flight_impact_model'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Flight_impact_model">&#182;</a>
-        </div>
-        <h1>Flight impact model</h1>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'earth/air/aircraft'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'earth/air/flight_distance_class'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'earth/air/flight_distance_class_seat_class'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'earth/air/flight_segment'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'earth/locality/country'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1 id="flight-impact-model">Flight impact model</h1>
 <p>This model is used by the <a href="http://brighterplanet.com">Brighter Planet</a> <a href="http://impact.brighterplanet.com">CM1 web service</a> to calculate the per-passenger impacts of a flight, such as energy use and greenhouse gas emissions.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre></pre></div>
-      </td>
-    </tr>
-    <tr id='section-Timeframe'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Timeframe">&#182;</a>
-        </div>
-        <h4>Timeframe</h4>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <h4 id="timeframe">Timeframe</h4>
 <p>The model calculates impacts that occured during a particular time period (<code>timeframe</code>).
 For example if the <code>timeframe</code> is February 2010, a flight that occurred (<code>date</code>) on February 15, 2010 will have impacts, but a flight that occurred on January 31, 2010 will have zero impacts.</p>
-
 <p>The default <code>timeframe</code> is the current calendar year.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre></pre></div>
-      </td>
-    </tr>
-    <tr id='section-Calculations'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Calculations">&#182;</a>
-        </div>
-        <h4>Calculations</h4>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <h4 id="calculations">Calculations</h4>
 <p>The final impacts are the result of the calculations below. These are performed in reverse order, starting with the last calculation listed and finishing with the greenhouse gas emissions calculation.</p>
-
 <p>Each calculation listing shows:</p>
-
 <ul>
 <li>value returned (<em>units of measurement</em>)</li>
 <li>description of the value</li>
 <li>calculation methods, listed from most to least preferred</li>
 </ul>
-
-
 <p>Some methods use <code>values</code> returned by prior calculations. If any of these <code>values</code> are unknown the method is skipped.
 If all the methods for a calculation are skipped, the value the calculation would return is unknown.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre></pre></div>
-      </td>
-    </tr>
-    <tr id='section-Standard_compliance'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Standard_compliance">&#182;</a>
-        </div>
-        <h4>Standard compliance</h4>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h4 id="standard-compliance">Standard compliance</h4>
 <p>When compliance with a particular standard is requested, all methods that do not comply with that standard are ignored.
 Thus any <code>values</code> a method needs will have been calculated using a compliant method or will be unknown.
 To see which standards a method complies with, look at the <code>:complies =&gt;</code> section of the code in the right column.</p>
-
 <p>Client input complies with all standards.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre></pre></div>
-      </td>
-    </tr>
-    <tr id='section-Collaboration'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Collaboration">&#182;</a>
-        </div>
-        <h4>Collaboration</h4>
 
-<p>Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see <a href="https://github.com/brighterplanet/sniff#readme">sniff</a>, our emitter testing framework, for more information.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre><span class="nb">require</span> <span class="s1">&#39;cohort_analysis&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;flight/impact_model/fuel_use_equation&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;flight/impact_model/flight_segment_cohort&#39;</span>
-
-<span class="k">module</span> <span class="nn">BrighterPlanet</span>
-  <span class="k">module</span> <span class="nn">Flight</span>
-    <span class="k">module</span> <span class="nn">ImpactModel</span>
-      <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">included</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
-        <span class="n">base</span><span class="o">.</span><span class="n">decide</span> <span class="ss">:impact</span><span class="p">,</span> <span class="ss">:with</span> <span class="o">=&gt;</span> <span class="ss">:characteristics</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-7'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-7">&#182;</a>
-        </div>
-        <hr />
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Carbon_(&lt;em&gt;kg_CO&lt;sub&gt;2&lt;/sub&gt;e&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Carbon_(&lt;em&gt;kg_CO&lt;sub&gt;2&lt;/sub&gt;e&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Carbon (<em>kg CO<sub>2</sub>e</em>)</h3>
-
-<p><em>The passenger&rsquo;s share of the flight&rsquo;s anthropogenic greenhouse emissions during <code>timeframe</code>.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:carbon</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-9'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-9">&#182;</a>
-        </div>
-        <p>Multiply <code>fuel use</code> (<em>l</em>) by <code>greenhouse gas emission factor</code> (<em>kg CO<sub>2</sub>e / l</em>) to give <em>kg CO<sub>2</sub>e</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel use and greenhouse gas emission factor&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_use</span><span class="p">,</span> <span class="ss">:ghg_emission_factor</span><span class="o">]</span><span class="p">,</span> <span class="ss">:appreciates</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:cohort</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">cohort</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">]</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cohort</span><span class="o">.</span><span class="n">respond_to?</span><span class="p">(</span><span class="ss">:cleanup</span><span class="p">)</span>
-                  <span class="n">cohort</span><span class="o">.</span><span class="n">cleanup</span>
-                <span class="k">end</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:ghg_emission_factor</span><span class="o">]</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Greenhouse_gas_emission_factor_(&lt;em&gt;kg_CO&lt;sub&gt;2&lt;/sub&gt;_/_l&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Greenhouse_gas_emission_factor_(&lt;em&gt;kg_CO&lt;sub&gt;2&lt;/sub&gt;_/_l&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Greenhouse gas emission factor (<em>kg CO<sub>2</sub> / l</em>)</h3>
-
-<p><em>An emission factor that includes the extra forcing effects of high-altitude emissions.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:ghg_emission_factor</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-11'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-11">&#182;</a>
-        </div>
-        <p>Multiply the <a href="http://data.brighterplanet.com/fuels">fuel</a>&rsquo;s co2 emission factor (<em>kg CO<sub>2</sub> / l</em>) by <code>aviation multiplier</code> to give <em>kg CO<sub>2</sub> / l</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel and aviation multiplier&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel</span><span class="p">,</span> <span class="ss">:aviation_multiplier</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">co2_emission_factor</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aviation_multiplier</span><span class="o">]</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Aviation_multiplier'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Aviation_multiplier">&#182;</a>
-        </div>
-        <h3>Aviation multiplier</h3>
-
-<p><em>A multiplier to account for the extra climate impact of greenhouse gas emissions high in the atmosphere.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:aviation_multiplier</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-13'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-13">&#182;</a>
-        </div>
-        <p>Use <strong>2.0</strong> after <a href="http://sei-us.org/publications/id/13">Kollmuss and Crimmins (2009)</a>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="mi">2</span><span class="o">.</span><span class="mi">0</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Energy_(&lt;em&gt;MJ&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Energy_(&lt;em&gt;MJ&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Energy (<em>MJ</em>)</h3>
-
-<p><em>The passenger&rsquo;s share of the flight&rsquo;s energy consumption during <code>timeframe</code>.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:energy</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-15'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-15">&#182;</a>
-        </div>
-        <p>Multiply <code>fuel use</code> (<em>l</em>) by the <a href="http://data.brighterplanet.com/fuels">fuel</a>&rsquo;s <code>energy content</code> (<em>MJ / l</em>) to give <em>MJ</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel use and fuel&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_use</span><span class="p">,</span> <span class="ss">:fuel</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-              <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">energy_content</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Fuel_use_(&lt;em&gt;l&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Fuel_use_(&lt;em&gt;l&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Fuel use (<em>l</em>)</h3>
-
-<p><em>The passenger&rsquo;s share of the flight&rsquo;s fuel use during <code>timeframe</code>.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_use</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-17'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-17">&#182;</a>
-        </div>
-        <p>Check whether <code>date</code> falls within <code>timeframe</code> &ndash; otherwise fuel use is zero.
-Multiply <code>fuel per segment</code> (<em>kg</em>) by <code>segments per trip</code> and <code>trips</code> to give total fuel use (<em>kg</em>).
-Multiply by (1 &ndash; <code>freight share</code>) to take out fuel attributed to cargo and mail, leaving fuel attributed to passengers and their baggage.
-Divide by <code>passengers</code> and multiply by <code>seat class multiplier</code> to account for the portion of the cabin occupied by the passenger&rsquo;s seat.
-Divide by the <a href="http://data.brighterplanet.com/fuels">fuel</a>&rsquo;s density (<em>kg / l</em>) to give <em>l</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from fuel per segment, segments per trip, trips, freight_share, passengers, seat class multiplier, fuel, date, and timeframe&#39;</span><span class="p">,</span>
-              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:fuel_per_segment</span><span class="p">,</span> <span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:trips</span><span class="p">,</span> <span class="ss">:freight_share</span><span class="p">,</span> <span class="ss">:passengers</span><span class="p">,</span> <span class="ss">:seat_class_multiplier</span><span class="p">,</span> <span class="ss">:fuel</span><span class="p">,</span> <span class="ss">:date</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
-                <span class="n">date</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Date</span><span class="p">)</span> <span class="p">?</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">]</span> <span class="p">:</span> <span class="no">Date</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:date</span><span class="o">].</span><span class="n">to_s</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">timeframe</span><span class="o">.</span><span class="n">include?</span> <span class="n">date</span>
-                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_per_segment</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:trips</span><span class="o">]</span> <span class="o">*</span>
-                    <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:freight_share</span><span class="o">]</span><span class="p">)</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:passengers</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class_multiplier</span><span class="o">]</span> <span class="o">/</span>
-                    <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel</span><span class="o">].</span><span class="n">density</span>
-                <span class="k">else</span>
-                  <span class="mi">0</span>
-                <span class="k">end</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Fuel_per_segment_(&lt;em&gt;kg&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Fuel_per_segment_(&lt;em&gt;kg&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Fuel per segment (<em>kg</em>)</h3>
-
-<p><em>The fuel used by each nonstop segment of the flight.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_per_segment</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-19'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-19">&#182;</a>
-        </div>
-        <p>Fuel per segment = <em>m<sub>3</sub>d<sup>3</sup> + m<sub>2</sub>d<sup>2</sup> + m<sub>1</sub>d + b</em>
-where <em>d</em> is <code>adjusted distance per segment</code> and <em>m<sub>3</sub>, m<sub>2</sub>, m<sub>1</sub></em>, and <em>b</em> are the <code>fuel use coefficients</code>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance per segment and fuel use coefficients&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="p">,</span> <span class="ss">:fuel_use_coefficients</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m3</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">]</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">+</span>
-                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m2</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
-                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">m1</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">]</span> <span class="o">+</span>
-                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:fuel_use_coefficients</span><span class="o">].</span><span class="n">b</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Seat_class_multiplier'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Seat_class_multiplier">&#182;</a>
-        </div>
-        <h3>Seat class multiplier</h3>
-
-<p><em>A multiplier to account for the portion of cabin space occupied by the passenger&rsquo;s seat.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:seat_class_multiplier</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-21'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-21">&#182;</a>
-        </div>
-        <p>Use the <code>distance class seat class</code> multiplier.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class seat class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_class_seat_class</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class_seat_class</span><span class="o">].</span><span class="n">multiplier</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-22'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-22">&#182;</a>
-        </div>
-        <p>Otherwise use the average <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class seat class</a> multiplier.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">FlightDistanceClassSeatClass</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">multiplier</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Distance_class_seat_class'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Distance_class_seat_class">&#182;</a>
-        </div>
-        <h3>Distance class seat class</h3>
-
-<p><em>The passenger&rsquo;s <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class and seat class</a>.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance_class_seat_class</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-24'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-24">&#182;</a>
-        </div>
-        <p>Check whether the <code>distance class</code> and <code>seat class</code> combination matches any records in our database.
-If it doesn&rsquo;t then we don&rsquo;t know <code>distance class seat class</code>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class and seat class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:distance_class</span><span class="p">,</span> <span class="ss">:seat_class</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="no">FlightDistanceClassSeatClass</span><span class="o">.</span><span class="n">find_by_distance_class_name_and_seat_class_name</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class</span><span class="o">].</span><span class="n">name</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:seat_class</span><span class="o">].</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Distance_class'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Distance_class">&#182;</a>
-        </div>
-        <h3>Distance class</h3>
-
-<p><em>The flight&rsquo;s <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a>.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance_class</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-26'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-26">&#182;</a>
-        </div>
-        <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-27'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-27">&#182;</a>
-        </div>
-        <p>Otherwise look up the <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a> that corresponds to <code>adjusted distance per segment</code>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance per segment&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:adjusted_distance_per_segment</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="no">FlightDistanceClass</span><span class="o">.</span><span class="n">find_by_distance</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance_per_segment</span><span class="o">].</span><span class="n">nautical_miles</span><span class="o">.</span><span class="n">to</span> <span class="ss">:kilometres</span><span class="p">)</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Seat_class'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Seat_class">&#182;</a>
-        </div>
-        <h3>Seat class</h3>
-
-<p><em>The passenger&rsquo;s <a href="http://data.brighterplanet.com/flight_seat_classes">seat class</a>.</em></p>
-
-<p>Use client input if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Adjusted_distance_per_segment_(&lt;em&gt;nautical_miles&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Adjusted_distance_per_segment_(&lt;em&gt;nautical_miles&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Adjusted distance per segment (<em>nautical miles</em>)</h3>
-
-<p><em>The distance of each nonstop segment of the flight.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:adjusted_distance_per_segment</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-30'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-30">&#182;</a>
-        </div>
-        <p>Divide <code>adjusted distance</code> (<em>nautical miles</em>) by <code>segments per trip</code> to give <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from adjusted distance and segments per trip&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:adjusted_distance</span><span class="p">,</span> <span class="ss">:segments_per_trip</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:adjusted_distance</span><span class="o">]</span> <span class="o">/</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Adjusted_distance_(&lt;em&gt;nautical_miles&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Adjusted_distance_(&lt;em&gt;nautical_miles&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Adjusted distance (<em>nautical miles</em>)</h3>
-
-<p><em>The flight&rsquo;s distance accounting for factors that increase the actual distance traveled by real world flights.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:adjusted_distance</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-32'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-32">&#182;</a>
-        </div>
-        <p>Multiply <code>distance</code> (<em>nautical miles</em>) by <code>route inefficiency factor</code> and <code>dogleg factor</code> to give <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance, route inefficiency factor, and dogleg factor&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:distance</span><span class="p">,</span> <span class="ss">:route_inefficiency_factor</span><span class="p">,</span> <span class="ss">:dogleg_factor</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:route_inefficiency_factor</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:dogleg_factor</span><span class="o">]</span>
-            <span class="k">end</span>
-          <span class="k">end</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-Distance_(&lt;em&gt;nautical_miles&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Distance_(&lt;em&gt;nautical_miles&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Distance (<em>nautical miles</em>)</h3>
-
-<p><em>The flight&rsquo;s base distance.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:distance</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-34'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-34">&#182;</a>
-        </div>
-        <p>Calculate the great circle distance between the <code>origin airport</code> and <code>destination airport</code> (<em>km</em>) and convert to <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from airports&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">distance_to</span><span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span> <span class="ss">:units</span> <span class="o">=&gt;</span> <span class="ss">:kms</span><span class="p">)</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-35'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-35">&#182;</a>
-        </div>
-        <p>Otherwise convert <code>distance estimate</code>(<em>km</em>) to <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance estimate&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_estimate</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_estimate</span><span class="o">].</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-36'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-36">&#182;</a>
-        </div>
-        <p>Otherwise convert the <code>distance class</code> distance (<em>km</em>) to <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from distance class&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:distance_class</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:distance_class</span><span class="o">].</span><span class="n">distance</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
-            <span class="k">end</span>
+            </div>
             
-<span class="cm">=begin</span>
-<span class="cm">  This should not be prioritized over distance estimate or distance class because cohort here never has both airports</span>
-<span class="cm">=end</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-37'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-37">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average distance of the <code>cohort</code> segments, weighted by passengers, (<em>km</em>) and convert to <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-              <span class="n">distance</span> <span class="o">=</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:distance</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
-<span class="cm">=begin</span>
-<span class="cm">  Need to check distance &gt; 0 because some flight segments have 0 for distance</span>
-<span class="cm">=end</span>
-              <span class="n">distance</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">distance</span> <span class="p">:</span> <span class="kp">nil</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-38'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-38">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average <code>distance</code> of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers, (<em>km</em>) and convert to <em>nautical miles</em>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span> <span class="k">do</span>
-              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">kilometres</span><span class="o">.</span><span class="n">to</span> <span class="ss">:nautical_miles</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Route_inefficiency_factor'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Route_inefficiency_factor">&#182;</a>
-        </div>
-        <h3>Route inefficiency factor</h3>
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <h4 id="collaboration">Collaboration</h4>
+<p>Contributions to this impact model are actively encouraged and warmly welcomed. This library includes a comprehensive test suite to ensure that your changes do not cause regressions. All changes should include test coverage for new functionality. Please see <a href="https://github.com/brighterplanet/sniff#readme">sniff</a>, our emitter testing framework, for more information.</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'cohort_analysis'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'flight/impact_model/fuel_use_equation'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'flight/impact_model/flight_segment_cohort'</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">'leap'</span>
+
+<span class="hljs-class"><span class="hljs-keyword">module</span> <span class="hljs-title">BrighterPlanet</span></span>
+  <span class="hljs-class"><span class="hljs-keyword">module</span> <span class="hljs-title">Flight</span></span>
+    <span class="hljs-class"><span class="hljs-keyword">module</span> <span class="hljs-title">ImpactModel</span></span>
+      <span class="hljs-function"><span class="hljs-keyword">def</span> </span><span class="hljs-keyword">self</span>.included(base)
+        base.decide <span class="hljs-symbol">:impact</span>, <span class="hljs-symbol">:with</span> =&gt; <span class="hljs-symbol">:characteristics</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <hr>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <h3 id="carbon-kg-co-sub-2-sub-e-">Carbon (<em>kg CO<sub>2</sub>e</em>)</h3>
+<p><em>The passenger’s share of the flight’s anthropogenic greenhouse emissions during <code>timeframe</code>.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:carbon</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Multiply <code>fuel use</code> (<em>l</em>) by <code>greenhouse gas emission factor</code> (<em>kg CO<sub>2</sub>e / l</em>) to give <em>kg CO<sub>2</sub>e</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from fuel use and greenhouse gas emission factor'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:fuel_use</span>, <span class="hljs-symbol">:ghg_emission_factor</span>], <span class="hljs-symbol">:appreciates</span> =&gt; [<span class="hljs-symbol">:cohort</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-keyword">if</span> (cohort = characteristics[<span class="hljs-symbol">:cohort</span>]) <span class="hljs-keyword">and</span> cohort.respond_to?(<span class="hljs-symbol">:cleanup</span>)
+                  cohort.cleanup
+                <span class="hljs-keyword">end</span>
+                characteristics[<span class="hljs-symbol">:fuel_use</span>] * characteristics[<span class="hljs-symbol">:ghg_emission_factor</span>]
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <h3 id="greenhouse-gas-emission-factor-kg-co-sub-2-sub-l-">Greenhouse gas emission factor (<em>kg CO<sub>2</sub> / l</em>)</h3>
+<p><em>An emission factor that includes the extra forcing effects of high-altitude emissions.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:ghg_emission_factor</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Multiply the <a href="http://data.brighterplanet.com/fuels">fuel</a>‘s co2 emission factor (<em>kg CO<sub>2</sub> / l</em>) by <code>aviation multiplier</code> to give <em>kg CO<sub>2</sub> / l</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from fuel and aviation multiplier'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:fuel</span>, <span class="hljs-symbol">:aviation_multiplier</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:fuel</span>].co2_emission_factor * characteristics[<span class="hljs-symbol">:aviation_multiplier</span>]
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <h3 id="aviation-multiplier">Aviation multiplier</h3>
+<p><em>A multiplier to account for the extra climate impact of greenhouse gas emissions high in the atmosphere.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:aviation_multiplier</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Use <strong>2.0</strong> after <a href="http://sei-us.org/publications/id/13">Kollmuss and Crimmins (2009)</a>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-number">2.0</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h3 id="energy-mj-">Energy (<em>MJ</em>)</h3>
+<p><em>The passenger’s share of the flight’s energy consumption during <code>timeframe</code>.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:energy</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Multiply <code>fuel use</code> (<em>l</em>) by the <a href="http://data.brighterplanet.com/fuels">fuel</a>‘s <code>energy content</code> (<em>MJ / l</em>) to give <em>MJ</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from fuel use and fuel'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:fuel_use</span>, <span class="hljs-symbol">:fuel</span>] <span class="hljs-keyword">do</span> |characteristics|
+              characteristics[<span class="hljs-symbol">:fuel_use</span>] * characteristics[<span class="hljs-symbol">:fuel</span>].energy_content
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <h3 id="fuel-use-l-">Fuel use (<em>l</em>)</h3>
+<p><em>The passenger’s share of the flight’s fuel use during <code>timeframe</code>.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:fuel_use</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>Check whether <code>date</code> falls within <code>timeframe</code> - otherwise fuel use is zero.
+Multiply <code>fuel per segment</code> (<em>kg</em>) by <code>segments per trip</code> and <code>trips</code> to give total fuel use (<em>kg</em>).
+Multiply by (1 - <code>freight share</code>) to take out fuel attributed to cargo and mail, leaving fuel attributed to passengers and their baggage.
+Divide by <code>passengers</code> and multiply by <code>seat class multiplier</code> to account for the portion of the cabin occupied by the passenger’s seat.
+Divide by the <a href="http://data.brighterplanet.com/fuels">fuel</a>‘s density (<em>kg / l</em>) to give <em>l</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from fuel per segment, segments per trip, trips, freight_share, passengers, seat class multiplier, fuel, date, and timeframe'</span>,
+              <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:fuel_per_segment</span>, <span class="hljs-symbol">:segments_per_trip</span>, <span class="hljs-symbol">:trips</span>, <span class="hljs-symbol">:freight_share</span>, <span class="hljs-symbol">:passengers</span>, <span class="hljs-symbol">:seat_class_multiplier</span>, <span class="hljs-symbol">:fuel</span>, <span class="hljs-symbol">:date</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics, timeframe|
+                date = characteristics[<span class="hljs-symbol">:date</span>].is_a?(<span class="hljs-constant">Date</span>) ? characteristics[<span class="hljs-symbol">:date</span>] <span class="hljs-symbol">:</span> <span class="hljs-constant">Date</span>.parse(characteristics[<span class="hljs-symbol">:date</span>].to_s)
+                <span class="hljs-keyword">if</span> timeframe.<span class="hljs-keyword">include</span>? date
+                  characteristics[<span class="hljs-symbol">:fuel_per_segment</span>] * characteristics[<span class="hljs-symbol">:segments_per_trip</span>] * characteristics[<span class="hljs-symbol">:trips</span>] *
+                    (<span class="hljs-number">1</span> - characteristics[<span class="hljs-symbol">:freight_share</span>]) / characteristics[<span class="hljs-symbol">:passengers</span>] * characteristics[<span class="hljs-symbol">:seat_class_multiplier</span>] /
+                    characteristics[<span class="hljs-symbol">:fuel</span>].density
+                <span class="hljs-keyword">else</span>
+                  <span class="hljs-number">0</span>
+                <span class="hljs-keyword">end</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <h3 id="fuel-per-segment-kg-">Fuel per segment (<em>kg</em>)</h3>
+<p><em>The fuel used by each nonstop segment of the flight.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:fuel_per_segment</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Fuel per segment = <em>m<sub>3</sub>d<sup>3</sup> + m<sub>2</sub>d<sup>2</sup> + m<sub>1</sub>d + b</em>
+where <em>d</em> is <code>adjusted distance per segment</code> and <em>m<sub>3</sub>, m<sub>2</sub>, m<sub>1</sub></em>, and <em>b</em> are the <code>fuel use coefficients</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from adjusted distance per segment and fuel use coefficients'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:adjusted_distance_per_segment</span>, <span class="hljs-symbol">:fuel_use_coefficients</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:fuel_use_coefficients</span>].m3 * characteristics[<span class="hljs-symbol">:adjusted_distance_per_segment</span>] ** <span class="hljs-number">3</span> +
+                  characteristics[<span class="hljs-symbol">:fuel_use_coefficients</span>].m2 * characteristics[<span class="hljs-symbol">:adjusted_distance_per_segment</span>] ** <span class="hljs-number">2</span> +
+                  characteristics[<span class="hljs-symbol">:fuel_use_coefficients</span>].m1 * characteristics[<span class="hljs-symbol">:adjusted_distance_per_segment</span>] +
+                  characteristics[<span class="hljs-symbol">:fuel_use_coefficients</span>].b
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <h3 id="seat-class-multiplier">Seat class multiplier</h3>
+<p><em>A multiplier to account for the portion of cabin space occupied by the passenger’s seat.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:seat_class_multiplier</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Use the <code>distance class seat class</code> multiplier.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from distance class seat class'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:distance_class_seat_class</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:distance_class_seat_class</span>].multiplier
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Otherwise use the average <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class seat class</a> multiplier.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">FlightDistanceClassSeatClass</span>.fallback.multiplier
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <h3 id="distance-class-seat-class">Distance class seat class</h3>
+<p><em>The passenger’s <a href="http://data.brighterplanet.com/flight_distance_class_seat_classes">distance class and seat class</a>.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:distance_class_seat_class</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Check whether the <code>distance class</code> and <code>seat class</code> combination matches any records in our database.
+If it doesn’t then we don’t know <code>distance class seat class</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from distance class and seat class'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:distance_class</span>, <span class="hljs-symbol">:seat_class</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-constant">FlightDistanceClassSeatClass</span>.find_by_distance_class_name_and_seat_class_name(characteristics[<span class="hljs-symbol">:distance_class</span>].name, characteristics[<span class="hljs-symbol">:seat_class</span>].name)
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <h3 id="distance-class">Distance class</h3>
+<p><em>The flight’s <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a>.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:distance_class</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Use client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>Otherwise look up the <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a> that corresponds to <code>adjusted distance per segment</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from adjusted distance per segment'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:adjusted_distance_per_segment</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-constant">FlightDistanceClass</span>.find_by_distance(characteristics[<span class="hljs-symbol">:adjusted_distance_per_segment</span>].nautical_miles.to <span class="hljs-symbol">:kilometres</span>)
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <h3 id="seat-class">Seat class</h3>
+<p><em>The passenger’s <a href="http://data.brighterplanet.com/flight_seat_classes">seat class</a>.</em></p>
+<p>Use client input if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <h3 id="adjusted-distance-per-segment-nautical-miles-">Adjusted distance per segment (<em>nautical miles</em>)</h3>
+<p><em>The distance of each nonstop segment of the flight.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:adjusted_distance_per_segment</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>Divide <code>adjusted distance</code> (<em>nautical miles</em>) by <code>segments per trip</code> to give <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from adjusted distance and segments per trip'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:adjusted_distance</span>, <span class="hljs-symbol">:segments_per_trip</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:adjusted_distance</span>] / characteristics[<span class="hljs-symbol">:segments_per_trip</span>]
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <h3 id="adjusted-distance-nautical-miles-">Adjusted distance (<em>nautical miles</em>)</h3>
+<p><em>The flight’s distance accounting for factors that increase the actual distance traveled by real world flights.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:adjusted_distance</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Multiply <code>distance</code> (<em>nautical miles</em>) by <code>route inefficiency factor</code> and <code>dogleg factor</code> to give <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from distance, route inefficiency factor, and dogleg factor'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:distance</span>, <span class="hljs-symbol">:route_inefficiency_factor</span>, <span class="hljs-symbol">:dogleg_factor</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:distance</span>] * characteristics[<span class="hljs-symbol">:route_inefficiency_factor</span>] * characteristics[<span class="hljs-symbol">:dogleg_factor</span>]
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <h3 id="distance-nautical-miles-">Distance (<em>nautical miles</em>)</h3>
+<p><em>The flight’s base distance.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:distance</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>Calculate the great circle distance between the <code>origin airport</code> and <code>destination airport</code> (<em>km</em>) and convert to <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from airports'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:origin_airport</span>, <span class="hljs-symbol">:destination_airport</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                o = characteristics[<span class="hljs-symbol">:origin_airport</span>]
+                d = characteristics[<span class="hljs-symbol">:destination_airport</span>]
+                <span class="hljs-constant">Flight</span>.geocoder.distance_between({<span class="hljs-symbol">latitude:</span> o.latitude, <span class="hljs-symbol">longitude:</span> o.longitude}, {<span class="hljs-symbol">latitude:</span> d.latitude, <span class="hljs-symbol">longitude:</span> d.longitude}).kilometres.to <span class="hljs-symbol">:nautical_miles</span>
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>Otherwise convert <code>distance estimate</code>(<em>km</em>) to <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from distance estimate'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:distance_estimate</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:distance_estimate</span>].kilometres.to <span class="hljs-symbol">:nautical_miles</span>
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Otherwise convert the <code>distance class</code> distance (<em>km</em>) to <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from distance class'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:distance_class</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:distance_class</span>].distance.kilometres.to <span class="hljs-symbol">:nautical_miles</span>
+            <span class="hljs-keyword">end</span>
+            
+<span class="hljs-comment">=begin
+  This should not be prioritized over distance estimate or distance class because cohort here never has both airports
+=end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average distance of the <code>cohort</code> segments, weighted by passengers, (<em>km</em>) and convert to <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from cohort'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:cohort</span> <span class="hljs-keyword">do</span> |characteristics|
+              distance = characteristics[<span class="hljs-symbol">:cohort</span>].weighted_average(<span class="hljs-symbol">:distance</span>, <span class="hljs-symbol">:weighted_by</span> =&gt; <span class="hljs-symbol">:passengers</span>).kilometres.to <span class="hljs-symbol">:nautical_miles</span>
+<span class="hljs-comment">=begin
+  Need to check distance &gt; 0 because some flight segments have 0 for distance
+=end</span>
+              distance &gt; <span class="hljs-number">0</span> ? distance <span class="hljs-symbol">:</span> <span class="hljs-keyword">nil</span>
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average <code>distance</code> of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers, (<em>km</em>) and convert to <em>nautical miles</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span> <span class="hljs-keyword">do</span>
+              <span class="hljs-constant">FlightSegment</span>.fallback.distance.kilometres.to <span class="hljs-symbol">:nautical_miles</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <h3 id="route-inefficiency-factor">Route inefficiency factor</h3>
 <p><em>A multiplier to account for factors like flight path routing around controlled airspace and circling while waiting for clearance to land.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:route_inefficiency_factor</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-40'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-40">&#182;</a>
-        </div>
-        <p>Use the <code>country</code> route inefficiency factor.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from country&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:country</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:country</span><span class="o">].</span><span class="n">flight_route_inefficiency_factor</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-41'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-41">&#182;</a>
-        </div>
-        <p>Otherwise use the <a href="http://data.brighterplanet.com/countries">global average</a> <code>route inefficiency factor</code>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">Country</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">flight_route_inefficiency_factor</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Dogleg_factor'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Dogleg_factor">&#182;</a>
-        </div>
-        <h3>Dogleg factor</h3>
 
-<p><em>A multiplier that represents how &lsquo;out of the way&rsquo; connecting airports are compared to a nonstop flight.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:dogleg_factor</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-43'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-43">&#182;</a>
-        </div>
-        <p>Assume that each connection increases the total flight distance by <strong>25%</strong>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from segments per trip&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:segments_per_trip</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="mi">1</span><span class="o">.</span><span class="mi">25</span> <span class="o">**</span> <span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:segments_per_trip</span><span class="o">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Distance_estimate_(&lt;em&gt;km&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Distance_estimate_(&lt;em&gt;km&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Distance estimate (<em>km</em>)</h3>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:route_inefficiency_factor</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>Use the <code>country</code> route inefficiency factor.</p>
 
-<p><em>The client&rsquo;s estimate of the flight&rsquo;s distance.</em></p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from country'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:country</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:country</span>].flight_route_inefficiency_factor
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>Otherwise use the <a href="http://data.brighterplanet.com/countries">global average</a> <code>route inefficiency factor</code>.</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">Country</span>.fallback.flight_route_inefficiency_factor
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <h3 id="dogleg-factor">Dogleg factor</h3>
+<p><em>A multiplier that represents how ‘out of the way’ connecting airports are compared to a nonstop flight.</em></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:dogleg_factor</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>Assume that each connection increases the total flight distance by <strong>25%</strong>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from segments per trip'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:segments_per_trip</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-number">1.25</span> ** (characteristics[<span class="hljs-symbol">:segments_per_trip</span>] - <span class="hljs-number">1</span>)
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <h3 id="distance-estimate-km-">Distance estimate (<em>km</em>)</h3>
+<p><em>The client’s estimate of the flight’s distance.</em></p>
 <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Distance_class'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Distance_class">&#182;</a>
-        </div>
-        <h3>Distance class</h3>
 
-<p><em>The flight&rsquo;s <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a>.</em></p>
-
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <h3 id="distance-class">Distance class</h3>
+<p><em>The flight’s <a href="http://data.brighterplanet.com/flight_distance_classes">distance class</a>.</em></p>
 <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Fuel_use_coefficients'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Fuel_use_coefficients">&#182;</a>
-        </div>
-        <h3>Fuel use coefficients</h3>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <h3 id="fuel-use-coefficients">Fuel use coefficients</h3>
 <p><em>The coefficients of a third-order polynomial equation that describes aircraft fuel use.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel_use_coefficients</span> <span class="k">do</span>
-            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-47'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-47">&#182;</a>
-        </div>
-        <p>Calculate the average fuel use coefficients of the <code>cohort</code> aircraft, weighted by the passengers carried by each of those aircraft:</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">from_flight_segment_cohort</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">value</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-48'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-48">&#182;</a>
-        </div>
-        <p>Otherwise use the <code>aircraft</code> fuel use coefficients.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">from_coefficients</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">m3</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">m2</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">m1</span><span class="p">,</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">b</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-49'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-49">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average fuel use coefficients of all <a href="http://data.brighterplanet.com/aircraft">aircraft</a>, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">FuelUseEquation</span><span class="o">.</span><span class="n">from_coefficients</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="no">Aircraft</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">b</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Fuel'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Fuel">&#182;</a>
-        </div>
-        <h3>Fuel</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:fuel_use_coefficients</span> <span class="hljs-keyword">do</span>
+            quorum <span class="hljs-string">'from cohort'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:cohort</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>Calculate the average fuel use coefficients of the <code>cohort</code> aircraft, weighted by the passengers carried by each of those aircraft:</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-constant">FuelUseEquation</span>.from_flight_segment_cohort characteristics[<span class="hljs-symbol">:cohort</span>].value
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>Otherwise use the <code>aircraft</code> fuel use coefficients.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from aircraft'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:aircraft</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-constant">FuelUseEquation</span>.from_coefficients characteristics[<span class="hljs-symbol">:aircraft</span>].m3, characteristics[<span class="hljs-symbol">:aircraft</span>].m2, characteristics[<span class="hljs-symbol">:aircraft</span>].m1, characteristics[<span class="hljs-symbol">:aircraft</span>].b
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average fuel use coefficients of all <a href="http://data.brighterplanet.com/aircraft">aircraft</a>, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">FuelUseEquation</span>.from_coefficients <span class="hljs-constant">Aircraft</span>.fallback.m3, <span class="hljs-constant">Aircraft</span>.fallback.m2, <span class="hljs-constant">Aircraft</span>.fallback.m1, <span class="hljs-constant">Aircraft</span>.fallback.b
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <h3 id="fuel">Fuel</h3>
 <p><em>The type of <a href="http://data.brighterplanet.com/fuels">fuel</a> used by the aircraft.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:fuel</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-51'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-51">&#182;</a>
-        </div>
-        <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-52'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-52">&#182;</a>
-        </div>
-        <p>Otherwise assume the flight uses <strong>Jet Fuel</strong>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">Fuel</span><span class="o">.</span><span class="n">find_by_name</span> <span class="s1">&#39;Jet Fuel&#39;</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Passengers'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Passengers">&#182;</a>
-        </div>
-        <h3>Passengers</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:fuel</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>Use client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>Otherwise assume the flight uses <strong>Jet Fuel</strong>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">Fuel</span>.find_by_name <span class="hljs-string">'Jet Fuel'</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <h3 id="passengers">Passengers</h3>
 <p><em>The number of passengers on the flight.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:passengers</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-54'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-54">&#182;</a>
-        </div>
-        <p>Multiply <code>seats</code> by <code>load factor</code> and round to the nearest whole number.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from seats and load factor&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:seats</span><span class="p">,</span> <span class="ss">:load_factor</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="p">(</span><span class="n">characteristics</span><span class="o">[</span><span class="ss">:seats</span><span class="o">]</span> <span class="o">*</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:load_factor</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">round</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Seats'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Seats">&#182;</a>
-        </div>
-        <h3>Seats</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:passengers</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>Multiply <code>seats</code> by <code>load factor</code> and round to the nearest whole number.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from seats and load factor'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:seats</span>, <span class="hljs-symbol">:load_factor</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                (characteristics[<span class="hljs-symbol">:seats</span>] * characteristics[<span class="hljs-symbol">:load_factor</span>]).round
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <h3 id="seats">Seats</h3>
 <p><em>The number of seats on the aircraft.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:seats</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-56'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-56">&#182;</a>
-        </div>
-        <p>Uses client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-57'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-57">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average seats of the <code>cohort</code> segments, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:seats_per_flight</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-58'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-58">&#182;</a>
-        </div>
-        <p>Otherwise use the <code>aircraft</code> average number of seats.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from aircraft&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:aircraft</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:aircraft</span><span class="o">].</span><span class="n">seats</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-59'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-59">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average seats of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">seats_per_flight</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Load_factor'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Load_factor">&#182;</a>
-        </div>
-        <h3>Load factor</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:seats</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>Uses client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average seats of the <code>cohort</code> segments, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from cohort'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:cohort</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:cohort</span>].weighted_average(<span class="hljs-symbol">:seats_per_flight</span>, <span class="hljs-symbol">:weighted_by</span> =&gt; <span class="hljs-symbol">:passengers</span>)
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>Otherwise use the <code>aircraft</code> average number of seats.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from aircraft'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:aircraft</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:aircraft</span>].seats
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average seats of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">FlightSegment</span>.fallback.seats_per_flight
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <h3 id="load-factor">Load factor</h3>
 <p><em>The portion of available seats that are occupied.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:load_factor</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-61'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-61">&#182;</a>
-        </div>
-        <p>Uses client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-62'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-62">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average load factor of the <code>cohort</code> segments, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:load_factor</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-63'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-63">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average load factor of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">load_factor</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Freight_share'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Freight_share">&#182;</a>
-        </div>
-        <h3>Freight share</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:load_factor</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>Uses client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average load factor of the <code>cohort</code> segments, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from cohort'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:cohort</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:cohort</span>].weighted_average(<span class="hljs-symbol">:load_factor</span>, <span class="hljs-symbol">:weighted_by</span> =&gt; <span class="hljs-symbol">:passengers</span>)
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average load factor of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">FlightSegment</span>.fallback.load_factor
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <h3 id="freight-share">Freight share</h3>
 <p><em>The percent of the total aircraft weight that is cargo and mail, as opposed to passengers and their baggage.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:freight_share</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-65'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-65">&#182;</a>
-        </div>
-        <p>Calculate the average freight share of the <code>cohort</code> segments, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from cohort&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="ss">:cohort</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="n">characteristics</span><span class="o">[</span><span class="ss">:cohort</span><span class="o">].</span><span class="n">weighted_average</span><span class="p">(</span><span class="ss">:freight_share</span><span class="p">,</span> <span class="ss">:weighted_by</span> <span class="o">=&gt;</span> <span class="ss">:passengers</span><span class="p">)</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-66'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-66">&#182;</a>
-        </div>
-        <p>Otherwise calculate the average freight share of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="no">FlightSegment</span><span class="o">.</span><span class="n">fallback</span><span class="o">.</span><span class="n">freight_share</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Trips'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Trips">&#182;</a>
-        </div>
-        <h3>Trips</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:freight_share</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>Calculate the average freight share of the <code>cohort</code> segments, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from cohort'</span>, <span class="hljs-symbol">:needs</span> =&gt; <span class="hljs-symbol">:cohort</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                characteristics[<span class="hljs-symbol">:cohort</span>].weighted_average(<span class="hljs-symbol">:freight_share</span>, <span class="hljs-symbol">:weighted_by</span> =&gt; <span class="hljs-symbol">:passengers</span>)
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>Otherwise calculate the average freight share of <a href="http://data.brighterplanet.com/flight_segments">all flight segments in our database</a>, weighted by passengers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-constant">FlightSegment</span>.fallback.freight_share
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <h3 id="trips">Trips</h3>
 <p><em>A one-way flight has one trip; a round-trip flight has two trips.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:trips</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-68'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-68">&#182;</a>
-        </div>
-        <p>Uses client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-69'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-69">&#182;</a>
-        </div>
-        <p>Otherwise use an average of <strong>1.7</strong>, calculated from the <a href="https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&amp;hl=en&amp;output=html">BTS Origin and Destination Survey</a>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="mi">1</span><span class="o">.</span><span class="mi">7</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Country'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Country">&#182;</a>
-        </div>
-        <h3>Country</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:trips</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>Uses client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>Otherwise use an average of <strong>1.7</strong>, calculated from the <a href="https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&amp;hl=en&amp;output=html">BTS Origin and Destination Survey</a>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-number">1.7</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <h3 id="country">Country</h3>
 <p><em>The <a href="http://data.brighterplanet.com/countries">country</a> in which the flight occured.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:country</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-71'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-71">&#182;</a>
-        </div>
-        <p>If the flight&rsquo;s <code>origin airport</code> and <code>destination airport</code> are within the same country, use that country.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from origin airport and destination airport&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-                <span class="k">if</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span> <span class="o">==</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:destination_airport</span><span class="o">].</span><span class="n">country_iso_3166_code</span>
-                  <span class="n">characteristics</span><span class="o">[</span><span class="ss">:origin_airport</span><span class="o">].</span><span class="n">country</span>
-                <span class="k">end</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Cohort'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Cohort">&#182;</a>
-        </div>
-        <h3>Cohort</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:country</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>If the flight’s <code>origin airport</code> and <code>destination airport</code> are within the same country, use that country.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from origin airport and destination airport'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:origin_airport</span>, <span class="hljs-symbol">:destination_airport</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+                <span class="hljs-keyword">if</span> characteristics[<span class="hljs-symbol">:origin_airport</span>].country_iso_3166_code == characteristics[<span class="hljs-symbol">:destination_airport</span>].country_iso_3166_code
+                  characteristics[<span class="hljs-symbol">:origin_airport</span>].country
+                <span class="hljs-keyword">end</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <h3 id="cohort">Cohort</h3>
 <p><em>A set of flight segment records in <a href="http://data.brighterplanet.com/flight_segments">our database</a> that match certain client-input values.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:cohort</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-73'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-73">&#182;</a>
-        </div>
-        <p>If the client specified the id of a single flight segment in our database, use that flight segment.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from row_hash&#39;</span><span class="p">,</span> <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:flight_segment_row_hash</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-              <span class="no">FlightSegment</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:row_hash</span> <span class="o">=&gt;</span> <span class="n">characteristics</span><span class="o">[</span><span class="ss">:flight_segment_row_hash</span><span class="o">].</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">end</span>
-            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-74'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-74">&#182;</a>
-        </div>
-        <p>Otherwise assemble a cohort based on whatever client inputs are available:</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from segments per trip and input&#39;</span><span class="p">,</span>
-              <span class="ss">:needs</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:segments_per_trip</span><span class="p">,</span> <span class="ss">:date</span><span class="o">]</span><span class="p">,</span> <span class="ss">:appreciates</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:origin_airport</span><span class="p">,</span> <span class="ss">:destination_airport</span><span class="p">,</span> <span class="ss">:aircraft</span><span class="p">,</span> <span class="ss">:airline</span><span class="o">]</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="o">|</span>
-              <span class="no">FlightSegmentCohort</span><span class="o">.</span><span class="n">from_characteristics</span> <span class="n">characteristics</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Origin_airport'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Origin_airport">&#182;</a>
-        </div>
-        <h3>Origin airport</h3>
 
-<p><em>The flight&rsquo;s <a href="http://data.brighterplanet.com/airports">origin airport</a>.</em></p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:cohort</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>If the client specified the id of a single flight segment in our database, use that flight segment.</p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from row_hash'</span>, <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:flight_segment_row_hash</span>] <span class="hljs-keyword">do</span> |characteristics|
+              <span class="hljs-constant">FlightSegment</span>.where(<span class="hljs-symbol">:row_hash</span> =&gt; characteristics[<span class="hljs-symbol">:flight_segment_row_hash</span>].value)
+            <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>Otherwise assemble a cohort based on whatever client inputs are available:</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from segments per trip and input'</span>,
+              <span class="hljs-symbol">:needs</span> =&gt; [<span class="hljs-symbol">:segments_per_trip</span>, <span class="hljs-symbol">:date</span>], <span class="hljs-symbol">:appreciates</span> =&gt; [<span class="hljs-symbol">:origin_airport</span>, <span class="hljs-symbol">:destination_airport</span>, <span class="hljs-symbol">:aircraft</span>, <span class="hljs-symbol">:airline</span>],
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics|
+              <span class="hljs-constant">FlightSegmentCohort</span>.from_characteristics characteristics
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <h3 id="origin-airport">Origin airport</h3>
+<p><em>The flight’s <a href="http://data.brighterplanet.com/airports">origin airport</a>.</em></p>
 <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Destination_airport'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Destination_airport">&#182;</a>
-        </div>
-        <h3>Destination airport</h3>
 
-<p><em>The flight&rsquo;s <a href="http://data.brighterplanet.com/airports">destination airport</a>.</em></p>
-
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <h3 id="destination-airport">Destination airport</h3>
+<p><em>The flight’s <a href="http://data.brighterplanet.com/airports">destination airport</a>.</em></p>
 <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Aircraft'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Aircraft">&#182;</a>
-        </div>
-        <h3>Aircraft</h3>
 
-<p><em>The flight&rsquo;s <a href="http://data.brighterplanet.com/aircraft">aircraft</a>.</em></p>
-
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <h3 id="aircraft">Aircraft</h3>
+<p><em>The flight’s <a href="http://data.brighterplanet.com/aircraft">aircraft</a>.</em></p>
 <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Airline'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Airline">&#182;</a>
-        </div>
-        <h3>Airline</h3>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <h3 id="airline">Airline</h3>
 <p><em>The <a href="http://data.brighterplanet.com/airlines">airline</a> that operates the flight. For codeshare flights this may be different than the ticketing airline.</em></p>
-
 <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Segments_per_trip'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Segments_per_trip">&#182;</a>
-        </div>
-        <h3>Segments per trip</h3>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <h3 id="segments-per-trip">Segments per trip</h3>
 <p><em>The number of nonstop flight segments. A nonstop flight has 1 segment per trip (e.g. JFK to SFO); a connecting flight has 2 or more segments (e.g. JFK to SFO via ORD).</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:segments_per_trip</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-80'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-80">&#182;</a>
-        </div>
-        <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-81'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-81">&#182;</a>
-        </div>
-        <p>Otherwise use an average of <strong>1.68</strong>, calculated from the <a href="https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&amp;hl=en&amp;output=html">BTS Origin and Destination Survey</a>.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span>
-                <span class="mi">1</span><span class="o">.</span><span class="mi">68</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-          </pre></div>
-      </td>
-    </tr>
-    <tr id='section-Date_(&lt;em&gt;date&lt;/em&gt;)'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-Date_(&lt;em&gt;date&lt;/em&gt;)">&#182;</a>
-        </div>
-        <h3>Date (<em>date</em>)</h3>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:segments_per_trip</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>Use client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <p>Otherwise use an average of <strong>1.68</strong>, calculated from the <a href="https://spreadsheets.google.com/pub?key=0Anc8M0qoN5VidC1ESzRRb21zaVRodkN6TF95M3JQeUE&amp;hl=en&amp;output=html">BTS Origin and Destination Survey</a>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'default'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span>
+                <span class="hljs-number">1.68</span>
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <h3 id="date-date-">Date (<em>date</em>)</h3>
 <p><em>The day the flight occurred.</em></p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>          <span class="n">committee</span> <span class="ss">:date</span> <span class="k">do</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-83'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-83">&#182;</a>
-        </div>
-        <p>Use client input, if available.</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            </pre></div>
-      </td>
-    </tr>
-    <tr id='section-84'>
-      <td class=docs>
-        <div class="pilwrap">
-          <a class="pilcrow" href="#section-84">&#182;</a>
-        </div>
-        <p>Otherwise assume the flight occurred on the first day of <code>timeframe</code>.</p>
 
-      </td>
-      <td class=code>
-        <div class='highlight'><pre>            <span class="n">quorum</span> <span class="s1">&#39;from timeframe&#39;</span><span class="p">,</span>
-              <span class="ss">:complies</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:ghg_protocol_scope_3</span><span class="p">,</span> <span class="ss">:iso</span><span class="p">,</span> <span class="ss">:tcr</span><span class="o">]</span> <span class="k">do</span> <span class="o">|</span><span class="n">characteristics</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">|</span>
-                <span class="n">timeframe</span><span class="o">.</span><span class="n">from</span>
-            <span class="k">end</span>
-          <span class="k">end</span>
-        <span class="k">end</span>
-      <span class="k">end</span>
-    <span class="k">end</span>
-  <span class="k">end</span>
-<span class="k">end</span></pre></div>
-      </td>
-    </tr>
-  </table>
-</div>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          committee <span class="hljs-symbol">:date</span> <span class="hljs-keyword">do</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-83">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-83">&#182;</a>
+              </div>
+              <p>Use client input, if available.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-84">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-84">&#182;</a>
+              </div>
+              <p>Otherwise assume the flight occurred on the first day of <code>timeframe</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            quorum <span class="hljs-string">'from timeframe'</span>,
+              <span class="hljs-symbol">:complies</span> =&gt; [<span class="hljs-symbol">:ghg_protocol_scope_3</span>, <span class="hljs-symbol">:iso</span>, <span class="hljs-symbol">:tcr</span>] <span class="hljs-keyword">do</span> |characteristics, timeframe|
+                timeframe.from
+            <span class="hljs-keyword">end</span>
+          <span class="hljs-keyword">end</span>
+        <span class="hljs-keyword">end</span>
+      <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">end</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
 </body>
+</html>
